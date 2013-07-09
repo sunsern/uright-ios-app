@@ -29,6 +29,7 @@ void onUncaughtException(NSException *exception)
     _window = [[UIWindow alloc] initWithFrame:screenBounds];
     
     _viewController = [[SPViewController alloc] init];
+    _viewController.multitouchEnabled = NO;
     
     // Enable some common settings here:
     //

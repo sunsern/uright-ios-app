@@ -4,23 +4,15 @@
 //
 
 #import "Game.h" 
-
-// --- private interface ---------------------------------------------------------------------------
-
-@interface Game ()
-
-- (void)setup;
-- (void)onImageTouched:(SPTouchEvent *)event;
-- (void)onResize:(SPResizeEvent *)event;
-
-@end
-
-
-// --- class implementation ------------------------------------------------------------------------
+#import "Canvas.h"
+#import "MenuScene.h"
+#import "RaceScene.h"
+#import "ServerManager.h"
 
 @implementation Game
 {
     SPSprite *_contents;
+    SPSprite *_currentScene;
 }
 
 - (id)init
@@ -62,27 +54,57 @@
 
     _contents = [SPSprite sprite];
     [self addChild:_contents];
-
-    SPImage *background = [[SPImage alloc] initWithContentsOfFile:@"background.jpg"];
-    [_contents addChild:background];
-    
-    NSString *text = @"To find out how to create your own game out of this scaffold, "
-                     @"have a look at the 'First Steps' section of the Sparrow website!";
-    
-    SPTextField *textField = [[SPTextField alloc] initWithWidth:280 height:80 text:text];
-    textField.x = (background.width - textField.width) / 2;
-    textField.y = (background.height / 2) - 135;
-    [_contents addChild:textField];
-
-    SPImage *image = [[SPImage alloc] initWithTexture:[Media atlasTexture:@"sparrow"]];
-    image.pivotX = (int)image.width  / 2;
-    image.pivotY = (int)image.height / 2;
-    image.x = background.width  / 2;
-    image.y = background.height / 2 + 40;
-    [_contents addChild:image];
     
     [self updateLocations];
     
+    
+    // Initialize the singleton storage
+    GlobalStorage *gs = [GlobalStorage sharedInstance];
+    [gs loadData];
+    
+    // build cache
+    UserStorage *us = [gs userdata];
+    [us switchToLanguageId:[us languageId]];
+
+    // Auto login
+    NSDictionary *jsonObj = [ServerManager fetchDataForUsername:@"sunsern"
+                                                       password:@"12345"];
+    // update user-independent data
+    if (jsonObj != nil) {
+        GlobalStorage *gs = [GlobalStorage sharedInstance];
+        [gs setLanguages:[jsonObj objectForKey:@"languages"]];
+        
+        // now user-specific data
+        NSString *login_result = [jsonObj objectForKey:@"login_result"];
+        if ([login_result isEqualToString:@"OK"]) {
+            int newUserId = [[jsonObj objectForKey:@"user_id"] intValue];
+            // switch user and save data
+            [gs switchToUser:newUserId];
+            // Update classifier with the new one
+            UserStorage *us = [gs userdata];
+            [us setClassifiers:[[NSMutableDictionary alloc]
+                                initWithDictionary:[jsonObj objectForKey:@"classifiers"]]];
+            [us setUsername:@"sunsern"];
+            [us setPassword:@"12345"];
+            [us switchToLanguageId:[us languageId]];
+            [gs saveUserData];
+            
+        } else {
+            // save the langauges data
+            [gs saveGlobalData];
+        }
+    } 
+    
+    //MenuScene *menu = [[MenuScene alloc] init];
+    //[self showScene:menu];
+    
+    
+    [[Sparrow juggler] delayInvocationByTime:0.5f block:^{
+        RaceScene *race = [[RaceScene alloc] init];
+        [self showScene:race];
+    }];
+    
+    /*
     // play a sound when the image is touched
     [image addEventListener:@selector(onImageTouched:) atObject:self forType:SP_EVENT_TYPE_TOUCH];
     
@@ -93,7 +115,7 @@
     tween.repeatCount = 0; // repeat indefinitely
     tween.reverse = YES;
     [Sparrow.juggler addObject:tween];
-    
+    */
 
     // The controller autorotates the game to all supported device orientations. 
     // Choose the orienations you want to support in the Xcode Target Settings ("Summary"-tab).
@@ -104,16 +126,6 @@
     // to the "App-Info.plist" file and choose any landscape orientation.
     
     [self addEventListener:@selector(onResize:) atObject:self forType:SP_EVENT_TYPE_RESIZE];
-    
-    // Per default, this project compiles as a universal application. To change that, enter the 
-    // project info screen, and in the "Build"-tab, find the setting "Targeted device family".
-    //
-    // Now choose:  
-    //   * iPhone      -> iPhone only App
-    //   * iPad        -> iPad only App
-    //   * iPhone/iPad -> Universal App  
-    // 
-    // Sparrow's minimum deployment target is iOS 5.
 }
 
 - (void)updateLocations
@@ -121,14 +133,12 @@
     int gameWidth  = Sparrow.stage.width;
     int gameHeight = Sparrow.stage.height;
     
-    _contents.x = (int) (gameWidth  - _contents.width)  / 2;
-    _contents.y = (int) (gameHeight - _contents.height) / 2;
-}
-
-- (void)onImageTouched:(SPTouchEvent *)event
-{
-    NSSet *touches = [event touchesWithTarget:self andPhase:SPTouchPhaseEnded];
-    if ([touches anyObject]) [Media playSound:@"sound.caf"];
+    //_contents.x = (int) (gameWidth  - _contents.width)  / 2;
+    //_contents.y = (int) (gameHeight - _contents.height) / 2;
+    
+    NSLog(@"%f %f", _contents.width, _contents.height);
+    NSLog(@"%d %d", gameWidth, gameHeight);
+    
 }
 
 - (void)onResize:(SPResizeEvent *)event
@@ -136,6 +146,15 @@
     NSLog(@"new size: %.0fx%.0f (%@)", event.width, event.height, 
           event.isPortrait ? @"portrait" : @"landscape");
     
+    [self updateLocations];
+}
+
+- (void)showScene:(SPSprite *)scene {
+    if ([_contents containsChild:_currentScene]) {
+        [_contents removeChild:_currentScene];
+    }
+    [_contents addChild:scene];
+    _currentScene = scene;
     [self updateLocations];
 }
 
