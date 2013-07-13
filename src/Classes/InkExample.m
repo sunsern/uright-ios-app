@@ -10,12 +10,13 @@
 
 #import "InkCharacter.h"
 
-@implementation InkExample
+@implementation InkExample 
 
 - (id)initWithInkCharacter:(InkCharacter *)ink label:(NSString *)label {
     self = [super init];
     if (self) {
-        _inkCharacter = ink;
+        _inkCharacter = [[InkCharacter alloc]
+                         initWithJSONObject:[ink toJSONObject]];
         _label = [label copy];
     }
     return self; 
@@ -25,16 +26,16 @@
     self = [super init];
     if (self) {
         _inkCharacter = [[InkCharacter alloc]
-                         initWithJSONObject:[jsonObj objectForKey:@"character"]];
-        _label = [[jsonObj objectForKey:@"label"] copy];
+                         initWithJSONObject:jsonObj[@"character"]];
+        _label = [jsonObj[@"label"] copy];
     }
     return self;
 }
 
 - (NSDictionary *)toJSONObject {
-    NSMutableDictionary *jsonObj = [[NSMutableDictionary alloc] initWithCapacity:2];
-    [jsonObj setObject:[_inkCharacter toJSONObject] forKey:@"character"];
-    [jsonObj setObject:_label forKey:@"label"];
+    NSMutableDictionary *jsonObj = [[NSMutableDictionary alloc] init];
+    jsonObj[@"character"] = [_inkCharacter toJSONObject];
+    jsonObj[@"label"] = _label;
     return jsonObj;
 }
 

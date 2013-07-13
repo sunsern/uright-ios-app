@@ -10,15 +10,20 @@
 
 @class BFClassifier;
 @class InkPoint;
+@class InkCharacter;
 
 @interface Canvas : SPSprite
 
-@property (weak) BFClassifier *dtw;
-@property double firstTouchTime;
-@property double lastTouchTime;
+@property (nonatomic,strong) InkCharacter *currentInkCharacter;
+@property (nonatomic,weak) BFClassifier *classifier;
+@property (readonly) double firstTouchTime;
+@property (readonly) double lastTouchTime;
+@property (readonly) float baseline;
+@property (readonly) float topline;
 
 - (id)initWithWidth:(float)width height:(float)height;
 - (void)clear;
-- (void)drawAtPoint:(InkPoint *)point;
+- (void)drawMarkerAt:(InkPoint *)point;
+- (void)setGuideVisible:(BOOL)visible;
 
 @end

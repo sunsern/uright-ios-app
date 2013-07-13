@@ -13,6 +13,7 @@
 
 @interface ServerManager : NSObject
 
++ (void)showConnectionError:(NSString *)message;
 + (NSDictionary *)fetchDataForUsername:(NSString *)username password:(NSString *)password;
 + (NSDictionary *)submitSessionData:(SessionData *)data;
 + (BOOL)isOnline;

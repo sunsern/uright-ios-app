@@ -12,6 +12,7 @@
 		1D60589F0D05DD5A006BFB54 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
 		1DF5F4E00D08C38300B7A737 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DF5F4DF0D08C38300B7A737 /* UIKit.framework */; };
 		288765FD0DF74451002DB57D /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 288765FC0DF74451002DB57D /* CoreGraphics.framework */; };
+		3C38FAF11791592E003CC8C0 /* RoundData.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C38FAF01791592D003CC8C0 /* RoundData.m */; };
 		3C89AB96178B572400874DC8 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C89AB95178B572400874DC8 /* CFNetwork.framework */; };
 		3C89AB98178B575100874DC8 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C89AB97178B575100874DC8 /* MobileCoreServices.framework */; };
 		3C89AB9A178B576200874DC8 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C89AB99178B576200874DC8 /* SystemConfiguration.framework */; };
@@ -27,10 +28,7 @@
 		3CA096351787890F000B8A0E /* button_big@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3CA096341787890F000B8A0E /* button_big@2x.png */; };
 		3CA0963B178B52A6000B8A0E /* JCSuperPriorityQueue.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3CA0963A178B52A6000B8A0E /* JCSuperPriorityQueue.mm */; };
 		3CA0964F178B52F0000B8A0E /* InkPoint.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CA0963E178B52F0000B8A0E /* InkPoint.m */; };
-		3CA09650178B52F0000B8A0E /* InkStroke.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CA09640178B52F0000B8A0E /* InkStroke.m */; };
 		3CA09651178B52F0000B8A0E /* InkCharacter.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CA09642178B52F0000B8A0E /* InkCharacter.m */; };
-		3CA09652178B52F0000B8A0E /* InkExample.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CA09644178B52F0000B8A0E /* InkExample.m */; };
-		3CA09653178B52F0000B8A0E /* ExampleSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CA09646178B52F0000B8A0E /* ExampleSet.m */; };
 		3CA09654178B52F0000B8A0E /* ClassificationResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CA09648178B52F0000B8A0E /* ClassificationResult.m */; };
 		3CA09655178B52F0000B8A0E /* SessionData.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CA0964A178B52F0000B8A0E /* SessionData.m */; };
 		3CA09656178B52F0000B8A0E /* UserStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CA0964C178B52F0000B8A0E /* UserStorage.m */; };
@@ -120,6 +118,8 @@
 		288765FC0DF74451002DB57D /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		32CA4F630368D1EE00C91783 /* App-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "App-Prefix.pch"; sourceTree = "<group>"; };
+		3C38FAEF1791592D003CC8C0 /* RoundData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RoundData.h; sourceTree = "<group>"; };
+		3C38FAF01791592D003CC8C0 /* RoundData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RoundData.m; sourceTree = "<group>"; };
 		3C89AB95178B572400874DC8 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
 		3C89AB97178B575100874DC8 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
 		3C89AB99178B576200874DC8 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
@@ -143,14 +143,8 @@
 		3CA0963A178B52A6000B8A0E /* JCSuperPriorityQueue.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = JCSuperPriorityQueue.mm; sourceTree = "<group>"; };
 		3CA0963D178B52F0000B8A0E /* InkPoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InkPoint.h; sourceTree = "<group>"; };
 		3CA0963E178B52F0000B8A0E /* InkPoint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InkPoint.m; sourceTree = "<group>"; };
-		3CA0963F178B52F0000B8A0E /* InkStroke.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InkStroke.h; sourceTree = "<group>"; };
-		3CA09640178B52F0000B8A0E /* InkStroke.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InkStroke.m; sourceTree = "<group>"; };
 		3CA09641178B52F0000B8A0E /* InkCharacter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InkCharacter.h; sourceTree = "<group>"; };
 		3CA09642178B52F0000B8A0E /* InkCharacter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InkCharacter.m; sourceTree = "<group>"; };
-		3CA09643178B52F0000B8A0E /* InkExample.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InkExample.h; sourceTree = "<group>"; };
-		3CA09644178B52F0000B8A0E /* InkExample.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InkExample.m; sourceTree = "<group>"; };
-		3CA09645178B52F0000B8A0E /* ExampleSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExampleSet.h; sourceTree = "<group>"; };
-		3CA09646178B52F0000B8A0E /* ExampleSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExampleSet.m; sourceTree = "<group>"; };
 		3CA09647178B52F0000B8A0E /* ClassificationResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ClassificationResult.h; sourceTree = "<group>"; };
 		3CA09648178B52F0000B8A0E /* ClassificationResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ClassificationResult.m; sourceTree = "<group>"; };
 		3CA09649178B52F0000B8A0E /* SessionData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SessionData.h; sourceTree = "<group>"; };
@@ -263,10 +257,11 @@
 		080E96DDFE201D6D7F000001 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				3CA0963C178B52C6000B8A0E /* Data */,
-				3CA09636178B5252000B8A0E /* Lib */,
+				3C38FAF2179160B5003CC8C0 /* Singletons */,
+				3CA0963C178B52C6000B8A0E /* DataStructure */,
+				3CA09636178B5252000B8A0E /* BFClassifier */,
 				3CA0962117874FC2000B8A0E /* Scenes */,
-				DE4F80D714E153EA00655D44 /* Game */,
+				DE4F80D714E153EA00655D44 /* MainController */,
 				1D3623240D0F684500981E51 /* AppDelegate.h */,
 				1D3623250D0F684500981E51 /* AppDelegate.m */,
 			);
@@ -340,6 +335,19 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		3C38FAF2179160B5003CC8C0 /* Singletons */ = {
+			isa = PBXGroup;
+			children = (
+				3CA0964D178B52F0000B8A0E /* GlobalStorage.h */,
+				3CA0964E178B52F0000B8A0E /* GlobalStorage.m */,
+				3CA0964B178B52F0000B8A0E /* UserStorage.h */,
+				3CA0964C178B52F0000B8A0E /* UserStorage.m */,
+				3CA09658178B5361000B8A0E /* ServerManager.h */,
+				3CA09659178B5361000B8A0E /* ServerManager.m */,
+			);
+			name = Singletons;
+			sourceTree = "<group>";
+		};
 		3CA0962117874FC2000B8A0E /* Scenes */ = {
 			isa = PBXGroup;
 			children = (
@@ -357,7 +365,7 @@
 			name = Scenes;
 			sourceTree = "<group>";
 		};
-		3CA09636178B5252000B8A0E /* Lib */ = {
+		3CA09636178B5252000B8A0E /* BFClassifier */ = {
 			isa = PBXGroup;
 			children = (
 				3CA09639178B52A6000B8A0E /* JCSuperPriorityQueue.h */,
@@ -366,35 +374,25 @@
 				3CA09638178B526B000B8A0E /* BFClassifier.m */,
 				3CE1B1871790AA320041D1BF /* BFPrototype.h */,
 				3CE1B1881790AA320041D1BF /* BFPrototype.m */,
-				3CA09658178B5361000B8A0E /* ServerManager.h */,
-				3CA09659178B5361000B8A0E /* ServerManager.m */,
 			);
-			name = Lib;
+			name = BFClassifier;
 			sourceTree = "<group>";
 		};
-		3CA0963C178B52C6000B8A0E /* Data */ = {
+		3CA0963C178B52C6000B8A0E /* DataStructure */ = {
 			isa = PBXGroup;
 			children = (
 				3CA0963D178B52F0000B8A0E /* InkPoint.h */,
 				3CA0963E178B52F0000B8A0E /* InkPoint.m */,
-				3CA0963F178B52F0000B8A0E /* InkStroke.h */,
-				3CA09640178B52F0000B8A0E /* InkStroke.m */,
 				3CA09641178B52F0000B8A0E /* InkCharacter.h */,
 				3CA09642178B52F0000B8A0E /* InkCharacter.m */,
-				3CA09643178B52F0000B8A0E /* InkExample.h */,
-				3CA09644178B52F0000B8A0E /* InkExample.m */,
-				3CA09645178B52F0000B8A0E /* ExampleSet.h */,
-				3CA09646178B52F0000B8A0E /* ExampleSet.m */,
 				3CA09647178B52F0000B8A0E /* ClassificationResult.h */,
 				3CA09648178B52F0000B8A0E /* ClassificationResult.m */,
 				3CA09649178B52F0000B8A0E /* SessionData.h */,
 				3CA0964A178B52F0000B8A0E /* SessionData.m */,
-				3CA0964B178B52F0000B8A0E /* UserStorage.h */,
-				3CA0964C178B52F0000B8A0E /* UserStorage.m */,
-				3CA0964D178B52F0000B8A0E /* GlobalStorage.h */,
-				3CA0964E178B52F0000B8A0E /* GlobalStorage.m */,
+				3C38FAEF1791592D003CC8C0 /* RoundData.h */,
+				3C38FAF01791592D003CC8C0 /* RoundData.m */,
 			);
-			name = Data;
+			name = DataStructure;
 			sourceTree = "<group>";
 		};
 		3CE1B1BE1790EE170041D1BF /* ASIHTTP */ = {
@@ -471,7 +469,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		DE4F80D714E153EA00655D44 /* Game */ = {
+		DE4F80D714E153EA00655D44 /* MainController */ = {
 			isa = PBXGroup;
 			children = (
 				DE4A3DE310FFB2AF00FDA492 /* Game.h */,
@@ -479,7 +477,7 @@
 				DE4F80D414E153E600655D44 /* Media.h */,
 				DE4F80D514E153E600655D44 /* Media.m */,
 			);
-			name = Game;
+			name = MainController;
 			sourceTree = "<group>";
 		};
 		DE4F80D914E1541400655D44 /* audio */ = {
@@ -680,10 +678,7 @@
 				1D3623260D0F684500981E51 /* AppDelegate.m in Sources */,
 				3CA0963B178B52A6000B8A0E /* JCSuperPriorityQueue.mm in Sources */,
 				3CA0964F178B52F0000B8A0E /* InkPoint.m in Sources */,
-				3CA09650178B52F0000B8A0E /* InkStroke.m in Sources */,
 				3CA09651178B52F0000B8A0E /* InkCharacter.m in Sources */,
-				3CA09652178B52F0000B8A0E /* InkExample.m in Sources */,
-				3CA09653178B52F0000B8A0E /* ExampleSet.m in Sources */,
 				3CA09654178B52F0000B8A0E /* ClassificationResult.m in Sources */,
 				3CA09655178B52F0000B8A0E /* SessionData.m in Sources */,
 				3CA09656178B52F0000B8A0E /* UserStorage.m in Sources */,
@@ -707,6 +702,7 @@
 				3CE1B1DB1790EE170041D1BF /* ASIInputStream.m in Sources */,
 				3CE1B1DC1790EE170041D1BF /* ASINetworkQueue.m in Sources */,
 				3CE1B1DD1790EE170041D1BF /* Reachability.m in Sources */,
+				3C38FAF11791592E003CC8C0 /* RoundData.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

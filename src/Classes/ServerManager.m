@@ -17,6 +17,15 @@
 
 @implementation ServerManager
 
++ (void)showConnectionError:(NSString *)message {
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection Error"
+                                                    message:message
+                                                   delegate:nil
+                                          cancelButtonTitle:@"Ok"
+                                          otherButtonTitles:nil];
+    [alert show];
+}
+
 + (BOOL)isOnline {
     NetworkStatus internetStatus = [[Reachability reachabilityForInternetConnection]
                                     currentReachabilityStatus];
@@ -88,6 +97,72 @@
     }
     return nil;
 }
+
+
+
+- (void)synchronizeData {
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Please wait"
+                                                    message:@"Synchronizing data..."
+                                                   delegate:nil
+                                          cancelButtonTitle:nil
+                                          otherButtonTitles:nil];
+    [alert show];
+    if(alert != nil) {
+        UIActivityIndicatorView *indicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+        
+        indicator.center = CGPointMake(alert.bounds.size.width/2, alert.bounds.size.height-45);
+        [indicator startAnimating];
+        [alert addSubview:indicator];
+    }
+    
+    dispatch_async(serialQueue_, ^{
+        // submit saved sessions
+        if ([ServerManager isOnline]) {
+            NSMutableArray *sessions = [_userdata sessions];
+            NSLog(@"%d saved sessions",[sessions count]);
+            while ([sessions count] > 0) {
+                SessionData *session = [[SessionData alloc]
+                                        initWithJSONObject:[sessions objectAtIndex:0]];
+                if (![ServerManager submitSessionData:session]) {
+                    NSLog(@"Fail to send, aborting");
+                    break;
+                } else {
+                    [sessions removeObjectAtIndex:0];
+                    NSLog(@"Session sent!");
+                }
+            }
+        }
+        
+        // Fetch new data
+        NSDictionary *jsonObj = [ServerManager fetchDataForUsername:[_userdata username]
+                                                           password:[_userdata password]];
+        
+        if (jsonObj != nil) {
+            _languages = [jsonObj objectForKey:@"languages"];
+            [self saveGlobalData];
+            
+            NSDictionary *classifiers = [jsonObj objectForKey:@"classifiers"];
+            [_userdata setClassifiers:[[NSMutableDictionary alloc]
+                                       initWithDictionary:classifiers]];
+            // rebuild cache
+            [_userdata switchToLanguageId:[_userdata languageId]];
+            NSLog(@"Classifiers updated");
+            [self saveUserData];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [alert dismissWithClickedButtonIndex:0 animated:YES];
+            });
+            
+        } else {
+            [self saveUserData];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [alert dismissWithClickedButtonIndex:0 animated:YES];
+                [ServerManager showConnectionError:@"Connect to the internet to synchronize your data."];
+            });
+        }
+    });
+}
+
+
 
 
 

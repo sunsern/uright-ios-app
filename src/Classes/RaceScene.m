@@ -120,7 +120,7 @@
     [_dtw setDelegate:self];
     [_dtw setBeamCount:800];
     
-    [_canvas setDtw:_dtw];
+    [_canvas setClassifier:_dtw];
 }
 
 - (void)restartRace {
@@ -249,7 +249,7 @@
 - (void)thresholdReached:(InkPoint *)point {
     if (!_soundPlayed) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [_canvas drawAtPoint:point];
+            [_canvas drawMarkerAt:point];
             _soundPlayed = YES;
             [Media playSound:@"DING.caf"];
         });

@@ -1,6 +1,6 @@
 //
 //  UserStorage.h
-//  uRight2
+//  uRight3
 //
 //  Created by Sunsern Cheamanunkul on 11/6/12.
 //
@@ -8,14 +8,10 @@
 
 #import <Foundation/Foundation.h>
 
-@class DtwClassifier;
-@class ExampleSet;
-
 @interface UserStorage : NSObject
 
 @property (readonly) int userId;
 @property (readonly) int languageId;
-@property (readwrite) float characterDelay;
 @property (nonatomic,copy) NSString *username;
 @property (nonatomic,copy) NSString *password;
 // (key:value) = (languageId:jsonObject)
@@ -46,5 +42,10 @@
 
 - (void)updateClassifier:(NSDictionary *)c
              forLanguage:(int)languageId;
+
+// Serialization
+- (id)initWithJSONObject:(NSDictionary *)jsonObj;
+- (NSDictionary *)toJSONObject;
+
 
 @end

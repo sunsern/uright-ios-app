@@ -3,14 +3,13 @@
 //  uRight
 //
 //  Created by Sunsern Cheamanunkul on 4/2/12.
-//  Copyright 2012 __MyCompanyName__. All rights reserved.
 //
 
 #import "InkPoint.h"
 
 @implementation InkPoint
 
-- (id)initWithX:(float)px y:(float)py t:(double)pt {
+- (id)initWithX:(float)px y:(float)py t:(double)pt penup:(BOOL)penup {
 	self = [super init];
 	if (self) {
 		_x = px;
@@ -18,21 +17,25 @@
 		_t = pt;
         _dx = 0;
         _dy = 0;
-        _penup = NO;
+        _penup = penup;
 	}
 	return self;
 }
 
+- (id)initWithX:(float)px y:(float)py t:(double)pt {
+	return [self initWithX:px y:py t:pt penup:NO];
+}
+
 - (id)initWithX:(float)px y:(float)py {
-	return [self initWithX:px y:py t:0];
+	return [self initWithX:px y:py t:0 penup:NO];
 }
 
 - (id)initWithInkPoint:(InkPoint *)ip {
-    return [self initWithX:ip.x y:ip.y t:ip.t];
+    return [self initWithX:ip.x y:ip.y t:ip.t penup:ip.penup];
 }
 
 - (id)init {
-	return [self initWithX:0 y:0 t:0];
+	return [self initWithX:0 y:0 t:0 penup:NO];
 }
 
 + (double)locationDistanceFrom:(InkPoint *)p1 to:(InkPoint *)p2 {
@@ -43,21 +46,8 @@
 	return pow(p1.dx - p2.dx,2) + pow(p1.dy - p2.dy,2);
 }
 
-- (id)initWithPenUp {
-    self = [super init];
-	if (self) {
-		_x = 0;
-		_y = 0;
-		_t = 0;
-        _dx = 0;
-        _dy = 0;
-        _penup = YES;
-	}
-	return self;
-}
-
 + (id)penupPoint {
-    return [[self alloc] initWithPenUp];
+    return [[self alloc] initWithX:0 y:0 t:0 penup:YES];
 }
 
 @end
