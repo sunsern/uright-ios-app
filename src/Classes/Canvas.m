@@ -7,7 +7,7 @@
 //
 
 #import "Canvas.h"
-#import "DtwOnlineClassifier.h"
+#import "BFClassifier.h"
 #import "InkPoint.h"
 
 #define kBrushSize 10
@@ -71,7 +71,7 @@
 
 - (void)clear {
     [_renderTexture clearWithColor:0x000000 alpha:1.0f];
-    [_dtw resetClassifier];
+    [_dtw reset];
 }
 
 - (void)updateCanvas:(SPEnterFrameEvent *)event {
@@ -111,7 +111,7 @@
             _firstTouchTime = p.t;
         }
         
-        [_dtw addPointWithX:p.x y:p.y t:p.t];
+        [_dtw addPoint:p];
        
     }
 	SPTouch *touchMove = [[event touchesWithTarget:self andPhase:SPTouchPhaseMoved] anyObject];
@@ -125,7 +125,7 @@
                                                 t:[NSDate timeIntervalSinceReferenceDate]];
      
         
-        [_dtw addPointWithX:p.x y:p.y t:p.t];
+        [_dtw addPoint:p];
 
     }
     
@@ -138,7 +138,7 @@
         
         _lastTouchTime = [NSDate timeIntervalSinceReferenceDate];
         
-        [_dtw addPenUp];
+        [_dtw addPoint:[InkPoint penupPoint]];
 	}
 }
 

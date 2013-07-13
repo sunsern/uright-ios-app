@@ -8,7 +8,7 @@
 
 #import "RaceScene.h"
 #import "Canvas.h"
-#import "DtwOnlineClassifier.h"
+#import "BFClassifier.h"
 #import "ExampleSet.h"
 #import "Media.h"
 
@@ -20,7 +20,7 @@
     SPTextField *_totalScore;
     SPTextField *_totalTime;
     SPTextField *_bps;
-    DtwOnlineClassifier *_dtw;
+    BFClassifier *_dtw;
     NSString *_testString;
     int _currentIdx;
     NSMutableArray *_results;
@@ -116,9 +116,9 @@
     
     UserStorage *us = [[GlobalStorage sharedInstance] userdata];
     ExampleSet *englishSet = [[ExampleSet alloc] initWithJSONObject:[[us classifiers] objectForKey:@"1"]];
-    _dtw = [[DtwOnlineClassifier alloc] initWithExampleSet:englishSet];
+    _dtw = [[BFClassifier alloc] initWithExampleSet:englishSet];
     [_dtw setDelegate:self];
-    [_dtw setBeamCount:500];
+    [_dtw setBeamCount:1000];
     
     [_canvas setDtw:_dtw];
 }
@@ -132,7 +132,8 @@
     _totalTime.text = @"0.00";
     _bps.text = @"0.00";
     
-    _testString = [self shuffleString:@"abcdefghijklmnopqrstuvwxyz"];
+    //_testString = [self shuffleString:@"abcdefghijklmnopqrstuvwxyz"];
+    _testString = @"nh";
     _currentIdx = 0;
     _score = 0;
     _time = 0;
@@ -246,16 +247,16 @@
 }
 
 
-- (void)updateUI:(float)v {
-    //NSDictionary *likelihood = [_dtw likelihood];
-    //float p = 1.0 / [likelihood[_targetLabel.text] floatValue];
-    float p = 1.0 / v;
-    _currentScore = MAX(log2(26) - log2(p), 0);
-    
-    if (!_soundPlayed && log2(p) < 1.0) {
+- (void)thresholdReached {
+    if (!_soundPlayed) {
         _soundPlayed = YES;
         [Media playSound:@"DING.caf"];
     }
+}
+
+- (void)updateScore:(float)v {
+    float p = 1.0 / v;
+    _currentScore = MAX(log2(26) - log2(p), 0);
 }
 
 

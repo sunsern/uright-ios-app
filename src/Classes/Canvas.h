@@ -8,11 +8,11 @@
 
 #import "SPSprite.h"
 
-@class DtwOnlineClassifier;
+@class BFClassifier;
 
 @interface Canvas : SPSprite
 
-@property (weak) DtwOnlineClassifier *dtw;
+@property (weak) BFClassifier *dtw;
 @property double firstTouchTime;
 @property double lastTouchTime;
 

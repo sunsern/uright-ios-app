@@ -7,8 +7,8 @@
 //
 
 #import "Scene.h"
-#import "DtwOnlineClassifier.h"
+#import "BFClassifier.h"
 
-@interface RaceScene : Scene <PredictionReadyDelegate>
+@interface RaceScene : Scene <BFClassifierDelegate>
 
 @end
