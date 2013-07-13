@@ -105,7 +105,6 @@
     } else {
         _exampleSet = [[ExampleSet alloc] initWithJSONObject:jsonObj];
         _dtwClassifier = nil;
-
     }
 }
 

@@ -118,7 +118,7 @@
     ExampleSet *englishSet = [[ExampleSet alloc] initWithJSONObject:[[us classifiers] objectForKey:@"1"]];
     _dtw = [[BFClassifier alloc] initWithExampleSet:englishSet];
     [_dtw setDelegate:self];
-    [_dtw setBeamCount:1000];
+    [_dtw setBeamCount:800];
     
     [_canvas setDtw:_dtw];
 }
@@ -132,8 +132,7 @@
     _totalTime.text = @"0.00";
     _bps.text = @"0.00";
     
-    //_testString = [self shuffleString:@"abcdefghijklmnopqrstuvwxyz"];
-    _testString = @"nh";
+    _testString = [self shuffleString:@"abcdefghijklmnopqrstuvwxyz"];
     _currentIdx = 0;
     _score = 0;
     _time = 0;
@@ -247,10 +246,13 @@
 }
 
 
-- (void)thresholdReached {
+- (void)thresholdReached:(InkPoint *)point {
     if (!_soundPlayed) {
-        _soundPlayed = YES;
-        [Media playSound:@"DING.caf"];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [_canvas drawAtPoint:point];
+            _soundPlayed = YES;
+            [Media playSound:@"DING.caf"];
+        });
     }
 }
 
@@ -264,7 +266,7 @@
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
     SPTouch *touchEnd = [[event touchesWithTarget:self andPhase:SPTouchPhaseEnded] anyObject];
     if(touchEnd){
-        [self performSelector:@selector(endRound) withObject:nil afterDelay:1.3];
+        [self performSelector:@selector(endRound) withObject:nil afterDelay:2.0];
     }
 }
 

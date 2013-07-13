@@ -13,7 +13,7 @@
 @class InkPoint;
 
 @protocol BFClassifierDelegate
-- (void)thresholdReached;
+- (void)thresholdReached:(InkPoint *)point;
 - (void)updateScore:(float)v;
 @end
 

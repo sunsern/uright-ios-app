@@ -40,8 +40,15 @@ NSArray* ink2array(InkCharacter *ink) {
         self.label = ink.label;
         self.prior = prior;
         self.pointArray = ink2array([ink.inkCharacter normalizedCharacter]);
+        if ([ink.label isEqualToString:@"a"]) {
+            NSLog(@"%@",self.pointArray);
+        }
     }
     return self;
+}
+
+- (int)length {
+    return [self.pointArray count];
 }
 
 @end

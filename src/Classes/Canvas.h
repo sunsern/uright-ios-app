@@ -9,6 +9,7 @@
 #import "SPSprite.h"
 
 @class BFClassifier;
+@class InkPoint;
 
 @interface Canvas : SPSprite
 
@@ -18,5 +19,6 @@
 
 - (id)initWithWidth:(float)width height:(float)height;
 - (void)clear;
+- (void)drawAtPoint:(InkPoint *)point;
 
 @end

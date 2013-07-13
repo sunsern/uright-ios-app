@@ -17,5 +17,6 @@
 @property (readwrite) float prior;
 
 - (id)initWithInkExample:(InkExample *)ink prior:(float)prior;
+- (int)length;
 
 @end

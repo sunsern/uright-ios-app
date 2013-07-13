@@ -11,7 +11,8 @@
 #import "InkPoint.h"
 
 #define kBrushSize 10
-#define kBrushColor [UIColor blueColor]
+#define kDefaultColor 0x0000ff
+#define kSpecialColor 0xff0000
 
 @implementation Canvas {
     SPImage *_brush;
@@ -21,6 +22,7 @@
     CGPoint _lastTouch;
     CGPoint _newTouch;
     BOOL _drawing;
+    InkPoint *_marker;
 }
 
 - (id)initWithWidth:(float)width height:(float)height {
@@ -32,13 +34,14 @@
                    height:kBrushSize
                    draw:^(CGContextRef context) {
                        CGRect circle = CGRectMake(0, 0, kBrushSize, kBrushSize);
-                       CGContextSetFillColorWithColor(context, kBrushColor.CGColor);
+                       CGContextSetFillColorWithColor(context, [[UIColor whiteColor] CGColor]);
                        CGContextFillEllipseInRect(context, circle);
                    }];
         
         _brush = [[SPImage alloc] initWithTexture:_circle];
         _brush.pivotX = (int)(_brush.width / 2);
         _brush.pivotY = (int)(_brush.height / 2);
+        _brush.color = kDefaultColor;
         _brush.blendMode = SP_BLEND_MODE_NORMAL;
         
         _renderTexture = [[SPRenderTexture alloc]
@@ -46,6 +49,7 @@
         
         _canvas = [[SPImage alloc] initWithTexture:_renderTexture];
         _drawing = NO;
+        _marker = nil;
         
         [self addChild:_canvas];
         
@@ -72,13 +76,14 @@
 - (void)clear {
     [_renderTexture clearWithColor:0x000000 alpha:1.0f];
     [_dtw reset];
+    _marker = nil;
 }
 
 - (void)updateCanvas:(SPEnterFrameEvent *)event {
     if (_drawing) {
         // group the draw calls together for speed
 		[_renderTexture drawBundled:^{
-            int numSteps = 10;
+            int numSteps = 8;
             double incX = (_newTouch.x - _lastTouch.x)/numSteps;
 			double incY = (_newTouch.y - _lastTouch.y)/numSteps;
 			_brush.x = _lastTouch.x;
@@ -89,8 +94,35 @@
 				_brush.x += incX;
 				_brush.y += incY;
             }
+            
+            if (_marker) {
+                _brush.x = _marker.x;
+                _brush.y = _marker.y;
+                _brush.scaleX = 2.0;
+                _brush.scaleY = 2.0;
+                _brush.color = kSpecialColor;
+                [_renderTexture drawObject:_brush];
+                _marker = nil;
+                _brush.color = kDefaultColor;
+                _brush.scaleX = 1.0;
+                _brush.scaleY = 1.0;
+            }
+            
 		}];
 		_lastTouch = CGPointMake(_newTouch.x, _newTouch.y);
+    }
+    
+    if (_marker) {
+        _brush.x = _marker.x;
+        _brush.y = _marker.y;
+        _brush.scaleX = 2.0;
+        _brush.scaleY = 2.0;
+        _brush.color = kSpecialColor;
+        [_renderTexture drawObject:_brush];
+        _marker = nil;
+        _brush.color = kDefaultColor;
+        _brush.scaleX = 1.0;
+        _brush.scaleY = 1.0;
     }
 }
 
@@ -103,8 +135,10 @@
 		_newTouch = CGPointMake(touchPosition.x, touchPosition.y);
          _drawing = YES;
         
-        InkPoint *p = [[InkPoint alloc] initWithX:(_lastTouch.x / self.width)*4.0 - 2.0
-                                                y:(_lastTouch.y / self.height)*1.4 - 0.2
+        float w = self.width;
+        float h = self.height;
+        InkPoint *p = [[InkPoint alloc] initWithX:(_lastTouch.x/w)*3.0 - 1.5
+                                                y:(_lastTouch.y/h)*1.3 - 0.15
                                                 t:[NSDate timeIntervalSinceReferenceDate]];
         
         if (_firstTouchTime == 0.0) {
@@ -120,11 +154,11 @@
 		_newTouch = CGPointMake(touchPosition.x, touchPosition.y);
         _drawing = YES;
        
-        InkPoint *p = [[InkPoint alloc] initWithX:(_lastTouch.x / self.width)*4.0 - 2.0
-                                                y:(_lastTouch.y / self.height)*1.4 - 0.2
+        float w = self.width;
+        float h = self.height;
+        InkPoint *p = [[InkPoint alloc] initWithX:(_lastTouch.x/w)*3.0 - 1.5
+                                                y:(_lastTouch.y/h)*1.3 - 0.15
                                                 t:[NSDate timeIntervalSinceReferenceDate]];
-     
-        
         [_dtw addPoint:p];
 
     }
@@ -138,9 +172,21 @@
         
         _lastTouchTime = [NSDate timeIntervalSinceReferenceDate];
         
-        [_dtw addPoint:[InkPoint penupPoint]];
+        float w = self.width;
+        float h = self.height;
+        InkPoint *p = [[InkPoint alloc] initWithX:(_lastTouch.x/w)*3.0 - 1.5
+                                                y:(_lastTouch.y/h)*1.3 - 0.15
+                                                t:[NSDate timeIntervalSinceReferenceDate]];
+        p.penup = YES;
+        [_dtw addPoint:p];
 	}
 }
 
+- (void)drawAtPoint:(InkPoint *)point {
+    _marker = [[InkPoint alloc] initWithInkPoint:point];
+    _marker.x = ((point.x + 1.5) / 3.0) * self.width;
+    _marker.y = ((point.y + 0.15) / 1.3) * self.height;
+    NSLog(@"%f %f", _marker.x, _marker.y);
+}
 
 @end
