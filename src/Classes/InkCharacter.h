@@ -31,8 +31,8 @@
                                      topline:(float)topline;
 
 // Serialization
-- (id)initWithJSONObject:(NSDictionary *)jsonObj;
-- (NSDictionary *)toJSONObject;
+- (id)initWithJSONObject:(id)jsonObj;
+- (id)toJSONObject;
 
 // Duration of the current character
 - (double)duration;

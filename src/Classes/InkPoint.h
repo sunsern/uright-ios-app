@@ -23,6 +23,9 @@
 // Initialize the sample point with given x,y and t.
 - (id)initWithX:(float)px y:(float)py t:(double)pt;
 
+// Initialize the sample point with given x,y
+- (id)initWithX:(float)px y:(float)py;
+
 // Initialize with another InkPoint
 - (id)initWithInkPoint:(InkPoint *)ip;
 

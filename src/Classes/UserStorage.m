@@ -8,37 +8,74 @@
 
 #import "UserStorage.h"
 
-#import "ExampleSet.h"
+#import "BFClassifier.h"
+#import "SessionData.h"
 
 #define kMaxScoreHistory 10
-#define HEBREW_LANGUAGE_ID 3
 
 @implementation UserStorage
 
-- (id)initWithUserId:(int)userId languageId:(int)languageId {
+- (id)init {
     self = [super init];
     if (self) {
-        _userId = userId;
-        _languageId = languageId;
-        _sessions = [[NSMutableArray alloc] init];
-        _scores = [[NSMutableDictionary alloc] init];
-        _classifiers = [[NSMutableDictionary alloc]
-                        initWithDictionary:[self defaultClassifier]];
+        _userId = -1;
+        _languageId = -1;
+        _username = @"";
+        _password = @"";
+        _classifiers = [[NSMutableDictionary alloc] init];
         _sessions = [[NSMutableArray alloc] init];
         _scores = [[NSMutableDictionary alloc] init];        
     }
     return self;
 }
 
+- (id)initWithJSONObject:(NSDictionary *)jsonObj {
+    self = [super init];
+    if (self) {
+        _userId = [jsonObj[@"userId"] intValue];
+        _languageId = [jsonObj[@"languageId"] intValue];
+        _username = [jsonObj[@"username"] copy];
+        _password = [jsonObj[@"password"] copy];
+        _classifiers = [[NSMutableDictionary alloc] init];
+        NSDictionary *classifiers = jsonObj[@"classifiers"];
+        for (id key in classifiers) {
+            _classifiers[key] = [[BFClassifier alloc]
+                                 initWithJSONObject:classifiers[key]];
+        }
+        _sessions = [[NSMutableArray alloc]
+                     initWithArray:jsonObj[@"sessions"]];
+        _scores = [[NSMutableDictionary alloc]
+                   initWithDictionary:jsonObj[@"scores"]];
+    }
+    return self;
+}
+
+
+- (NSDictionary *)toJSONObject {
+    NSMutableDictionary *jsonObj = [[NSMutableDictionary alloc] init];
+    jsonObj[@"userId"] = @(_userId);
+    jsonObj[@"languageId"] = @(_languageId);
+    jsonObj[@"username"] = _username;
+    jsonObj[@"password"] = _password;
+    jsonObj[@"sessions"] = _sessions;
+    jsonObj[@"scores"] = _scores;
+    NSMutableDictionary *classifiers = [[NSMutableDictionary alloc] init];
+    for (id key in _classifiers) {
+        classifiers[key] = [_classifiers[key] toJSONObject];
+    }
+    jsonObj[@"classifiers"] = classifiers;
+    return jsonObj;
+}
+
 - (void)addScore:(float)score {
-    NSString *key = [NSString stringWithFormat:@"%d",_languageId];
-    NSDictionary *scoreStruct = [_scores objectForKey:key];
+    NSString *key = [@(_languageId) stringValue];
+    NSDictionary *scoreStruct = _scores[key];
     if (scoreStruct != nil) {
-        float max_score = [[scoreStruct objectForKey:@"maxscore"] floatValue];
-        float avg_score = [[scoreStruct objectForKey:@"avgscore"] floatValue];
-        int num_sessions = [[scoreStruct objectForKey:@"numsessions"] intValue];
+        float max_score = [scoreStruct[@"maxscore"] floatValue];
+        float avg_score = [scoreStruct[@"avgscore"] floatValue];
+        int num_sessions = [scoreStruct[@"numsessions"] intValue];
         NSMutableArray *scoreArray = [[NSMutableArray alloc] initWithArray:
-                                      [scoreStruct objectForKey:@"scores"]];
+                                      scoreStruct[@"scores"]];
         if (score > max_score) {
             max_score = score;
         }
@@ -52,76 +89,52 @@
                                          @"avgscore":@(avg_score),
                                          @"numsessions":@(num_sessions),
                                          @"scores":scoreArray};
-        [_scores setObject:newScoreStruct forKey:key];
+        _scores[key] = newScoreStruct;
     } else {
         NSDictionary *newScoreStruct = @{@"maxscore":@(score),
                                          @"avgscore":@(score),
                                          @"numsessions":@(1),
                                          @"scores":@[@(score)]};
-        [_scores setObject:newScoreStruct forKey:key];
+        _scores[key] = newScoreStruct;
     }
 }
 
 - (NSArray *)scoreArray {
-    NSString *key = [NSString stringWithFormat:@"%d",_languageId];
-    return [[_scores objectForKey:key] objectForKey:@"scores"];
+    return _scores[[@(_languageId) stringValue]][@"scores"];
 }
 
 - (float)bestScore {
-    NSString *key = [NSString stringWithFormat:@"%d",_languageId];
-    NSDictionary *scoreStruct = [_scores objectForKey:key];
+    NSDictionary *scoreStruct = _scores[[@(_languageId) stringValue]];
     if (scoreStruct == nil) {
         return 0.0;
     } else {
-        return [[scoreStruct objectForKey:@"maxscore"] floatValue];
+        return [scoreStruct[@"maxscore"] floatValue];
     }
 }
 
-- (NSDictionary *)defaultClassifier {
-    NSString *filePath = [[NSBundle mainBundle]
-                          pathForResource:@"global_proto.json" ofType:@""];
-    NSData *data = [[NSData alloc] initWithContentsOfFile:filePath];
-    NSError *error;
-    return [NSJSONSerialization JSONObjectWithData:data
-                                           options:kNilOptions
-                                             error:&error];
-}
-
-- (void)addSession:(NSDictionary *)jsonData {
-    [_sessions addObject:jsonData];
+- (void)addSessionJSON:(id)sessionJSON {
+    [_sessions addObject:sessionJSON];
 }
 
 // Build cache
 - (void)switchToLanguageId:(int)langId {
     _languageId = langId;
-    NSString *langIdStr = [NSString stringWithFormat:@"%d",_languageId];
-    NSDictionary *jsonObj = [_classifiers objectForKey:langIdStr];
-    
-    _labelArray = [[[[GlobalStorage sharedInstance] languages]
-                    objectForKey:langIdStr] objectForKey:@"characters"];
-  
-    if (jsonObj == nil) {
-        _dtwClassifier = nil;
-    } else {
-        _exampleSet = [[ExampleSet alloc] initWithJSONObject:jsonObj];
-        _dtwClassifier = nil;
-    }
 }
 
-- (int)classifierId {
-    return [_exampleSet classifier_id];
+- (void)setClassifier:(BFClassifier *)classifier
+          forLanguage:(int)languageId {
+    _classifiers[[@(languageId) stringValue]] = classifier;
+}
+
+- (BFClassifier *)classifier {
+    return _classifiers[[@(_languageId) stringValue]];
 }
 
 - (NSString *)languageName {
     GlobalStorage *gs = [GlobalStorage sharedInstance];
-    NSDictionary *langInfo = [[gs languages]
-                              objectForKey:[NSString stringWithFormat:@"%d",_languageId]];
-    return [langInfo objectForKey:@"name"];
+    LanguageInfo *langInfo = [gs.languages languageWithId:_languageId];
+    return langInfo.languageName;
 }
 
-- (void)updateClassifier:(NSDictionary *)c forLanguage:(int)languageId {
-    NSString *langId = [NSString stringWithFormat:@"%d",languageId];
-    [_classifiers setObject:c forKey:langId];
-}
 
 @end

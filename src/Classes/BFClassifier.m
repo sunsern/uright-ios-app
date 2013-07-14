@@ -1,28 +1,55 @@
 //
-//  DtwOnlineClassifier.m
-//  uRight2
+//  BFClassifier.m
+//  uRight3
 //
 //  Created by Sunsern Cheamanunkul on 12/8/12.
 //
 //
 
 #import "BFClassifier.h"
-#import "ExampleSet.h"
-#import "InkExample.h"
-#import "InkPoint.h"
 #import "BFPrototype.h"
+#import "InkPoint.h"
 
 #define kAlpha 0.5
 #define kSkip 3
-#define kQueueThreshold -10.0 
+#define kQueueThreshold -10.0
+#define kBeamWidth 500
+#define kLikelihoodThreshold 1.0
+#define kIgnoreAddpoint 0.0002
 
-#define HASHKEY(x,y) ([NSNumber numberWithInteger:x*1000 + y])
+#define HASHKEY(x,y) ([SimpleHashKey hashkey:((x)*1000+(y))])
+#define logsumexp(x,y) ((x)<(y) ? y+log(1+exp(x-y)) : x+log(1+exp(y-x)))
 
-float logsumexp(float x,float y) {
-    float temp;
-    temp = MAX(x,y);
-    return temp + log(exp(x-temp) + exp(y-temp));
+///////////////////////
+
+@interface SimpleHashKey : NSObject <NSCopying>
+@property int key;
++ (id)hashkey:(int)key;
+@end
+
+@implementation SimpleHashKey
++ (id)hashkey:(int)key {
+    id obj = [[[self class] alloc] init];
+    [obj setKey:key];
+    return obj;
 }
+- (id)copyWithZone:(NSZone *)zone {
+    id copy = [[[self class] allocWithZone:zone] init];
+    if (copy) {
+        [copy setKey:_key];
+    }
+    return copy;
+}
+- (BOOL)isEqual:(id)object {
+    SimpleHashKey *other = (SimpleHashKey *)object;
+    return _key == other.key;
+}
+- (NSUInteger)hash {
+    return _key;
+}
+@end
+
+/////////////////////
 
 @interface StateData : NSObject
 @property (readwrite) float alpha;
@@ -33,6 +60,9 @@ float logsumexp(float x,float y) {
 @implementation StateData
 @end
 
+/////////////////////
+
+
 @interface CacheData : NSObject
 @property (readwrite) float cost;
 @property (nonatomic, strong) StateData *state;
@@ -41,68 +71,73 @@ float logsumexp(float x,float y) {
 @implementation CacheData
 @end
 
+/////////////////////
+
+static dispatch_queue_t __serialQueue = NULL;
+
 @implementation BFClassifier  {
     JCSuperPriorityQueue *_beamPQ;
     NSArray *_prototypes;
-    InkPoint *_sumSqPoint;
-    InkPoint *_sumPoint;
     InkPoint *_prevPoint;
-    int _pointCount;
     NSMutableDictionary *_likelihood;
     NSMutableDictionary *_finalLikelihood;
-    dispatch_queue_t _serialQueue;
     NSMutableDictionary *_cacheDict;
+    // Save this for serialization
+    NSDictionary *_jsonObj;
 }
 
-- (id)initWithExampleSet:(ExampleSet *)exSet {
++ (dispatch_queue_t)serialQueue {
+    if (__serialQueue != NULL) {
+        return __serialQueue;
+    }
+    static dispatch_once_t pred;
+    dispatch_once(&pred, ^{
+        __serialQueue = dispatch_queue_create("uRight3.BFClassifier", NULL);
+    });
+    return __serialQueue;
+}
+
+- (id)initWithJSONObject:(id)jsonObj {
     self = [super init];
     if (self) {
-        _serialQueue = dispatch_queue_create("uRight.DtwOnlineClassifier", NULL);
-        NSDictionary *dict = [exSet examples];
-        NSArray *labelArray = [dict allKeys];
+        // create a queue if not yet
+        [[self class] serialQueue];
         NSMutableArray *prototypes = [[NSMutableArray alloc] init];
-        for (int i=0; i < [labelArray count];i++) {
-            NSString *label = [labelArray objectAtIndex:i];
-            NSArray *examples = [dict objectForKey:label];
-            NSLog(@"%@ = %d", label, [examples count]);
-            for (InkExample *inkEx in examples) {
-                BFPrototype *pData = [[BFPrototype alloc] initWithInkExample:inkEx
-                                                                       prior:0.0];
-                [prototypes addObject:pData];
-            }
+        for (id protoJSON in jsonObj[@"prototypes"]) {
+            BFPrototype *p = [[BFPrototype alloc] initWithJSONObject:protoJSON];
+            [prototypes addObject:p];
         }
-        _beamCount = 500;
+        _classifierId = [jsonObj[@"classifier_id"] intValue];
+        _beamCount = kBeamWidth;
+        _targetThreshold = kLikelihoodThreshold;
         _prototypes = prototypes;
         _beamPQ = [[JCSuperPriorityQueue alloc] init];
         _likelihood = [[NSMutableDictionary alloc] init];
         _finalLikelihood = [[NSMutableDictionary alloc] init];
         _cacheDict = [[NSMutableDictionary alloc] init];
+        _jsonObj = [jsonObj copy];
         [self reset];
     }
     return self;
 }
 
-
-- (void)dealloc {
-    dispatch_release(_serialQueue);
+- (id)toJSONObject {
+    return _jsonObj;
 }
 
 
 // sync method
 - (void)reset {
-    dispatch_sync(_serialQueue, ^{
-        NSLog(@"Reset classifier");
+    dispatch_sync([[self class]serialQueue], ^{
+        //NSLog(@"Reset classifier");
         [_beamPQ clear];
         for (int i=0; i<[_prototypes count];i++) {
-            StateData *s = [[StateData alloc] init];
-            s.alpha = ((BFPrototype *)_prototypes[i]).prior;
-            s.prototypeIdx = i;
-            s.stateIdx = -1;
-            [_beamPQ addObject:s value:s.alpha];
+            StateData *state = [[StateData alloc] init];
+            state.alpha = log(((BFPrototype *)_prototypes[i]).prior);
+            state.prototypeIdx = i;
+            state.stateIdx = -1;
+            [_beamPQ addObject:state value:state.alpha];
         }
-        _pointCount = 0;
-        _sumPoint = [[InkPoint alloc] init];
-        _sumSqPoint = [[InkPoint alloc] init];
         _prevPoint = nil;
     });
 }
@@ -120,7 +155,6 @@ float logsumexp(float x,float y) {
         float d_dir = [InkPoint directionDistanceFrom:a to:b];
         float d_loc = [InkPoint locationDistanceFrom:a to:b];
         float d_final = kAlpha*d_loc + (1.0 - kAlpha)*d_dir;
-        
         return -d_final;
     }
 }
@@ -137,7 +171,7 @@ float logsumexp(float x,float y) {
     CacheData *data = _cacheDict[key];
     float cost = 0;
     if (data == nil) {
-        cost = [BFClassifier computeCostInkPoint:(pData.pointArray)[stateIdx]
+        cost = [[self class] computeCostInkPoint:(pData.pointArray)[stateIdx]
                                               to:inputPoint];
         StateData *state = [[StateData alloc] init];
         state.prototypeIdx = prototypeIdx;
@@ -160,30 +194,30 @@ float logsumexp(float x,float y) {
 - (void)addPoint:(InkPoint *)point {
     
     if (!point.penup && _prevPoint &&
-        [InkPoint locationDistanceFrom:point to:_prevPoint] < 0.0002) {
-        NSLog(@"DENIED");
+        [InkPoint locationDistanceFrom:point to:_prevPoint] < kIgnoreAddpoint) {
+        //NSLog(@"Point too close to the previous point, ignoring");
         return;
     }
     
-    dispatch_async(_serialQueue, ^{
+    dispatch_async([[self class] serialQueue], ^{
         
+        // Compute dx, dy
         if (!point.penup && _prevPoint) {
             float dx = point.x - _prevPoint.x;
             float dy = point.y - _prevPoint.y;
             float norm = sqrt(dx*dx+dy*dy);
-            point.dx = dx / MAX(norm,1e-5);
-            point.dy = dy / MAX(norm,1e-5);
+            point.dx = dx / MAX(norm,1e-6);
+            point.dy = dy / MAX(norm,1e-6);
         }
         
         //[_cacheDict removeAllObjects];
         _cacheDict = [[NSMutableDictionary alloc] init];
         
         StateData *state = [_beamPQ pop];
+        
         int c = 0;
         while (state != nil && c < _beamCount) {
-            //NSLog(@"working state %d, %d %f",[state prototypeIdx],  [state stateIdx], [state alpha]);
             float alpha = [state alpha];
-            //NSLog(@"%0.3f",alpha);
             BFPrototype *pData = _prototypes[state.prototypeIdx];
             // Case 1: stay
             if ([state stateIdx] >= 0) {
@@ -209,69 +243,69 @@ float logsumexp(float x,float y) {
         // Clear the queue
         [_beamPQ clear];
         
-        // pack the new states to the PQ
         [_likelihood removeAllObjects];
         [_finalLikelihood removeAllObjects];
         
-        // try normalize
+        // Normalize live states
         float sum_like = -FLT_MAX;
-        for (id <NSCopying> key in [_cacheDict allKeys]) {
-            CacheData *cache = [_cacheDict objectForKey:key];
-            StateData *s = cache.state;
-            sum_like = logsumexp(sum_like, s.alpha);
+        for (id key in _cacheDict) {
+            CacheData *cache = _cacheDict[key];
+            StateData *state = cache.state;
+            sum_like = logsumexp(sum_like, state.alpha);
         }
-        
-        for (id <NSCopying> key in [_cacheDict allKeys]) {
-            CacheData *cache = [_cacheDict objectForKey:key];
-            StateData *s = cache.state;
+        for (id key in _cacheDict) {
+            CacheData *cache = _cacheDict[key];
+            StateData *state = cache.state;
+            
             // perform normalization
-            s.alpha = s.alpha - sum_like;
+            state.alpha = state.alpha - sum_like;
             // insert the state to PQ
-            if (s.alpha > kQueueThreshold) {
-                [_beamPQ addObject:s value:s.alpha];
+            if (state.alpha > kQueueThreshold) {
+                [_beamPQ addObject:state value:state.alpha];
             }
             
             // update likelihood
-            NSString *label = [_prototypes[s.prototypeIdx] label];
+            NSString *label = [_prototypes[state.prototypeIdx] label];
             NSNumber *existing = _likelihood[label];
             if (existing != nil) {
-                _likelihood[label] = @(logsumexp([existing floatValue], s.alpha));
+                _likelihood[label] = @(logsumexp([existing floatValue], state.alpha));
             } else {
-                _likelihood[label] = @(s.alpha);
+                _likelihood[label] = @(state.alpha);
             }
             
             // update final likelihood
-            if (s.stateIdx == [_prototypes[s.prototypeIdx] length] - 1) {
-                _finalLikelihood[label] = @(s.alpha);
+            if (state.stateIdx == [_prototypes[state.prototypeIdx] length] - 1) {
+                _finalLikelihood[label] = @(state.alpha);
             }
         }
         
         // Likelihood normalization
         sum_like = -FLT_MAX;
-        for (NSString *label in [_likelihood allKeys]) {
-            float x = [_likelihood[label] floatValue];
+        for (id key in _likelihood) {
+            float x = [_likelihood[key] floatValue];
             sum_like = logsumexp(sum_like, x);
         }
-        for (NSString *label in [_likelihood allKeys]) {
-            _likelihood[label] = @(exp([_likelihood[label] floatValue] - sum_like));
+        for (id key in [_likelihood allKeys]) {
+            _likelihood[key] = @(exp([_likelihood[key]
+                                      floatValue] - sum_like));
         }
         
         sum_like = -FLT_MAX;
-        for (NSString *label in [_finalLikelihood allKeys]) {
-            float x = [_finalLikelihood[label] floatValue];
+        for (id key in _finalLikelihood) {
+            float x = [_finalLikelihood[key] floatValue];
             sum_like = logsumexp(sum_like, x);
         }
-        for (NSString *label in [_finalLikelihood allKeys]) {
-            _finalLikelihood[label] = @(exp([_finalLikelihood[label] floatValue] - sum_like));
+        for (id key in [_finalLikelihood allKeys]) {
+            _finalLikelihood[key] = @(exp([_finalLikelihood[key]
+                                           floatValue] - sum_like));
         }
         
         float p = 1.0 / [_likelihood[_targetLabel] floatValue];
-        if (log2(p) < 1.0) {
+        if (log2(p) < _targetThreshold) {
             [_delegate thresholdReached:point];
         }
         
         if (point.penup) {
-            NSLog(@"%@", _finalLikelihood);
             [_delegate updateScore:[_finalLikelihood[_targetLabel] floatValue]];
             _prevPoint = nil;
         } else {
@@ -287,6 +321,8 @@ float logsumexp(float x,float y) {
 - (NSDictionary *)finalLikelihood {
     return _finalLikelihood;
 }
+
+
 
 
 @end

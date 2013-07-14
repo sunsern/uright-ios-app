@@ -9,7 +9,6 @@
 #import <Foundation/Foundation.h>
 
 @class SessionData;
-@class ExampleSet;
 
 @interface ServerManager : NSObject
 
@@ -17,5 +16,6 @@
 + (NSDictionary *)fetchDataForUsername:(NSString *)username password:(NSString *)password;
 + (NSDictionary *)submitSessionData:(SessionData *)data;
 + (BOOL)isOnline;
++ (void)synchronizeData;
 
 @end

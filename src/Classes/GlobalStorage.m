@@ -7,21 +7,21 @@
 //
 
 #import "GlobalStorage.h"
-
 #import "UserStorage.h"
-#import "ServerManager.h"
-#import "SessionData.h"
+#import "BFClassifier.h"
 
 #define VERSION 3.0
-#define VERBOSE YES
-#define DEFAULT_LANGUAGE 1
+#define DEFAULT_LANGUAGE_ID 1 // English
 #define GUEST_USER_ID 0
 #define SETTINGS_FILE @"settings.json"
+#define ENGLISH_CLASSIFIER @"dtw_classifier_user_1.json"
+
+#define VERBOSE YES
 
 static GlobalStorage *sharedInstance = nil;
 
 @implementation GlobalStorage {
-    dispatch_queue_t serialQueue_;
+    dispatch_queue_t _serialQueue;
 }
 
 + (GlobalStorage *)sharedInstance {
@@ -39,135 +39,95 @@ static GlobalStorage *sharedInstance = nil;
     self = [super init];
     if (self) {
         // Create a serial queue
-        serialQueue_ = dispatch_queue_create("com.uRight.GlobalStorage", NULL);
+        _serialQueue = dispatch_queue_create("uRight3.GlobalStorage", NULL);
     }
     return self;
 }
 
 - (void)dealloc {
-    dispatch_release(serialQueue_);
+    dispatch_release(_serialQueue);
 }
 
+- (void)saveGlobalData {
+    dispatch_async(_serialQueue, ^{
+        // save last active userId
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        [defaults setObject:@(_currentUserId) forKey:@"currentuserid"];
+        [defaults setObject:[_languages toJSONObject] forKey:@"languages"];
+        if (VERBOSE) NSLog(@"Save global data");
+    });
+}
 
 - (void)loadGlobalData {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     
-    // Read User ID
+    // Read the user id from storage
     NSNumber *uid = [defaults objectForKey:@"currentuserid"];
-    if (uid != nil) {
-        _currentUserId = [uid intValue];
-    } else {
+    if (uid == nil) {
         _currentUserId = GUEST_USER_ID;
+    } else {
+        _currentUserId = [uid intValue];
     }
     if (VERBOSE) NSLog(@"Current userId = %d", _currentUserId);
     
-    // Language defnitions
-    _langDefinitions = [defaults objectForKey:@"languages"];
-    if (_langDefinitions == nil) {
-        // Load languages from settings.json
-        NSString *filePath = [[NSBundle mainBundle]
-                              pathForResource:SETTINGS_FILE ofType:@""];
-        NSData *data = [[NSData alloc] initWithContentsOfFile:filePath];
-        NSError *error;
-        NSDictionary *jsonData = [NSJSONSerialization JSONObjectWithData:data
-                                                                 options:kNilOptions
-                                                                   error:&error];
-        _langDefinitions = jsonData[@"languages"];
+    // Language Info
+    NSDictionary *langInfo = [defaults objectForKey:@"languages"];
+    if (langInfo == nil) {
+        // Load languages
+        NSDictionary *jsonObj = [[self class] loadJSONFromFile:SETTINGS_FILE];
+        _languages = [[Languages alloc]
+                      initWithJSONObject:jsonObj[@"languages"]];
     }
-    NSLog(@"Loaded %d languages",[_langDefinitions count]);
+    else {
+        _languages = [[Languages alloc]
+                      initWithJSONObject:langInfo];
+    }
+    if (VERBOSE) NSLog(@"Loaded %d languages",[_languages.languages count]);
 }
 
+- (void)saveUserData {
+    dispatch_async(_serialQueue, ^{
+        // save last active userId
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        [defaults setObject:[_userdata toJSONObject]
+                     forKey:[NSString stringWithFormat:@"user-%d-version-%0.1f",
+                             _currentUserId, VERSION]];
+        if (VERBOSE) NSLog(@"Save user data");
+    });
+}
 
 - (void)loadUserData {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    // Userdata
-    NSDictionary *userData = [defaults objectForKey:
+    id userData = [defaults objectForKey:
                               [NSString stringWithFormat:
                                @"user-%d-version-%0.1f",_currentUserId,VERSION]];
     if (userData == nil) {
-        if (_currentUserId == 0) {
-            // Guest account
-            _userdata = [[UserStorage alloc] initWithUserId:GUEST_USER_ID
-                                                 languageId:DEFAULT_LANGUAGE];
-            [_userdata setUsername:@"Guest"];
-            [_userdata setPassword:@""];
+        // Guest account
+        _userdata = [[UserStorage alloc] init];
+        _userdata.userId = _currentUserId;
+        _userdata.languageId = DEFAULT_LANGUAGE_ID;
+        if (_currentUserId == GUEST_USER_ID) {
+            _userdata.username = @"Guest";
+            _userdata.password = @"";
         } else {
-            // Non-guest account
-            _userdata = [[UserStorage alloc] initWithUserId:_currentUserId
-                                                 languageId:DEFAULT_LANGUAGE];
-            [_userdata setUsername:@"unknown"];
-            [_userdata setPassword:@""];
+            _userdata.username = @"unknown";
+            _userdata.password = @"";
         }
-        // Default data template
-        [_userdata setCharacterDelay:DEFAULT_CHARDELAY];
-        NSLog(@"Data for %d doesn't exist. Creating from template", _currentUserId);
+        // Create English classifier
+        NSDictionary *classifierJSON = [[self class]
+                                        loadJSONFromFile:ENGLISH_CLASSIFIER];
+        BFClassifier *classifier = [[BFClassifier alloc]
+                                    initWithJSONObject:classifierJSON];
+        [_userdata setClassifier:classifier forLanguage:1];
+        
+        if (VERBOSE) {
+            NSLog(@"Data for %d doesn't exist. Creating from template",
+                  _currentUserId);
+        }
     } else {
-        _userdata = [[UserStorage alloc] initWithUserId:_currentUserId
-                                             languageId:[[userData objectForKey:@"languageId"] intValue]];
-        [_userdata setCharacterDelay:[[userData objectForKey:@"characterDelay"] floatValue]];
-        [_userdata setUsername:[userData objectForKey:@"username"]];
-        [_userdata setPassword:[userData objectForKey:@"password"]];
-        [_userdata setClassifiers:[[NSMutableDictionary alloc]
-                                   initWithDictionary:
-                                   [userData objectForKey:@"classifiers"]]];
-        [_userdata setScores:[[NSMutableDictionary alloc]
-                              initWithDictionary:[userData objectForKey:@"scores"]]];
-        [_userdata setSessions:[[NSMutableArray alloc]
-                                initWithArray:[userData objectForKey:@"sessions"]]];
-        NSLog(@"Load data for user %d",_currentUserId);
+        _userdata = [[UserStorage alloc] initWithJSONObject:userData];
+        if (VERBOSE) NSLog(@"Load data for user %d",_currentUserId);
     }
-}
-
-
-// Async
-- (void)saveUserData {
-    dispatch_async(serialQueue_, ^{
-        // save last active userId
-        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-        NSDictionary *userData = @{
-        @"languageId":@([_userdata languageId]),
-        @"characterDelay":@([_userdata characterDelay]),
-        @"classifiers":[_userdata classifiers],
-        @"sessions":[_userdata sessions],
-        @"username":[_userdata username],
-        @"password":[_userdata password],
-        @"scores":[_userdata scores] };
-        [defaults setObject:userData
-                     forKey:[NSString stringWithFormat:@"user-%d-version-%0.1f",
-                             _currentUserId,VERSION]];
-        NSLog(@"Save user data");
-    });
-}
-
-// Async
-- (void)saveGlobalData {
-    dispatch_async(serialQueue_, ^{
-        // save last active userId
-        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-        [defaults setObject:@(_currentUserId) forKey:@"currentuserid"];
-        [defaults setObject:_languages forKey:@"languages"];
-        NSLog(@"Save global data");
-    });
-}
-
-// Sync
-- (void)saveAllData {
-    // save last active userId
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setObject:@(_currentUserId) forKey:@"currentuserid"];
-    [defaults setObject:_languages forKey:@"languages"];
-    NSDictionary *userData = @{
-    @"languageId":@([_userdata languageId]),
-    @"characterDelay":@([_userdata characterDelay]),
-    @"classifiers":[_userdata classifiers],
-    @"sessions":[_userdata sessions],
-    @"username":[_userdata username],
-    @"password":[_userdata password],
-    @"scores":[_userdata scores] };
-    [defaults setObject:userData
-                 forKey:[NSString stringWithFormat:@"user-%d-version-%0.1f",
-                         _currentUserId,VERSION]];
-    NSLog(@"Save all data");
 }
 
 - (void)switchToUser:(int)newUserId {
@@ -179,6 +139,16 @@ static GlobalStorage *sharedInstance = nil;
     }
 }
 
+// Helper method
++ (NSDictionary *)loadJSONFromFile:(NSString *)filename {
+    NSString *filePath = [[NSBundle mainBundle]
+                          pathForResource:filename ofType:@""];
+    NSData *data = [[NSData alloc] initWithContentsOfFile:filePath];
+    NSError *error;
+    return [NSJSONSerialization JSONObjectWithData:data
+                                           options:kNilOptions
+                                             error:&error];
+}
 
 
 @end

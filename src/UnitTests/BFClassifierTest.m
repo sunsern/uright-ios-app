@@ -25,7 +25,6 @@
 
 - (void)updateScore:(float)v {
     _lastScore = v;
-    NSLog(@"YOY");
 }
 
 - (void)setUp
@@ -34,42 +33,10 @@
     
     // Initialize the singleton storage
     GlobalStorage *gs = [GlobalStorage sharedInstance];
-    [gs loadData];
-    
-    // build cache
+    [gs loadGlobalData];
+    [gs loadUserData];
     UserStorage *us = [gs userdata];
-    [us switchToLanguageId:[us languageId]];
-    
-    // Auto login
-    NSDictionary *jsonObj = [ServerManager fetchDataForUsername:@"sunsern"
-                                                       password:@"12345"];
-    // update user-independent data
-    if (jsonObj != nil) {
-        GlobalStorage *gs = [GlobalStorage sharedInstance];
-        [gs setLanguages:[jsonObj objectForKey:@"languages"]];
-        
-        // now user-specific data
-        NSString *login_result = [jsonObj objectForKey:@"login_result"];
-        if ([login_result isEqualToString:@"OK"]) {
-            int newUserId = [[jsonObj objectForKey:@"user_id"] intValue];
-            // switch user and save data
-            [gs switchToUser:newUserId];
-            // Update classifier with the new one
-            UserStorage *us = [gs userdata];
-            [us setClassifiers:[[NSMutableDictionary alloc]
-                                initWithDictionary:[jsonObj objectForKey:@"classifiers"]]];
-            [us setUsername:@"sunsern"];
-            [us setPassword:@"12345"];
-            [us switchToLanguageId:[us languageId]];
-            [gs saveUserData];
-            
-        } else {
-            // save the langauges data
-            [gs saveGlobalData];
-        }
-    }
-
-    _classifier = [[BFClassifier alloc] initWithExampleSet:[us exampleSet]];
+    _classifier = [us classifier];
     [_classifier setDelegate:self];
     
     // Set-up code here.
@@ -109,6 +76,7 @@
     [_classifier addPoint:[InkPoint penupPoint]];
     
     [NSThread sleepForTimeInterval:1.5];
+    //while (true) {}
     
     STAssertTrue(_lastScore > 0.9f, @"Probability too low");
     

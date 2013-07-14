@@ -13,7 +13,22 @@
 
 @implementation RoundData
 
-- (NSDictionary *)toJSONObject {
+- (id)initWithJSONObject:(id)jsonObj {
+    self = [super init];
+    if (self) {
+        _startTime = [jsonObj[@"startTime"] doubleValue];
+        _firstPendownTime = [jsonObj[@"firstPendownTime"] doubleValue];
+        _lastPenupTime = [jsonObj[@"lastPenupTime"] doubleValue];
+        _score = [jsonObj[@"score"] floatValue];
+        _label = [jsonObj[@"label"] copy];
+        _ink = [[InkCharacter alloc] initWithJSONObject:jsonObj[@"ink"]];
+        _result = [[ClassificationResult alloc]
+                   initWithJSONObject:jsonObj[@"result"]];
+    }
+    return self;
+}
+
+- (id)toJSONObject {
     NSMutableDictionary *jsonObj = [[NSMutableDictionary alloc] init];
     jsonObj[@"startTime"] = @(_startTime);
     jsonObj[@"firstPendownTime"] = @(_firstPendownTime);

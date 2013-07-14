@@ -27,6 +27,25 @@
     return self;
 }
 
+- (id)initWithJSONObject:(id)jsonObj {
+    self = [super init];
+    if (self) {
+        _userId = [jsonObj[@"userId"] intValue];
+        _languageId = [jsonObj[@"languageId"] intValue];
+        _modeId = [jsonObj[@"modeId"] intValue];
+        _classifierId = [jsonObj[@"classifierId"] intValue];
+        _bps = [jsonObj[@"bps"] floatValue];
+        _totalScore = [jsonObj[@"totalScore"] floatValue];
+        _totalTime = [jsonObj[@"totalTime"] floatValue];
+        _rounds = [[NSMutableArray alloc] init];
+        for (id each_round in jsonObj[@"rounds"]) {
+            RoundData *round = [[RoundData alloc]initWithJSONObject:each_round];
+            [_rounds addObject:round];
+        }
+    }
+    return self;
+}
+
 - (NSDictionary *)toJSONObject {
     NSMutableDictionary *jsonObj = [[NSMutableDictionary alloc] init];
     jsonObj[@"version"] = @"uRight3";
@@ -45,6 +64,10 @@
         jsonObj[@"rounds"] = roundJSON;
     }
     return jsonObj;
+}
+
+- (void)addRound:(RoundData *)round {
+    [_rounds addObject:round];
 }
 
 @end

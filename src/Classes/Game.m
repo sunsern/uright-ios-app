@@ -60,40 +60,15 @@
     
     // Initialize the singleton storage
     GlobalStorage *gs = [GlobalStorage sharedInstance];
-    [gs loadData];
-    
-    // build cache
-    UserStorage *us = [gs userdata];
-    [us switchToLanguageId:[us languageId]];
+    [gs loadGlobalData];
+    [gs loadUserData];
 
-    // Auto login
-    NSDictionary *jsonObj = [ServerManager fetchDataForUsername:@"sunsern"
-                                                       password:@"12345"];
-    // update user-independent data
-    if (jsonObj != nil) {
-        GlobalStorage *gs = [GlobalStorage sharedInstance];
-        [gs setLanguages:[jsonObj objectForKey:@"languages"]];
-        
-        // now user-specific data
-        NSString *login_result = [jsonObj objectForKey:@"login_result"];
-        if ([login_result isEqualToString:@"OK"]) {
-            int newUserId = [[jsonObj objectForKey:@"user_id"] intValue];
-            // switch user and save data
-            [gs switchToUser:newUserId];
-            // Update classifier with the new one
-            UserStorage *us = [gs userdata];
-            [us setClassifiers:[[NSMutableDictionary alloc]
-                                initWithDictionary:[jsonObj objectForKey:@"classifiers"]]];
-            [us setUsername:@"sunsern"];
-            [us setPassword:@"12345"];
-            [us switchToLanguageId:[us languageId]];
-            [gs saveUserData];
-            
-        } else {
-            // save the langauges data
-            [gs saveGlobalData];
-        }
-    } 
+    [gs saveUserData];
+    [gs saveGlobalData];
+    
+    
+    NSLog(@"%@",[[[gs languages] languageWithId:1] languageName]);
+    
     
     //MenuScene *menu = [[MenuScene alloc] init];
     //[self showScene:menu];
@@ -103,6 +78,12 @@
         RaceScene *race = [[RaceScene alloc] init];
         [self showScene:race];
     }];
+    
+    
+    [[Sparrow juggler] delayInvocationByTime:1.5f block:^{
+        [ServerManager synchronizeData];
+    }];
+    
     
     /*
     // play a sound when the image is touched
@@ -130,15 +111,11 @@
 
 - (void)updateLocations
 {
-    int gameWidth  = Sparrow.stage.width;
-    int gameHeight = Sparrow.stage.height;
+    //int gameWidth  = Sparrow.stage.width;
+    //int gameHeight = Sparrow.stage.height;
     
     //_contents.x = (int) (gameWidth  - _contents.width)  / 2;
     //_contents.y = (int) (gameHeight - _contents.height) / 2;
-    
-    NSLog(@"%f %f", _contents.width, _contents.height);
-    NSLog(@"%d %d", gameWidth, gameHeight);
-    
 }
 
 - (void)onResize:(SPResizeEvent *)event

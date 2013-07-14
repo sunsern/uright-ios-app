@@ -23,4 +23,4 @@
 #import "GlobalStorage.h"
 #import "UserStorage.h"
 
-#define kBaseURL @"http://fpga1.ucsd.edu/uright/"
+#define kBaseURL @"http://fpga1.ucsd.edu:8000/"

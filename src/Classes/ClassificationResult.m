@@ -10,6 +10,14 @@
 
 @implementation ClassificationResult 
 
+- (id)initWithJSONObject:(id)jsonObj {
+    self = [super init];
+    if (self) {
+        _resultDictionary = [[NSDictionary alloc] initWithDictionary:jsonObj];
+    }
+    return self;
+}
+
 - (id)initWithDictionary:(NSDictionary *)dict {
     self = [super init];
     if (self) {
@@ -34,7 +42,7 @@
     return [[_resultDictionary objectForKey:label] doubleValue];
 }
 
-- (NSDictionary *)toJSONObject {
+- (id)toJSONObject {
     return _resultDictionary;
 }
 

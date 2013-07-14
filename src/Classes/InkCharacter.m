@@ -136,7 +136,7 @@
 }
 
 
-- (id)initWithJSONObject:(NSDictionary *)jsonObj {
+- (id)initWithJSONObject:(id)jsonObj {
     self = [super init];
     if (self) {
         _baseLine = [jsonObj[@"baseline"] floatValue];
@@ -153,7 +153,7 @@
     return self;
 }
 
-- (NSDictionary *)toJSONObject {
+- (id)toJSONObject {
     NSMutableDictionary *characterInfo = [[NSMutableDictionary alloc] init];
     characterInfo[@"baseline"] = @(_baseLine);
     characterInfo[@"topline"] = @(_topLine);

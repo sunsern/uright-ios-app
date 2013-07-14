@@ -17,12 +17,13 @@
 #define kBaseLineRatio 0.70f
 #define kTopLineRatio 0.30f
 #define kDrawDelta 3.0f
+#define kMaxSteps 20
 
 #define ADJUST_X(x) ((x / self.width) * 3.0 - 1.5)
 #define UNADJUST_X(x) (((x + 1.5) / 3.0) * self.width)
 
 #define ADJUST_Y(y) ((y / self.height) * 1.3 - 0.15)
-#define UNADJUST_Y(y) (((point.y + 0.15) / 1.3) * self.height)
+#define UNADJUST_Y(y) (((y + 0.15) / 1.3) * self.height)
 
 
 @implementation Canvas {
@@ -150,7 +151,9 @@
         [_renderTexture drawBundled:^{
             float dx = _newTouch.x - _lastTouch.x;
             float dy = _newTouch.y - _lastTouch.y;
-            int numSteps = MAX((int)(MAX(fabs(dx),fabs(dy)) / kDrawDelta), 1);
+            int numSteps = MIN(MAX((int)(MAX(fabs(dx),
+                                             fabs(dy)) / kDrawDelta), 1),
+                               kMaxSteps);
             float incX = dx / numSteps;
             float incY = dy / numSteps;
             _brush.x = _lastTouch.x;
@@ -200,6 +203,7 @@
             _firstTouchTime = p.t;
         }
         
+        [_currentInkCharacter addPoint:p];
         [_classifier addPoint:p];
     }
 	SPTouch *touchMove = [[event touchesWithTarget:_canvas
@@ -214,6 +218,7 @@
                                                 y:ADJUST_Y(_newTouch.y)
                                                 t:[NSDate timeIntervalSinceReferenceDate]];
         
+        [_currentInkCharacter addPoint:p];
         [_classifier addPoint:p];
     }
     
@@ -228,20 +233,18 @@
         
         _lastTouchTime = [NSDate timeIntervalSinceReferenceDate];
         
-        float w = self.width;
-        float h = self.height;
         InkPoint *p = [[InkPoint alloc] initWithX:ADJUST_X(_newTouch.x)
                                                 y:ADJUST_Y(_newTouch.y)
                                                 t:[NSDate timeIntervalSinceReferenceDate]];
         p.penup = YES;
+        [_currentInkCharacter addPoint:p];
         [_classifier addPoint:p];
 	}
 }
 
 - (void)drawMarkerAt:(InkPoint *)point {
-    _marker = [[InkPoint alloc] initWithInkPoint:point];
-    _marker.x = ((point.x + 1.5) / 3.0) * self.width;
-    _marker.y = ((point.y + 0.15) / 1.3) * self.height;
+    _marker = [[InkPoint alloc] initWithX:UNADJUST_X(point.x)
+                                        y:UNADJUST_Y(point.y)];
 }
 
 

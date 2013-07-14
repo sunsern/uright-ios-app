@@ -22,6 +22,7 @@
 - (double)scoreByLabel:(NSString *)label;
 
 // Serialization
-- (NSDictionary *)toJSONObject;
+- (id)initWithJSONObject:(id)jsonObj;
+- (id)toJSONObject;
 
 @end

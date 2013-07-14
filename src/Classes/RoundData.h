@@ -21,7 +21,8 @@
 @property double lastPenupTime;
 @property float score;
 
-- (NSDictionary *)toJSONObject;
+- (id)initWithJSONObject:(id)jsonObj;
+- (id)toJSONObject;
 
 
 @end

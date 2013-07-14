@@ -7,13 +7,14 @@
 
 #import <Foundation/Foundation.h>
 
+#import "Languages.h"
+
 @class UserStorage;
 
 @interface GlobalStorage : NSObject
 
 @property (readonly) int currentUserId;
-// (key:value) = (languageID, jsonObject)
-@property (nonatomic,strong) NSDictionary *langDefinitions;
+@property (nonatomic,strong) Languages *languages;
 @property (nonatomic,strong) UserStorage *userdata;
 
 + (id)sharedInstance;
@@ -26,10 +27,5 @@
 
 - (void)saveGlobalData;
 - (void)saveUserData;
-- (void)saveAllData;
-
-// sync data
-- (void)synchronizeData;
-
 
 @end

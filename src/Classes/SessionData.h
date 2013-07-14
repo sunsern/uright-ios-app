@@ -7,6 +7,8 @@
 
 #import <Foundation/Foundation.h>
 
+@class RoundData;
+
 @interface SessionData : NSObject
 
 @property (nonatomic,strong) NSMutableArray *rounds;
@@ -19,6 +21,9 @@
 @property int classifierId;
 
 // Serialization
-- (NSDictionary *)toJSONObject;
+- (id)initWithJSONObject:(id)jsonObj;
+- (id)toJSONObject;
+
+- (void)addRound:(RoundData *)round;
 
 @end

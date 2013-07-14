@@ -9,36 +9,35 @@
 #import "RaceScene.h"
 #import "Canvas.h"
 #import "BFClassifier.h"
-#import "ExampleSet.h"
 #import "Media.h"
+#import "SessionData.h"
+#import "RoundData.h"
+#import "ClassificationResult.h"
+#import "Languages.h"
 
 @implementation RaceScene {
+    // UI
+    SPTexture *_buttonTexture;
     SPButton *_resetButton;
     SPImage *_background;
-    Canvas *_canvas;
     SPTextField *_targetLabel;
     SPTextField *_totalScore;
     SPTextField *_totalTime;
     SPTextField *_bps;
-    BFClassifier *_dtw;
+    Canvas *_canvas;
+    
+    BFClassifier *_classifier;
     NSString *_testString;
     int _currentIdx;
-    NSMutableArray *_results;
-    NSMutableDictionary *_currentResult;
     float _currentScore;
     float _score;
     float _time;
-    SPTexture *_buttonTexture;
     BOOL _soundPlayed;
+    
+    SessionData *_session;
+    RoundData *_round;
 }
 
-- (id)init {
-    self = [super init];
-    if (self) {
-        [self setupScene];
-    }
-    return self;
-}
 
 - (void)setupScene {
     _background = [SPImage imageWithContentsOfFile:@"background.jpg" ];
@@ -112,27 +111,39 @@
     restart.scaleY = 0.75;
     [self addChild:restart];
     [restart addEventListener:@selector(restartRace) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
-
-    
-    UserStorage *us = [[GlobalStorage sharedInstance] userdata];
-    ExampleSet *englishSet = [[ExampleSet alloc] initWithJSONObject:[[us classifiers] objectForKey:@"1"]];
-    _dtw = [[BFClassifier alloc] initWithExampleSet:englishSet];
-    [_dtw setDelegate:self];
-    [_dtw setBeamCount:800];
-    
-    [_canvas setClassifier:_dtw];
 }
 
-- (void)restartRace {
+- (id)init {
+    self = [super init];
+    if (self) {
+        [self setupScene];
+        
+        UserStorage *us = [[GlobalStorage sharedInstance] userdata];
+        _classifier = [us classifier];
+        [_classifier setDelegate:self];
+        [_classifier setBeamCount:800];
+        
+        [_canvas setClassifier:_classifier];
+        
+    }
+    return self;
+}
 
-    _results = [[NSMutableArray alloc] init];
+
+- (void)restartRace {
+    _session = [[SessionData alloc] init];
     
     _targetLabel.text = @"";
     _totalScore.text = @"0.00";
     _totalTime.text = @"0.00";
     _bps.text = @"0.00";
     
-    _testString = [self shuffleString:@"abcdefghijklmnopqrstuvwxyz"];
+    //_testString = [self shuffleString:@"abcdefghijklmnopqrstuvwxyz"];
+    //_testString = [self shuffleString:@"abc"];
+    GlobalStorage *gs = [GlobalStorage sharedInstance];
+    UserStorage *us = [gs userdata];
+    NSArray *labelArray = [[[gs languages] languageWithId:[us languageId]] allLabels];
+    _testString = [self shuffleArray:labelArray];
     _currentIdx = 0;
     _score = 0;
     _time = 0;
@@ -169,28 +180,31 @@
 
 
 - (void)startRound {
-    _currentResult = [[NSMutableDictionary alloc] init];
-    
     [_canvas clear];
     _canvas.touchable = YES;
     _soundPlayed = NO;
     
-    _currentResult[@"display_time"] = @([NSDate timeIntervalSinceReferenceDate]);
-    _targetLabel.text = [_testString substringWithRange:NSMakeRange(_currentIdx,1)];
-    [_dtw setTargetLabel:_targetLabel.text];
+    _round = [[RoundData alloc] init];
+    _round.startTime = [NSDate timeIntervalSinceReferenceDate];
     
+    _targetLabel.text = [_testString substringWithRange:NSMakeRange(_currentIdx,1)];
+    [_classifier setTargetLabel:_targetLabel.text];
 }
 
 - (void)endRound {
     _canvas.touchable = NO;
     
-    _currentResult[@"start_time"] = @(_canvas.firstTouchTime);
-    _currentResult[@"end_time"] = @(_canvas.lastTouchTime);
-    _currentResult[@"score"] = @(_currentScore);
-    [_results addObject:_currentResult];
+    _round.firstPendownTime = _canvas.firstTouchTime;
+    _round.lastPenupTime = _canvas.lastTouchTime;
+    _round.score = _currentScore;
+    _round.ink = _canvas.currentInkCharacter;
+    _round.label = _targetLabel.text;
+    _round.result = [[ClassificationResult alloc]
+                     initWithDictionary:[_classifier finalLikelihood]];
     
-    float delta_time = ([_currentResult[@"end_time"] doubleValue] -
-                        [_currentResult[@"display_time"] doubleValue]);
+    [_session addRound:_round];
+    
+    float delta_time = _round.lastPenupTime - _round.startTime;
     _score += _currentScore;
     _time += delta_time;
     
@@ -198,7 +212,6 @@
     _totalTime.text = [NSString stringWithFormat:@"%0.2f", _time];
     _bps.text = [NSString stringWithFormat:@"%0.2f", _score/_time];
     
-
     SPTextField *current_score = [SPTextField textFieldWithText:[NSString stringWithFormat:@"%0.2f",_currentScore]];
     current_score.x = 140;
     current_score.y = 100;
@@ -211,7 +224,6 @@
     [tween animateProperty:@"y" targetValue:50];
     [tween animateProperty:@"alpha" targetValue:0.0];
     [[Sparrow juggler] addObject:tween];
-    
     
     SPTextField *current_time = [SPTextField textFieldWithText:[NSString stringWithFormat:@"%0.2f",delta_time]];
     current_time.x = 220;
@@ -236,8 +248,8 @@
 
 - (void)raceComplete {
     _targetLabel.text = @"";
-    [_canvas clear];
     
+    [_canvas clear];
 }
 
 - (void)onReset:(SPEvent *)event {
@@ -256,8 +268,8 @@
     }
 }
 
-- (void)updateScore:(float)v {
-    float p = 1.0 / v;
+- (void)updateScore:(float)targetProb {
+    float p = 1.0 / targetProb;
     _currentScore = MAX(log2(26) - log2(p), 0);
 }
 
@@ -284,6 +296,22 @@
     return randomizedText;
 }
 
-
+- (NSString *)shuffleArray:(NSArray *)labels {
+    NSLog(@"%@",labels);
+    NSMutableArray *temp = [[NSMutableArray alloc] initWithArray:labels];
+    for (NSInteger i = [labels count] - 1, j; i >= 0; i--)
+    {
+        j = arc4random() % (i + 1);
+        
+        NSString *buffer = temp[i];
+        temp[i] = temp[j];
+        temp[j] = buffer;
+    }
+    NSMutableString *outStr = [[NSMutableString alloc] init];
+    for (int i = 0; i < [labels count]; i++) {
+        [outStr appendString:temp[i]];
+    }
+    return outStr;
+}
 
 @end
