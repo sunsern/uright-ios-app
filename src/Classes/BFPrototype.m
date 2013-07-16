@@ -56,14 +56,19 @@ void normalizePointArray(NSArray *pointArray) {
             inkPoint.penup = [pointInfo[4] boolValue];
             [mPointArray addObject:inkPoint];
         }
-        _pointArray = mPointArray;
-        normalizePointArray(_pointArray);
+        _points = mPointArray;
+        normalizePointArray(_points);
     }
     return self;
 }
 
+- (id)toJSONObject {
+    // Not implemented
+    return nil;
+}
+
 - (int)length {
-    return [self.pointArray count];
+    return [self.points count];
 }
 
 @end

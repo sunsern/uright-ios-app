@@ -1,9 +1,8 @@
 //
 //  SessionData.m
-//  Handwriting
+//  uRight3
 //
 //  Created by Sunsern Cheamanunkul on 4/12/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
 //  This is for storing data collected during a session
 
@@ -15,10 +14,10 @@
 - (id)init {
     self = [super init];
     if (self) {
-        _userId = -1;
-        _languageId = -1;
-        _modeId = -1;
-        _classifierId = -1;
+        _userID = -1;
+        _languageID = -1;
+        _modeID = -1;
+        _classifierID = -1;
         _bps = 0.0;
         _totalScore = 0.0;
         _totalTime = 0.0;
@@ -30,10 +29,10 @@
 - (id)initWithJSONObject:(id)jsonObj {
     self = [super init];
     if (self) {
-        _userId = [jsonObj[@"userId"] intValue];
-        _languageId = [jsonObj[@"languageId"] intValue];
-        _modeId = [jsonObj[@"modeId"] intValue];
-        _classifierId = [jsonObj[@"classifierId"] intValue];
+        _userID = [jsonObj[@"userID"] intValue];
+        _languageID = [jsonObj[@"languageID"] intValue];
+        _modeID = [jsonObj[@"modeID"] intValue];
+        _classifierID = [jsonObj[@"classifierID"] intValue];
         _bps = [jsonObj[@"bps"] floatValue];
         _totalScore = [jsonObj[@"totalScore"] floatValue];
         _totalTime = [jsonObj[@"totalTime"] floatValue];
@@ -48,11 +47,11 @@
 
 - (NSDictionary *)toJSONObject {
     NSMutableDictionary *jsonObj = [[NSMutableDictionary alloc] init];
-    jsonObj[@"version"] = @"uRight3";
-    jsonObj[@"userId"] = @(_userId);
-    jsonObj[@"languageId"] = @(_languageId);
-    jsonObj[@"modeId"] = @(_modeId);
-    jsonObj[@"classifierId"] = @(_classifierId);
+    jsonObj[@"version"] = kURAppName;
+    jsonObj[@"userID"] = @(_userID);
+    jsonObj[@"languageID"] = @(_languageID);
+    jsonObj[@"modeID"] = @(_modeID);
+    jsonObj[@"classifierID"] = @(_classifierID);
     jsonObj[@"bps"] = @(_bps);
     jsonObj[@"totalTime"] = @(_totalTime);
     jsonObj[@"totalScore"] = @(_totalScore);

@@ -20,6 +20,8 @@
 - (id)init {
     self = [super init];
     if (self) {
+        int GAME_WIDTH = Sparrow.stage.width;
+        
         _background = [SPImage imageWithContentsOfFile:@"background.jpg"];
         _background.blendMode = SP_BLEND_MODE_NONE;
         [self addChild:_background];

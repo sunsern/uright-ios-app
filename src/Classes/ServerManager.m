@@ -30,6 +30,8 @@
     return (internetStatus != NotReachable);
 }
 
+
+
 + (NSDictionary *)fetchDataForUsername:(NSString *)username
                               password:(NSString *)password  {
     const char *cStr = [password UTF8String];
@@ -40,13 +42,15 @@
     for(int i = 0; i < CC_MD5_DIGEST_LENGTH; i++)
         [hashed appendFormat:@"%02x", digest[i]];
     
-    NSString *urlString = [NSString stringWithFormat:@"%@cgi/login.py", kBaseURL];
-    urlString = [urlString stringByAppendingString:@"?key=iosexp3"];
-    urlString = [urlString stringByAppendingFormat:@"&username=%@", username];
-    urlString = [urlString stringByAppendingFormat:@"&password=%@", hashed];
+    NSString *urlString = [NSString stringWithFormat:@"%@/login", kURBaseURL];
     NSURL *url = [NSURL URLWithString:urlString];
     
-    ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:url];
+    ASIFormDataRequest *request = [ASIFormDataRequest requestWithURL:url];
+    
+    [request setPostValue:username forKey:@"username"];
+    [request setPostValue:password forKey:@"password"];
+    [request setPostValue:kURMagicKey forKey:@"key"];
+    
     [request startSynchronous];
     if ([request error] != nil) {
         return nil;
@@ -59,6 +63,77 @@
                                              error:&error];
 }
 
+
++ (int)createAccountForUsername:(NSString *)username
+                        password:(NSString *)password
+                           email:(NSString *)email
+                        fullname:(NSString *)fullname {
+    
+    const char *cStr = [password UTF8String];
+    unsigned char digest[CC_MD5_DIGEST_LENGTH];
+    CC_MD5( cStr, strlen(cStr), digest ); // This is the md5 call
+    
+    NSMutableString *hashed = [NSMutableString stringWithCapacity:CC_MD5_DIGEST_LENGTH * 2];
+    for(int i = 0; i < CC_MD5_DIGEST_LENGTH; i++)
+        [hashed appendFormat:@"%02x", digest[i]];
+    
+    NSString *urlString = [NSString stringWithFormat:@"%@/newuser", kURBaseURL];
+    NSURL *url = [NSURL URLWithString:urlString];
+    
+    ASIFormDataRequest *request = [ASIFormDataRequest requestWithURL:url];
+    [request setPostValue:username forKey:@"username"];
+    [request setPostValue:hashed forKey:@"password"];
+    [request setPostValue:email forKey:@"email"];
+    [request setPostValue:fullname forKey:@"fullname"];
+    [request setPostValue:kURMagicKey forKey:@"key"];
+    
+    NSLog(@"email=%@",email);
+
+    [request startSynchronous];
+    if ([request error] != nil) {
+        return -1;
+    }
+    
+    NSError *error;
+    NSDictionary *response = [NSJSONSerialization JSONObjectWithData:[request responseData]
+                                                             options:kNilOptions
+                                                               error:&error];
+    return [response[@"user_id"] intValue];
+}
+
+
+
++ (NSDictionary *)getUserIdFromUsername:(NSString *)username
+                               password:(NSString *)password  {
+
+    const char *cStr = [password UTF8String];
+    unsigned char digest[CC_MD5_DIGEST_LENGTH];
+    CC_MD5( cStr, strlen(cStr), digest ); // This is the md5 call
+    
+    NSMutableString *hashed = [NSMutableString stringWithCapacity:CC_MD5_DIGEST_LENGTH * 2];
+    for(int i = 0; i < CC_MD5_DIGEST_LENGTH; i++)
+        [hashed appendFormat:@"%02x", digest[i]];
+    
+    NSString *urlString = [NSString stringWithFormat:@"%@/login", kURBaseURL];
+    NSURL *url = [NSURL URLWithString:urlString];
+    
+    ASIFormDataRequest *request = [ASIFormDataRequest requestWithURL:url];
+    [request setPostValue:username forKey:@"username"];
+    [request setPostValue:password forKey:@"password"];
+    [request setPostValue:kURMagicKey forKey:@"key"];
+
+    [request startSynchronous];
+    if ([request error] != nil) {
+        return nil;
+    }
+    
+    NSError *error;
+    NSDictionary *response = [NSJSONSerialization JSONObjectWithData:[request responseData]
+                                                             options:kNilOptions
+                                                               error:&error];
+    return response;
+}
+
 + (NSData *)json2data:(id)jsonObj {
     NSError *error;
     return [NSJSONSerialization dataWithJSONObject:jsonObj
@@ -68,7 +143,7 @@
 
 + (NSDictionary *)submitSessionData:(SessionData *)data {
     if ([data.rounds count] > 0) {
-        NSString *urlString = [NSString stringWithFormat:@"%@cgi/submit_session.php?key=iosexp2", kBaseURL];
+        NSString *urlString = [NSString stringWithFormat:@"%@cgi/submit_session.php?key=iosexp2", kURBaseURL];
         NSURL *url = [NSURL URLWithString:urlString];
         ASIFormDataRequest  *request = [ASIFormDataRequest requestWithURL:url];
         
@@ -77,13 +152,13 @@
                                                      encoding:NSUTF8StringEncoding];
         
         [request setPostValue:jsonString forKey:@"collected_data_json"];
-        [request setPostValue:[NSString stringWithFormat:@"%d", data.userId]
+        [request setPostValue:[NSString stringWithFormat:@"%d", data.userID]
                        forKey:@"user_id"];
-        [request setPostValue:[NSString stringWithFormat:@"%d", data.modeId]
+        [request setPostValue:[NSString stringWithFormat:@"%d", data.modeID]
                        forKey:@"mode_id"];
-        [request setPostValue:[NSString stringWithFormat:@"%d", data.classifierId]
+        [request setPostValue:[NSString stringWithFormat:@"%d", data.classifierID]
                        forKey:@"classifier_id"];
-        [request setPostValue:[NSString stringWithFormat:@"%d", data.languageId]
+        [request setPostValue:[NSString stringWithFormat:@"%d", data.languageID]
                        forKey:@"language_id"];
         [request setPostValue:[NSString stringWithFormat:@"%f", data.bps]
                        forKey:@"bps"];
@@ -120,7 +195,7 @@
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
         GlobalStorage *gs = [GlobalStorage sharedInstance];
-        UserStorage *us = [gs userdata];
+        UserData *us = [gs activeUser];
         
         // submit saved sessions
         if ([[self class] isOnline]) {
@@ -144,8 +219,7 @@
                                                           password:[us password]];
         
         if (jsonObj != nil) {
-            [gs setLanguages:[[Languages alloc] initWithJSONObject:jsonObj[@"languages"]]];
-            [gs saveGlobalData];
+            [gs setLanguages:[[LanguageData alloc] initWithJSONObject:jsonObj[@"languages"]]];
             
             dispatch_async(dispatch_get_main_queue(), ^{
                 [alert dismissWithClickedButtonIndex:0 animated:YES];

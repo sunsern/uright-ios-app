@@ -53,36 +53,26 @@
     // in one sprite (_contents): it will simply be rotated to be upright when the device rotates.
 
     _contents = [SPSprite sprite];
+    
     [self addChild:_contents];
     
     [self updateLocations];
     
-    
     // Initialize the singleton storage
     GlobalStorage *gs = [GlobalStorage sharedInstance];
-    [gs loadGlobalData];
-    [gs loadUserData];
-
-    [gs saveUserData];
-    [gs saveGlobalData];
+    
+    NSLog(@"%@",[[[gs languages] languageWithID:1] name]);
     
     
-    NSLog(@"%@",[[[gs languages] languageWithId:1] languageName]);
-    
-    
-    //MenuScene *menu = [[MenuScene alloc] init];
-    //[self showScene:menu];
-    
-    
-    [[Sparrow juggler] delayInvocationByTime:0.5f block:^{
-        RaceScene *race = [[RaceScene alloc] init];
-        [self showScene:race];
-    }];
+    MenuScene *menu = [[MenuScene alloc] init];
+    [self showScene:menu];
     
     
     [[Sparrow juggler] delayInvocationByTime:1.5f block:^{
         [ServerManager synchronizeData];
     }];
+    
+    
     
     
     /*

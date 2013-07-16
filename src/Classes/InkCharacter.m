@@ -9,7 +9,6 @@
 #import "InkCharacter.h"
 #import "InkPoint.h"
 
-
 #define EPS 1e-5
 
 @implementation InkCharacter  {

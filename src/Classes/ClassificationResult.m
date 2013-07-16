@@ -1,9 +1,8 @@
 //
 //  ClassificationResult.m
-//  Handwriting
+//  uRight3
 //
 //  Created by Sunsern Cheamanunkul on 4/13/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
 
 #import "ClassificationResult.h"
@@ -13,37 +12,37 @@
 - (id)initWithJSONObject:(id)jsonObj {
     self = [super init];
     if (self) {
-        _resultDictionary = [[NSDictionary alloc] initWithDictionary:jsonObj];
+        _scores = [[NSDictionary alloc] initWithDictionary:jsonObj];
     }
     return self;
+}
+
+- (id)toJSONObject {
+    return _scores;
 }
 
 - (id)initWithDictionary:(NSDictionary *)dict {
     self = [super init];
     if (self) {
-        _resultDictionary = [[NSDictionary alloc] initWithDictionary:dict];
+        _scores = [[NSDictionary alloc] initWithDictionary:dict];
     }
     return self;
 }
 
 - (NSString *)predictionByRanking:(int)rank {
-    NSArray *sortedLabels = [_resultDictionary
+    NSArray *sortedLabels = [_scores
                              keysSortedByValueUsingSelector:@selector(compare:)];
     return [sortedLabels objectAtIndex:rank];
 }
 
 - (double)scoreByRanking:(int)rank {
-    NSArray *sortedScores = [[_resultDictionary allValues]
+    NSArray *sortedScores = [[_scores allValues]
                              sortedArrayUsingSelector:@selector(compare:)];
     return [[sortedScores objectAtIndex:rank] doubleValue];
 }
 
 - (double)scoreByLabel:(NSString *)label {
-    return [[_resultDictionary objectForKey:label] doubleValue];
-}
-
-- (id)toJSONObject {
-    return _resultDictionary;
+    return [[_scores objectForKey:label] doubleValue];
 }
 
 @end

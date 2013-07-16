@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "JCSuperPriorityQueue.h"
+#import "URJSONSerializable.h"
 
 @class InkPoint;
 
@@ -16,21 +16,20 @@
 - (void)updateScore:(float)targetProb;
 @end
 
-@interface BFClassifier : NSObject
+@interface BFClassifier : NSObject <URJSONSerializable>
 
 @property (nonatomic,copy) NSString *targetLabel;
 @property (readwrite) int beamCount;
 @property (readwrite) float targetThreshold;
-@property (readonly) int classifierId;
+@property (readonly) int classifierID;
 @property (nonatomic,weak) id<BFClassifierDelegate> delegate;
 
-- (id)initWithJSONObject:(id)jsonObj;
-- (id)toJSONObject;
-
 - (void)reset;
+
 - (void)addPoint:(InkPoint *)point;
 
 - (NSDictionary *)finalLikelihood;
+
 - (NSDictionary *)likelihood;
 
 @end

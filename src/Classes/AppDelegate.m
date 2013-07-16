@@ -2,6 +2,7 @@
 //  AppDelegate.m
 //  AppScaffold
 //
+#import <FacebookSDK/FacebookSDK.h>
 
 #import "AppDelegate.h"
 #import "Game.h"
@@ -29,7 +30,6 @@ void onUncaughtException(NSException *exception)
     _window = [[UIWindow alloc] initWithFrame:screenBounds];
     
     _viewController = [[SPViewController alloc] init];
-    _viewController.multitouchEnabled = NO;
     
     // Enable some common settings here:
     //
@@ -37,12 +37,26 @@ void onUncaughtException(NSException *exception)
     // _viewController.multitouchEnabled = YES;
     // _viewController.preferredFramesPerSecond = 60;
     
+    // Let's disable multitouch
+    _viewController.multitouchEnabled = NO;
+    
     [_viewController startWithRoot:[Game class] supportHighResolutions:YES doubleOnPad:YES];
     
     [_window setRootViewController:_viewController];
     [_window makeKeyAndVisible];
     
     return YES;
+}
+
+- (BOOL)application:(UIApplication *)application
+            openURL:(NSURL *)url
+  sourceApplication:(NSString *)sourceApplication
+         annotation:(id)annotation {
+    return [FBAppCall handleOpenURL:url sourceApplication:sourceApplication];
+}
+
+- (void)applicationWillTerminate:(UIApplication *)application {
+    [[FBSession activeSession] close];
 }
 
 @end

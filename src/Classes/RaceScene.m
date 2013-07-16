@@ -13,8 +13,10 @@
 #import "SessionData.h"
 #import "RoundData.h"
 #import "ClassificationResult.h"
-#import "Languages.h"
+#import "LanguageData.h"
 
+#define GAMEWIDTH (Sparrow.stage.width)
+#define GAMEHEIGHT (Sparrow.stage.height)
 @implementation RaceScene {
     // UI
     SPTexture *_buttonTexture;
@@ -45,7 +47,7 @@
     [self addChild:_background];
     
     _canvas = [[Canvas alloc] initWithWidth:300 height:220];
-    _canvas.x = (GAME_WIDTH - _canvas.width)/2;
+    _canvas.x = (GAMEWIDTH - _canvas.width)/2;
     _canvas.y = 200;
     [_canvas clear];
     [self addChild:_canvas];
@@ -64,7 +66,7 @@
     _targetLabel = [[SPTextField alloc] initWithWidth:100 height:100];
     _targetLabel.pivotX = _targetLabel.width / 2;
     _targetLabel.pivotY = _targetLabel.height / 2;
-    _targetLabel.x = CENTER_X / 2 + 20;
+    _targetLabel.x = (GAMEWIDTH/2) / 2 + 20;
     _targetLabel.y = 150;
     _targetLabel.text = @"";
     _targetLabel.fontSize = 50;
@@ -118,8 +120,8 @@
     if (self) {
         [self setupScene];
         
-        UserStorage *us = [[GlobalStorage sharedInstance] userdata];
-        _classifier = [us classifier];
+        UserData *us = [[GlobalStorage sharedInstance] activeUser];
+        _classifier = [us activeClassifier];
         [_classifier setDelegate:self];
         [_classifier setBeamCount:800];
         
@@ -141,8 +143,8 @@
     //_testString = [self shuffleString:@"abcdefghijklmnopqrstuvwxyz"];
     //_testString = [self shuffleString:@"abc"];
     GlobalStorage *gs = [GlobalStorage sharedInstance];
-    UserStorage *us = [gs userdata];
-    NSArray *labelArray = [[[gs languages] languageWithId:[us languageId]] allLabels];
+    UserData *us = [gs activeUser];
+    NSArray *labelArray = [[[gs languages] languageWithID:[us languageID]] labels];
     _testString = [self shuffleArray:labelArray];
     _currentIdx = 0;
     _score = 0;
@@ -156,8 +158,8 @@
     banner.vAlign = SPVAlignCenter;
     banner.pivotX = banner.width/2;
     banner.pivotY = banner.height/2;
-    banner.x = CENTER_X;
-    banner.y = CENTER_Y + 70;
+    banner.x = GAMEWIDTH/2;
+    banner.y =  + 70;
     banner.color = 0x00ff00;
     banner.fontSize = 100;
     [self addChild:banner];

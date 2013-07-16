@@ -6,23 +6,20 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "URJSONSerializable.h"
 
 @class RoundData;
 
-@interface SessionData : NSObject
+@interface SessionData : NSObject <URJSONSerializable>
 
 @property (nonatomic,strong) NSMutableArray *rounds;
 @property float bps;
 @property float totalScore;
 @property float totalTime;
-@property int modeId;
-@property int userId;
-@property int languageId;
-@property int classifierId;
-
-// Serialization
-- (id)initWithJSONObject:(id)jsonObj;
-- (id)toJSONObject;
+@property int modeID;
+@property int userID;
+@property int languageID;
+@property int classifierID;
 
 - (void)addRound:(RoundData *)round;
 

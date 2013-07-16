@@ -1,17 +1,17 @@
 //
 //  ClassificationResult.h
-//  Handwriting
+//  uRight3
 //
 //  Created by Sunsern Cheamanunkul on 4/13/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
+#import "URJSONSerializable.h"
 
-@interface ClassificationResult : NSObject
+@interface ClassificationResult : NSObject <URJSONSerializable>
 
-@property (nonatomic,strong,readonly) NSDictionary *resultDictionary;
-           
+@property (nonatomic,strong) NSDictionary *scores;
+
 - (id)initWithDictionary:(NSDictionary *)dict;
 
 // best answer is rank 0
@@ -20,9 +20,5 @@
 - (double)scoreByRanking:(int)rank;
 
 - (double)scoreByLabel:(NSString *)label;
-
-// Serialization
-- (id)initWithJSONObject:(id)jsonObj;
-- (id)toJSONObject;
 
 @end

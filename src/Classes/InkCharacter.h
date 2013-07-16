@@ -6,12 +6,13 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "URJSONSerializable.h"
 
 @class InkPoint;
 
-@interface InkCharacter : NSObject
+@interface InkCharacter : NSObject <URJSONSerializable>
 
-@property (nonatomic,strong,readonly) NSArray *points;
+@property (nonatomic,strong) NSArray *points;
 @property float baseLine;
 @property float topLine;
 
@@ -29,10 +30,6 @@
 // This is for drawing purposes.
 - (InkCharacter *)alignCharacterWithBaseline:(float)baseline 
                                      topline:(float)topline;
-
-// Serialization
-- (id)initWithJSONObject:(id)jsonObj;
-- (id)toJSONObject;
 
 // Duration of the current character
 - (double)duration;

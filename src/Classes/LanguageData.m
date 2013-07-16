@@ -1,34 +1,35 @@
 //
-//  LanguageDefinition.m
+//  LanguageData.m
 //  uRight3
 //
 //  Created by Sunsern Cheamanunkul on 7/13/13.
 //
 //
 
-#import "Languages.h"
+#import "LanguageData.h"
 
 @implementation LanguageInfo
 
 - (id)initWithJSONObject:(id)jsonObj {
     self = [super init];
     if (self) {
-        _languageId = [jsonObj[@"id"] intValue];
-        _languageName = [jsonObj[@"name"] copy];
-        _allLabels = [[NSArray alloc] initWithArray:jsonObj[@"characters"]];
+        _languageID = [jsonObj[@"id"] intValue];
+        _name = [jsonObj[@"name"] copy];
+        _labels = [[NSArray alloc] initWithArray:jsonObj[@"characters"]];
     }
     return self;
 }
 
 - (id)toJSONObject {
-    return @{@"id":@(_languageId),
-             @"name":_languageName,
-             @"characters":_allLabels};
+    return @{@"id":@(_languageID),
+             @"name":_name,
+             @"characters":_labels};
 }
 
 @end
 
-@implementation Languages
+
+@implementation LanguageData
 
 - (id)initWithJSONObject:(id)jsonObj {
     self = [super init];
@@ -50,8 +51,8 @@
     return jsonObj;
 }
 
-- (LanguageInfo *)languageWithId:(int)languageId {
-    return _languages[[@(languageId) stringValue]];
+- (LanguageInfo *)languageWithID:(int)languageID {
+    return _languages[[@(languageID) stringValue]];
 }
 
 @end

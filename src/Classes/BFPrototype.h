@@ -7,14 +7,14 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "URJSONSerializable.h"
 
-@interface BFPrototype : NSObject
+@interface BFPrototype : NSObject <URJSONSerializable>
 
 @property (nonatomic,copy) NSString *label;
-@property (nonatomic,strong) NSArray *pointArray;
+@property (nonatomic,strong) NSArray *points;
 @property (readwrite) float prior;
 
-- (id)initWithJSONObject:(id)jsonObj;
 - (int)length;
 
 @end

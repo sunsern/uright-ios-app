@@ -7,11 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "URJSONSerializable.h"
 
 @class InkCharacter;
 @class ClassificationResult;
 
-@interface RoundData : NSObject
+@interface RoundData : NSObject <URJSONSerializable>
 
 @property (nonatomic,copy) NSString *label;
 @property (nonatomic,strong) InkCharacter *ink;
@@ -20,9 +21,5 @@
 @property double firstPendownTime;
 @property double lastPenupTime;
 @property float score;
-
-- (id)initWithJSONObject:(id)jsonObj;
-- (id)toJSONObject;
-
 
 @end

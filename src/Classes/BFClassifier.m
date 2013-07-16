@@ -9,6 +9,7 @@
 #import "BFClassifier.h"
 #import "BFPrototype.h"
 #import "InkPoint.h"
+#import "JCSuperPriorityQueue.h"
 
 #define kAlpha 0.5
 #define kSkip 3
@@ -107,7 +108,7 @@ static dispatch_queue_t __serialQueue = NULL;
             BFPrototype *p = [[BFPrototype alloc] initWithJSONObject:protoJSON];
             [prototypes addObject:p];
         }
-        _classifierId = [jsonObj[@"classifier_id"] intValue];
+        _classifierID = [jsonObj[@"classifier_id"] intValue];
         _beamCount = kBeamWidth;
         _targetThreshold = kLikelihoodThreshold;
         _prototypes = prototypes;
@@ -171,7 +172,7 @@ static dispatch_queue_t __serialQueue = NULL;
     CacheData *data = _cacheDict[key];
     float cost = 0;
     if (data == nil) {
-        cost = [[self class] computeCostInkPoint:(pData.pointArray)[stateIdx]
+        cost = [[self class] computeCostInkPoint:(pData.points)[stateIdx]
                                               to:inputPoint];
         StateData *state = [[StateData alloc] init];
         state.prototypeIdx = prototypeIdx;

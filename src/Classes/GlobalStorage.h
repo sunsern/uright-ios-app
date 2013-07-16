@@ -7,25 +7,28 @@
 
 #import <Foundation/Foundation.h>
 
-#import "Languages.h"
+#import "LanguageData.h"
 
-@class UserStorage;
+@class UserData;
 
 @interface GlobalStorage : NSObject
 
-@property (readonly) int currentUserId;
-@property (nonatomic,strong) Languages *languages;
-@property (nonatomic,strong) UserStorage *userdata;
+@property int activeUserID;
+@property (nonatomic,strong) LanguageData *languages;
+@property (nonatomic,strong) UserData *activeUser;
 
 + (id)sharedInstance;
 
 // change active user
-- (void)switchToUser:(int)newUserId;
+- (void)switchActiveUser:(int)userID;
 
-- (void)loadGlobalData;
-- (void)loadUserData;
+- (void)setLanguages:(LanguageData *)languages;
 
-- (void)saveGlobalData;
-- (void)saveUserData;
+//- (void)saveGlobalData;
+//- (void)loadGlobalData;
+//- (void)saveUserData;
+//- (void)loadUserData;
+
+- (void)clearGlobalData;
 
 @end

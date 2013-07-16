@@ -6,20 +6,20 @@
 //
 //
 
-#import "UserStorage.h"
+#import "UserData.h"
 
 #import "BFClassifier.h"
 #import "SessionData.h"
 
 #define kMaxScoreHistory 10
 
-@implementation UserStorage
+@implementation UserData
 
 - (id)init {
     self = [super init];
     if (self) {
-        _userId = -1;
-        _languageId = -1;
+        _userID = -1;
+        _languageID = -1;
         _username = @"";
         _password = @"";
         _classifiers = [[NSMutableDictionary alloc] init];
@@ -32,8 +32,8 @@
 - (id)initWithJSONObject:(NSDictionary *)jsonObj {
     self = [super init];
     if (self) {
-        _userId = [jsonObj[@"userId"] intValue];
-        _languageId = [jsonObj[@"languageId"] intValue];
+        _userID = [jsonObj[@"userID"] intValue];
+        _languageID = [jsonObj[@"languageID"] intValue];
         _username = [jsonObj[@"username"] copy];
         _password = [jsonObj[@"password"] copy];
         _classifiers = [[NSMutableDictionary alloc] init];
@@ -53,8 +53,8 @@
 
 - (NSDictionary *)toJSONObject {
     NSMutableDictionary *jsonObj = [[NSMutableDictionary alloc] init];
-    jsonObj[@"userId"] = @(_userId);
-    jsonObj[@"languageId"] = @(_languageId);
+    jsonObj[@"userID"] = @(_userID);
+    jsonObj[@"languageID"] = @(_languageID);
     jsonObj[@"username"] = _username;
     jsonObj[@"password"] = _password;
     jsonObj[@"sessions"] = _sessions;
@@ -68,7 +68,7 @@
 }
 
 - (void)addScore:(float)score {
-    NSString *key = [@(_languageId) stringValue];
+    NSString *key = [@(_languageID) stringValue];
     NSDictionary *scoreStruct = _scores[key];
     if (scoreStruct != nil) {
         float max_score = [scoreStruct[@"maxscore"] floatValue];
@@ -100,11 +100,11 @@
 }
 
 - (NSArray *)scoreArray {
-    return _scores[[@(_languageId) stringValue]][@"scores"];
+    return _scores[[@(_languageID) stringValue]][@"scores"];
 }
 
 - (float)bestScore {
-    NSDictionary *scoreStruct = _scores[[@(_languageId) stringValue]];
+    NSDictionary *scoreStruct = _scores[[@(_languageID) stringValue]];
     if (scoreStruct == nil) {
         return 0.0;
     } else {
@@ -116,24 +116,21 @@
     [_sessions addObject:sessionJSON];
 }
 
-// Build cache
-- (void)switchToLanguageId:(int)langId {
-    _languageId = langId;
+
+- (void)switchActiveLanguage:(int)langID {
+    GlobalStorage *gs = [GlobalStorage sharedInstance];
+    if ([[gs languages] languageWithID:langID] != nil) {
+        _languageID = langID;
+    }
 }
 
 - (void)setClassifier:(BFClassifier *)classifier
-          forLanguage:(int)languageId {
-    _classifiers[[@(languageId) stringValue]] = classifier;
+          forLanguage:(int)languageID {
+    _classifiers[[@(languageID) stringValue]] = classifier;
 }
 
-- (BFClassifier *)classifier {
-    return _classifiers[[@(_languageId) stringValue]];
-}
-
-- (NSString *)languageName {
-    GlobalStorage *gs = [GlobalStorage sharedInstance];
-    LanguageInfo *langInfo = [gs.languages languageWithId:_languageId];
-    return langInfo.languageName;
+- (BFClassifier *)activeClassifier {
+    return _classifiers[[@(_languageID) stringValue]];
 }
 
 

@@ -10,7 +10,7 @@
 
 #import "BFClassifier.h"
 #import "GlobalStorage.h"
-#import "UserStorage.h"
+#import "UserData.h"
 #import "ServerManager.h"
 #import "InkPoint.h"
 
@@ -35,7 +35,7 @@
     GlobalStorage *gs = [GlobalStorage sharedInstance];
     [gs loadGlobalData];
     [gs loadUserData];
-    UserStorage *us = [gs userdata];
+    UserData *us = [gs activeUser];
     _classifier = [us classifier];
     [_classifier setDelegate:self];
     
