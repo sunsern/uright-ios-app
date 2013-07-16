@@ -24,11 +24,6 @@
 
 - (void)setLanguages:(LanguageData *)languages;
 
-//- (void)saveGlobalData;
-//- (void)loadGlobalData;
-//- (void)saveUserData;
-//- (void)loadUserData;
-
 - (void)clearGlobalData;
 
 @end

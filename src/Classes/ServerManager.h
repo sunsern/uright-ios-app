@@ -11,22 +11,20 @@
 
 @interface ServerManager : NSObject
 
-+ (void)showConnectionError:(NSString *)message;
-
-+ (NSDictionary *)fetchDataForUsername:(NSString *)username password:(NSString *)password;
-
-+ (NSDictionary *)submitSessionData:(SessionData *)data;
-
 + (BOOL)isOnline;
 
-+ (void)synchronizeData;
++ (int)getUserIDFromUsername:(NSString *)username
+                    password:(NSString *)password;
 
 + (int)createAccountForUsername:(NSString *)username
-                        password:(NSString *)password
-                           email:(NSString *)email
-                        fullname:(NSString *)fullname;
+                       password:(NSString *)password
+                          email:(NSString *)email
+                       fullname:(NSString *)fullname;
 
-+ (NSDictionary *)getUserIdFromUsername:(NSString *)username
-                               password:(NSString *)password;
++ (NSDictionary *)fetchLanguageData;
+
++ (NSDictionary *)fetchClassifiers;
+
++ (BOOL)uploadSessionData:(SessionData *)data;
 
 @end

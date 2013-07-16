@@ -6,17 +6,17 @@
 //
 //
 
-#import <FacebookSDK/FacebookSDK.h>
-
 #import "MenuScene.h"
 
 #import "Game.h"
 #import "LoginScene.h"
 #import "RaceScene.h"
+#import "CollectScene.h"
 #import "ServerManager.h"
 
 @implementation MenuScene {
     LoginScene *_login;
+    SPTextField *_info;
 }
 
 - (id)init
@@ -28,6 +28,12 @@
     return self;
 }
 
+
+- (void)printInfo {
+    UserData *us = [[GlobalStorage sharedInstance] activeUser];
+    _info.text = [NSString stringWithFormat:@"User id: %d, Lang id: %d, Username: %@",
+                  us.userID, us.languageID, us.username];
+}
 
 - (void)setupScene {
     int gameWidth = Sparrow.stage.width;
@@ -54,8 +60,9 @@
         [self addChild:button];
     }
 
-    FBSession *session = [[FBSession alloc] init];
-    [FBSession setActiveSession:session];
+    _info = [[SPTextField alloc] initWithWidth:gameWidth height:100];
+    [self addChild:_info];
+    [self printInfo];
     
     
     [self addEventListener:@selector(onAddedToStage:)
@@ -75,65 +82,19 @@
         RaceScene *race = [[RaceScene alloc] init];
         [(Game *)Sparrow.root showScene:race];
     } else if ([button.name isEqualToString:@"Collect"]) {
-        // pass
+        CollectScene *collect = [[CollectScene alloc] init];
+        [(Game *)Sparrow.root showScene:collect];
     } else if ([button.name isEqualToString:@"Logout"]) {
-        NSArray *permissions = @[@"email"];
-        
-        // Attempt to open the session. If the session is not open, show the user the Facebook login UX
-        [FBSession openActiveSessionWithReadPermissions:permissions
-                                           allowLoginUI:YES
-                                      completionHandler:^(FBSession *session,                                           FBSessionState status, NSError *error)
-         {
-             // Did something go wrong during login? I.e. did the user cancel?
-             if (status == FBSessionStateClosedLoginFailed || status == FBSessionStateCreatedOpening) {
-                 
-                 // If so, just send them round the loop again
-                 [[FBSession activeSession] closeAndClearTokenInformation];
-                 [FBSession setActiveSession:nil];
-                 
-                 FBSession *session = [[FBSession alloc] init];
-                 [FBSession setActiveSession:session];
-             }
-             else
-             {
-                 // Update our game now we've logged in
-                 NSLog(@"Success");
-                 if (FBSession.activeSession.isOpen) {
-                     
-                     // Request data
-                     [[FBRequest requestForMe] startWithCompletionHandler:
-                      ^(FBRequestConnection *connection,
-                        NSDictionary <FBGraphUser> *user,
-                        NSError *error) {
-                          if (!error) {
-                              
-                              int userID = [ServerManager getUserIdFromUsername:user.username
-                                                                       password:user.id];
-                              
-                              // New user
-                              if (userID < 0) {
-                                  NSString *username = [NSString stringWithFormat:@"FB_%@",user.username];
-                                  userID = [ServerManager createAccountForUsername:username
-                                                                          password:user.id
-                                                                             email:user[@"email"]
-                                                                          fullname:user.name];
-                                  
-                                  if (userID > 0) {
-                                      NSLog(@"Created a new account %d", userID);
-                                  }
-                              }
-                          }
-                      }];
-                 }
-             }
-         }];
-    } else {
         // pass
     }
+    [self printInfo];
 }
 
 - (void)onAddedToStage:(SPEvent *)event {
-    // pass
+    if ([[GlobalStorage sharedInstance] activeUserID] == kURGuestUserID) {
+        LoginScene *login = [[LoginScene alloc] init];
+        [self addChild:login];
+    }
 }
 
 @end

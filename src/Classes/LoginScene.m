@@ -7,6 +7,7 @@
 //
 
 #import "LoginScene.h"
+#import "AccountManager.h"
 
 @implementation LoginScene {
     UITextField *_username;
@@ -14,7 +15,6 @@
     SPButton *_loginButton;
     SPButton *_guestButton;
     SPButton *_createButton;
-    SPImage *_background;
 }
 
 - (id)init {
@@ -22,42 +22,37 @@
     if (self) {
         int GAME_WIDTH = Sparrow.stage.width;
         
-        _background = [SPImage imageWithContentsOfFile:@"background.jpg"];
-        _background.blendMode = SP_BLEND_MODE_NONE;
-        [self addChild:_background];
+        SPImage *background = [SPImage imageWithContentsOfFile:@"background.jpg"];
+        background.blendMode = SP_BLEND_MODE_NONE;
+        [self addChild:background];
+        [background addEventListener:@selector(onTouch:)
+                            atObject:self forType:SP_EVENT_TYPE_TOUCH];
         
         // Create buttons
         SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
         
-        _loginButton = [SPButton buttonWithUpState:buttonTexture text:@"Log in"];
-        _loginButton.pivotX = _loginButton.width / 2;
-        _loginButton.pivotY = _loginButton.height / 2;
-        _loginButton.x = self.width / 2;
-        _loginButton.y = 200;
-        [self addChild:_loginButton];
+        NSArray *buttonText = @[@"Log in", @"Log in with Facebook"];
+        for (int i = 0; i < [buttonText count]; i++) {
+            SPButton *button = [SPButton buttonWithUpState:buttonTexture];
+            button.pivotX = button.width / 2;
+            button.pivotY = button.height / 2;
+            button.x = GAME_WIDTH / 2;
+            button.y = 200 + 80*i;
+            button.text = buttonText[i];
+            button.name = button.text;
+            [self addChild:button];
+            [button addEventListener:@selector(onButtonTriggered:)
+                            atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
+        }
         
-        _createButton = [SPButton buttonWithUpState:buttonTexture text:@"Create a new account"];
-        _createButton.pivotX = _createButton.width / 2;
-        _createButton.pivotY = _createButton.height / 2;
-        _createButton.x = self.width / 2;
-        _createButton.y = 280;
-        [self addChild:_createButton];
-        
-        _guestButton = [SPButton buttonWithUpState:buttonTexture text:@"Log in as a guest"];
-        _guestButton.pivotX = _guestButton.width / 2;
-        _guestButton.pivotY = _guestButton.height / 2;
-        _guestButton.x = self.width / 2;
-        _guestButton.y = 360;
-        [self addChild:_guestButton];
-        
-        _username = [[UITextField alloc] initWithFrame:CGRectMake(GAME_WIDTH/2, 30, 100, 30)];
+        _username = [[UITextField alloc] initWithFrame:CGRectMake(GAME_WIDTH/2, 50, 100, 30)];
         _username.backgroundColor = [UIColor whiteColor];
         _username.borderStyle = UITextBorderStyleRoundedRect;
         _username.autocorrectionType = UITextAutocorrectionTypeNo;
         _username.autocapitalizationType = UITextAutocapitalizationTypeNone;
         [Sparrow.currentController.view addSubview:_username];
         
-        _password = [[UITextField alloc] initWithFrame:CGRectMake(GAME_WIDTH/2, 70, 100, 30)];
+        _password = [[UITextField alloc] initWithFrame:CGRectMake(GAME_WIDTH/2, 90, 100, 30)];
         _password.backgroundColor = [UIColor whiteColor];
         _password.borderStyle = UITextBorderStyleRoundedRect;
         _password.secureTextEntry = YES;
@@ -74,20 +69,9 @@
         passwordLabel.y = 70;
         passwordLabel.color = 0x333333;
         [self addChild:passwordLabel];
-    
-        [_loginButton addEventListener:@selector(onButtonTriggered:) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
-        [_guestButton addEventListener:@selector(onButtonTriggered:) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
-        [_createButton addEventListener:@selector(onButtonTriggered:) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
         
-        [_background addEventListener:@selector(onTouch:) atObject:self forType:SP_EVENT_TYPE_TOUCH];
     }
     return self;
-}
-
-- (void)dealloc {
-    [_loginButton removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TRIGGERED];
-    [_guestButton removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TRIGGERED];
-    [_background removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TOUCH];
 }
 
 
@@ -100,17 +84,27 @@
     [_username resignFirstResponder];
     [_password resignFirstResponder];
     SPButton *button = (SPButton *)event.target;
-    if (button == _loginButton) {
-        NSLog(@"log in as %@ : %@", [_username text], [_password text]);
-        [self dispatchEvent:[SPEvent eventWithType:LOGIN_DONE]];
-    } else if (button == _createButton) {
-        NSLog(@"create account");
-        [self dispatchEvent:[SPEvent eventWithType:LOGIN_DONE]];
-    } else {
-        NSLog(@"guest");
-        [self dispatchEvent:[SPEvent eventWithType:LOGIN_DONE]];
+    if ([button.name isEqualToString:@"Log in"]) {
+        [AccountManager loginAsUsername:_username.text
+                               password:_password.text
+                             onComplete:^(BOOL successful){
+                                 if (successful) {
+                                     [_username removeFromSuperview];
+                                     [_password removeFromSuperview];
+                                     [self removeFromParent];
+                                 }
+                             }];
+    } else if ([button.name isEqualToString:@"Log in with Facebook"]) {
+        [AccountManager loginAsCurrentFacebookUser:^(BOOL successful){
+            if (successful) {
+                [_username removeFromSuperview];
+                [_password removeFromSuperview];
+                [self removeFromParent];
+            }
+        }];
     }
 }
+
 
 
 @end

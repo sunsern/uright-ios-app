@@ -8,12 +8,13 @@
 
 #import "GlobalStorage.h"
 
+#import "ServerManager.h"
 #import "UserData.h"
 #import "BFClassifier.h"
+#import "LanguageData.h"
 
 #define STORAGE_VERSION 3.0
 #define SETTINGS_FILE @"settings.json"
-#define ENGLISH_CLASSIFIER @"dtw_classifier_user_1.json"
 #define DEFAULT_LANGUAGE_ID 1 // English
 
 #define VERBOSE YES
@@ -81,6 +82,16 @@ static GlobalStorage *__sharedInstance = nil;
                       initWithJSONObject:langData];
     }
     if (VERBOSE) NSLog(@"Loaded %d languages",[_languages.languages count]);
+    
+    // check for langauge data online
+    if ([ServerManager isOnline]) {
+        NSDictionary *languages = [ServerManager fetchLanguageData];
+        if (languages) {
+            _languages = [[LanguageData alloc]
+                          initWithJSONObject:languages];
+            [self saveGlobalData];
+        }
+    }
 }
 
 
@@ -114,12 +125,6 @@ static GlobalStorage *__sharedInstance = nil;
             _activeUser.username = @"unknown";
             _activeUser.password = @"";
         }
-        // Create English classifier
-        NSDictionary *classifierJSON = [[self class]
-                                        loadJSONFromFile:ENGLISH_CLASSIFIER];
-        BFClassifier *classifier = [[BFClassifier alloc]
-                                    initWithJSONObject:classifierJSON];
-        [_activeUser setClassifier:classifier forLanguage:DEFAULT_LANGUAGE_ID];
         
         if (VERBOSE) {
             NSLog(@"Data for %d doesn't exist. Creating from template",
@@ -129,14 +134,35 @@ static GlobalStorage *__sharedInstance = nil;
         _activeUser = [[UserData alloc] initWithJSONObject:userData];
         if (VERBOSE) NSLog(@"Load data for user %d",_activeUserID);
     }
+    
+    // check for new classifiers
+    if ([ServerManager isOnline]) {
+        // TODO: obtain classifier from server
+        //NSDictionary *classifiers = [ServerManager fetchClassifiers];
+        //for (id key in classifiers) {
+        //    [_activeUser setClassifier:[[BFClassifier alloc]
+        //                                initWithJSONObject:classifiers[key]]
+        //                   forLanguage:[key intValue]];
+        // }
+        //[self saveUserData];
+    }
+    
+    // Inject classifier
+    NSDictionary *classifierJSON = [[self class]
+                                    loadJSONFromFile:@"dtw_classifier_user_1.json"];
+    BFClassifier *classifier = [[BFClassifier alloc]
+                                initWithJSONObject:classifierJSON];
+    [_activeUser setClassifier:classifier forLanguage:1];
 }
 
 - (void)switchActiveUser:(int)userID {
     if (_activeUserID != userID) {
         [self saveUserData];
+        NSLog(@"Switching user %d -> %d",_activeUserID, userID);
         _activeUserID = userID;
         [self loadUserData];
         [self saveGlobalData];
+      
     }
 }
 
@@ -146,6 +172,7 @@ static GlobalStorage *__sharedInstance = nil;
     [self saveGlobalData];
 }
 
+
 - (void)clearGlobalData {
     NSString *appDomain = [[NSBundle mainBundle] bundleIdentifier];
     [[NSUserDefaults standardUserDefaults] removePersistentDomainForName:appDomain];
@@ -154,7 +181,6 @@ static GlobalStorage *__sharedInstance = nil;
     [self loadGlobalData];
     [self loadUserData];
 }
-
 
 // Helper method
 + (NSDictionary *)loadJSONFromFile:(NSString *)filename {

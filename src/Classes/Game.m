@@ -7,12 +7,13 @@
 #import "Canvas.h"
 #import "MenuScene.h"
 #import "RaceScene.h"
-#import "ServerManager.h"
+#import "AccountManager.h"
 
 @implementation Game
 {
     SPSprite *_contents;
     SPSprite *_currentScene;
+    SPSprite *_menu;
 }
 
 - (id)init
@@ -58,21 +59,16 @@
     
     [self updateLocations];
     
+    
     // Initialize the singleton storage
-    GlobalStorage *gs = [GlobalStorage sharedInstance];
+    [GlobalStorage sharedInstance];
     
-    NSLog(@"%@",[[[gs languages] languageWithID:1] name]);
+
+    _menu = [[MenuScene alloc] init];
+    [self showScene:_menu];
     
-    
-    MenuScene *menu = [[MenuScene alloc] init];
-    [self showScene:menu];
-    
-    
-    [[Sparrow juggler] delayInvocationByTime:1.5f block:^{
-        [ServerManager synchronizeData];
-    }];
-    
-    
+    // Initialize Facebook session
+    [AccountManager initializeFacebookSession];
     
     
     /*
@@ -124,5 +120,12 @@
     _currentScene = scene;
     [self updateLocations];
 }
+
+- (void)showMenu {
+    if (_currentScene != _menu) {
+        [self showScene:_menu];
+    }
+}
+
 
 @end

@@ -10,7 +10,10 @@
 
 @interface AccountManager : NSObject
 
-+ (BOOL)loginAsUsername:(NSString *)username password:(NSString *)password;
-+ (void)logout;
++ (void)initializeFacebookSession;
++ (void)loginAsCurrentFacebookUser:(void(^)(BOOL))completeBlock;
++ (void)loginAsUsername:(NSString *)username password:(NSString *)password
+             onComplete:(void(^)(BOOL))completeBlock;
++ (void)logout:(void(^)(void))completeBlock;
 
 @end

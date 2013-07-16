@@ -1,12 +1,12 @@
 //
-//  RaceScene.m
+//  CollectScene.m
 //  uRight3
 //
 //  Created by Sunsern Cheamanunkul on 7/5/13.
 //
 //
 
-#import "RaceScene.h"
+#import "CollectScene.h"
 
 #import "Canvas.h"
 #import "BFClassifier.h"
@@ -18,11 +18,11 @@
 #import "LanguageData.h"
 #import "ServerManager.h"
 
-#define MODE_ID 3
+#define MODE_ID 6
 #define GAMEWIDTH (Sparrow.stage.width)
 #define GAMEHEIGHT (Sparrow.stage.height)
 
-@implementation RaceScene {
+@implementation CollectScene {
     // UI
     NSArray *_textfields;
     SPTextField *_targetLabel;
@@ -59,10 +59,6 @@
     _canvas.y = 200;
     [self addChild:_canvas];
     
-    [_canvas addEventListener:@selector(onTouch:)
-                     atObject:self
-                      forType:SP_EVENT_TYPE_TOUCH];
-    
     SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
     SPButton *resetButton = [SPButton buttonWithUpState:buttonTexture text:@"Reset"];
     resetButton.x = 100;
@@ -78,7 +74,7 @@
     _targetLabel.text = @"";
     _targetLabel.fontSize = 50;
     [self addChild:_targetLabel];
-   
+    
     NSArray *textfieldNames = @[@"totalScore", @"totalTime", @"bps"];
     NSMutableArray *mTextFields = [[NSMutableArray alloc] init];
     for (int i=0; i < [textfieldNames count]; i++) {
@@ -119,6 +115,13 @@
     [self addChild:quit];
     [quit addEventListener:@selector(quitRace) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
     
+    // next button
+    SPButton *next = [SPButton buttonWithUpState:buttonTexture text:@"next"];
+    next.x = 20;
+    next.y = 100;
+    [self addChild:next];
+    [next addEventListener:@selector(endRound) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
+    
     
     // Auto start
     [self addEventListener:@selector(restartRace) atObject:self forType:SP_EVENT_TYPE_ADDED_TO_STAGE];
@@ -146,10 +149,6 @@
     // Set up classifier
     GlobalStorage *gs = [GlobalStorage sharedInstance];
     UserData *us = [gs activeUser];
-    _classifier = [us activeClassifier];
-    [_classifier setDelegate:self];
-    [_classifier setBeamCount:800];
-    [_canvas setClassifier:_classifier];
     
     _session = [[SessionData alloc] init];
     _session.userID = us.userID;
@@ -162,8 +161,9 @@
         tf.text = @"0.00";
     }
     
-    NSArray *labelArray = [[[gs languages] languageWithID:[us languageID]] labels];
-    _testString = [self shuffleArray:labelArray];
+    //NSArray *labelArray = [[[gs languages] languageWithID:[us languageID]] labels];
+    _testString = @"กขคง";
+    //_testString = [self shuffleArray:labelArray];
     _currentIdx = 0;
     _score = 0;
     _time = 0;
@@ -243,34 +243,6 @@
         }
     }
     
-    SPTextField *current_score = [SPTextField textFieldWithText:[NSString stringWithFormat:@"%0.2f",_currentScore]];
-    current_score.x = 140;
-    current_score.y = 100;
-    current_score.fontSize = 30;
-    current_score.color = 0xff0000;
-    current_score.alpha = 1.0;
-    [self addChild:current_score];
-    SPTween *tween = [SPTween tweenWithTarget:current_score time:1.5f];
-    tween.delay = 0.0;
-    tween.onComplete = ^{ [self removeChild:current_score]; };
-    [tween animateProperty:@"y" targetValue:50];
-    [tween animateProperty:@"alpha" targetValue:0.0];
-    [[Sparrow juggler] addObject:tween];
-    
-    SPTextField *current_time = [SPTextField textFieldWithText:[NSString stringWithFormat:@"%0.2f",delta_time]];
-    current_time.x = 220;
-    current_time.y = 100;
-    current_time.fontSize = 30;
-    current_time.color = 0x00ff00;
-    current_time.alpha = 1.0;
-    [self addChild:current_time];
-    tween = [SPTween tweenWithTarget:current_time time:1.5f];
-    tween.delay = 0.0;
-    tween.onComplete = ^{ [self removeChild:current_time]; };
-    [tween animateProperty:@"y" targetValue:50];
-    [tween animateProperty:@"alpha" targetValue:0.0];
-    [[Sparrow juggler] addObject:tween];
-    
     _currentIdx++;
     if (_currentIdx < _testString.length) {
         [self startRound];
@@ -297,30 +269,6 @@
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
 }
 
-
-- (void)thresholdReached:(InkPoint *)point {
-    if (!_soundPlayed) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [_canvas drawMarkerAt:point];
-            _soundPlayed = YES;
-            [Media playSound:@"DING.caf"];
-        });
-    }
-}
-
-- (void)updateScore:(float)targetProb {
-    float p = 1.0 / targetProb;
-    _currentScore = MAX(log2(26) - log2(p), 0);
-}
-
-
-- (void)onTouch:(SPTouchEvent *)event {
-    [NSObject cancelPreviousPerformRequestsWithTarget:self];
-    SPTouch *touchEnd = [[event touchesWithTarget:self andPhase:SPTouchPhaseEnded] anyObject];
-    if(touchEnd){
-        [self performSelector:@selector(endRound) withObject:nil afterDelay:2.0];
-    }
-}
 
 - (NSString *)shuffleString:(NSString *)labels {
     NSMutableString *randomizedText = [NSMutableString stringWithString:labels];

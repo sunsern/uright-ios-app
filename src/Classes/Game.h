@@ -9,5 +9,6 @@
 @interface Game : SPSprite
 
 - (void)showScene: (SPSprite *)scene;
+- (void)showMenu;
 
 @end

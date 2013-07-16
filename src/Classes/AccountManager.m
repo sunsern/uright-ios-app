@@ -6,26 +6,101 @@
 //
 //
 
+#import <FacebookSDK/FacebookSDK.h>
+
 #import "AccountManager.h"
 #import "ServerManager.h"
 
 @implementation AccountManager
 
-+ (BOOL)loginAsUsername:(NSString *)username password:(NSString *)password {
-    NSDictionary *result = [ServerManager getUserIdFromUsername:username password:password];
-    // successful
-    if (result && [result[@"login_result"] isEqualToString:@"OK"]) {
-        GlobalStorage *gs = [GlobalStorage sharedInstance];
-        [gs switchActiveUser:[result[@"user_id"] intValue]];
-        return YES;
-    } else {
-        return NO;
-    }
+
++ (void)initializeFacebookSession {
+    FBSession *session = [[FBSession alloc] init];
+    [FBSession setActiveSession:session];
 }
 
-+ (void)logout {
++ (void)loginAsCurrentFacebookUser:(void(^)(BOOL))completeBlock; {
+    NSArray *permissions = @[@"email"];
+    
+    // Attempt to open the session. If the session is not open,
+    // show the user the Facebook login UX
+    [FBSession openActiveSessionWithReadPermissions:permissions
+                                       allowLoginUI:YES
+                                  completionHandler:^(FBSession *session,                                           FBSessionState status, NSError *error)
+     {
+         // Did something go wrong during login? I.e. did the user cancel?
+         if (status == FBSessionStateClosedLoginFailed || status == FBSessionStateCreatedOpening) {
+             
+             // If so, just send them round the loop again
+             [[FBSession activeSession] closeAndClearTokenInformation];
+             [FBSession setActiveSession:nil];
+             
+             FBSession *session = [[FBSession alloc] init];
+             [FBSession setActiveSession:session];
+         } else {
+             if (FBSession.activeSession.isOpen) {
+                 
+                 // Request data
+                 [[FBRequest requestForMe] startWithCompletionHandler:
+                  ^(FBRequestConnection *connection,
+                    NSDictionary <FBGraphUser> *user,
+                    NSError *error) {
+                      if (!error) {
+                          
+                          // Create username and password
+                          NSString *username = [NSString stringWithFormat:@"FB_%@",user.username];
+                          NSString *password = user.id;
+                        
+                          // Attemp to login
+                          int userID = [ServerManager getUserIDFromUsername:username
+                                                                   password:password];
+                          
+                          if (userID != kURGuestUserID) {
+                              GlobalStorage *gs = [GlobalStorage sharedInstance];
+                              [gs switchActiveUser:userID];
+                          } else {
+                              int newUserID = [ServerManager createAccountForUsername:username
+                                                                             password:password
+                                                                                email:user[@"email"]
+                                                                             fullname:user.name];
+                              GlobalStorage *gs = [GlobalStorage sharedInstance];
+                              [gs switchActiveUser:newUserID];
+                          }
+                          
+                          UserData *us = [[GlobalStorage sharedInstance] activeUser];
+                          us.username = username;
+                          us.password = password;
+                          
+                          completeBlock(YES);
+                          return;
+                      }
+                      completeBlock(NO);
+                  }];
+             }
+         }
+     }];
+}
+
++ (void)loginAsUsername:(NSString *)username password:(NSString *)password
+             onComplete:(void(^)(BOOL))completeBlock {
+    int userID = [ServerManager getUserIDFromUsername:username password:password];
+    if (userID != kURGuestUserID) {
+        GlobalStorage *gs = [GlobalStorage sharedInstance];
+        [gs switchActiveUser:userID];
+        UserData *us = [[GlobalStorage sharedInstance] activeUser];
+        us.username = username;
+        us.password = password;
+        completeBlock(YES);
+        return;
+    }
+    completeBlock(NO);
+}
+
++ (void)logout:(void(^)(void))completeBlock; {
     GlobalStorage *gs = [GlobalStorage sharedInstance];
     [gs switchActiveUser:kURGuestUserID];
+    completeBlock();
 }
+
 
 @end
