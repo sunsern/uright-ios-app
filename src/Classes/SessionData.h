@@ -12,14 +12,14 @@
 
 @interface SessionData : NSObject <URJSONSerializable>
 
-@property (nonatomic,strong) NSMutableArray *rounds;
+@property int userID;
+@property int modeID;
 @property float bps;
 @property float totalScore;
 @property float totalTime;
-@property int modeID;
-@property int userID;
-@property int languageID;
-@property int classifierID;
+@property (nonatomic,strong) NSMutableArray *rounds;
+@property (nonatomic,strong) NSArray *activeCharacters;
+@property (nonatomic,strong) NSArray *activeProtosetIDs;
 
 - (void)addRound:(RoundData *)round;
 
