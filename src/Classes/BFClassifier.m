@@ -7,6 +7,7 @@
 //
 
 #import "BFClassifier.h"
+
 #import "BFPrototype.h"
 #import "InkPoint.h"
 #import "JCSuperPriorityQueue.h"
@@ -78,7 +79,6 @@ static dispatch_queue_t __serialQueue = NULL;
 
 @implementation BFClassifier  {
     JCSuperPriorityQueue *_beamPQ;
-    NSArray *_prototypes;
     InkPoint *_prevPoint;
     NSMutableDictionary *_likelihood;
     NSMutableDictionary *_finalLikelihood;
@@ -98,27 +98,37 @@ static dispatch_queue_t __serialQueue = NULL;
     return __serialQueue;
 }
 
-- (id)initWithJSONObject:(id)jsonObj {
+- (id)init {
     self = [super init];
     if (self) {
         // create a queue if not yet
         [[self class] serialQueue];
-        NSMutableArray *prototypes = [[NSMutableArray alloc] init];
-        for (id protoJSON in jsonObj[@"prototypes"]) {
-            BFPrototype *p = [[BFPrototype alloc] initWithJSONObject:protoJSON];
-            [prototypes addObject:p];
-        }
-        _classifierID = [jsonObj[@"classifier_id"] intValue];
         _beamCount = kBeamWidth;
         _targetThreshold = kLikelihoodThreshold;
-        _prototypes = prototypes;
         _beamPQ = [[JCSuperPriorityQueue alloc] init];
         _likelihood = [[NSMutableDictionary alloc] init];
         _finalLikelihood = [[NSMutableDictionary alloc] init];
         _cacheDict = [[NSMutableDictionary alloc] init];
-        _jsonObj = [jsonObj copy];
-        [self reset];
+        _jsonObj = nil;
     }
+    return self;
+}
+
+- (id)initWithPrototypes:(NSArray *)prototypes {
+    self = [self init];
+    _prototypes = [[NSArray alloc] initWithArray:prototypes];
+    return self;
+}
+
+- (id)initWithJSONObject:(id)jsonObj {
+    self = [self init];
+    NSMutableArray *prototypes = [[NSMutableArray alloc] init];
+    for (id protoJSON in jsonObj[@"prototypes"]) {
+        BFPrototype *p = [[BFPrototype alloc] initWithJSONObject:protoJSON];
+        [prototypes addObject:p];
+    }
+    _prototypes = (NSArray *)prototypes;
+    _jsonObj = [jsonObj copy];
     return self;
 }
 
@@ -322,8 +332,5 @@ static dispatch_queue_t __serialQueue = NULL;
 - (NSDictionary *)finalLikelihood {
     return _finalLikelihood;
 }
-
-
-
 
 @end

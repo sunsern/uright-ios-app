@@ -25,6 +25,8 @@
 #define ADJUST_Y(y) ((y / self.height) * 1.3 - 0.15)
 #define UNADJUST_Y(y) (((y + 0.15) / 1.3) * self.height)
 
+#define CLIP(X,a,b) (MAX(MIN(X,b),a))
+
 
 @implementation Canvas {
     SPImage *_brush;
@@ -35,52 +37,6 @@
     CGPoint _newTouch;
     InkPoint *_marker;
     BOOL _drawing;
-}
-
-
-+ (SPTexture *)circleTexture {
-    return [[SPTexture alloc]
-            initWithWidth:kBrushSize
-            height:kBrushSize
-            draw:^(CGContextRef ctx)
-            {
-                CGRect circle = CGRectMake(0, 0, kBrushSize, kBrushSize);
-                CGContextSetFillColorWithColor(ctx,[[UIColor whiteColor]
-                                                        CGColor]);
-                CGContextFillEllipseInRect(ctx, circle);
-            }];
-}
-
-
-+ (SPTexture *)guideWithWidth:(float)width height:(float)height {
-    return [[SPTexture alloc]
-            initWithWidth:width
-                height:height
-            draw:^(CGContextRef ctx) {
-                CGContextSetLineCap(ctx, kCGLineCapRound);
-                CGContextSetLineWidth(ctx, 1.0);
-                CGContextSetStrokeColorWithColor(ctx, [[UIColor whiteColor]
-                                                       CGColor]);
-                // Base line
-                CGContextBeginPath(ctx);
-                CGContextMoveToPoint(ctx, 0, kBaseLineRatio * height);
-                CGContextAddLineToPoint(ctx, width, kBaseLineRatio * height);
-                CGContextStrokePath(ctx);
-                
-                // Top line
-                CGContextBeginPath(ctx);
-                CGContextMoveToPoint(ctx, 0, kTopLineRatio * height);
-                CGContextAddLineToPoint(ctx, width, kTopLineRatio * height);
-                CGContextStrokePath(ctx);
-    
-                // Center line
-                CGFloat dash[2] = {6,3};
-                CGContextSetLineDash(ctx, 0, dash, 2);
-                CGContextBeginPath(ctx);
-                CGContextMoveToPoint(ctx, width / 2, 0);
-                CGContextAddLineToPoint(ctx, width / 2, height);
-                CGContextStrokePath(ctx);
-            }];
 }
 
 
@@ -151,9 +107,9 @@
         [_renderTexture drawBundled:^{
             float dx = _newTouch.x - _lastTouch.x;
             float dy = _newTouch.y - _lastTouch.y;
-            int numSteps = MIN(MAX((int)(MAX(fabs(dx),
-                                             fabs(dy)) / kDrawDelta), 1),
-                               kMaxSteps);
+            int numSteps = CLIP(MAX(fabs(dx),
+                                    fabs(dy))/kDrawDelta,
+                                1, kMaxSteps);
             float incX = dx / numSteps;
             float incY = dy / numSteps;
             _brush.x = _lastTouch.x;
@@ -177,10 +133,10 @@
         _brush.scaleX = 2.0;
         _brush.scaleY = 2.0;
         [_renderTexture drawObject:_brush];
-        _marker = nil;
         _brush.color = kDefaultColor;
         _brush.scaleX = 1.0;
         _brush.scaleY = 1.0;
+        _marker = nil;
     }
 }
 
@@ -189,57 +145,73 @@
                                            andPhase:SPTouchPhaseBegan]
                            anyObject];
 	SPPoint *touchPosition;
+    double touchTime = 0.0;
+    
     if(touchStart){
         touchPosition = [touchStart locationInSpace:_canvas];
 		_lastTouch = CGPointMake(touchPosition.x, touchPosition.y);
 		_newTouch = CGPointMake(touchPosition.x, touchPosition.y);
-         _drawing = YES;
+        _drawing = YES;
         
-        InkPoint *p = [[InkPoint alloc] initWithX:ADJUST_X(_newTouch.x)
-                                                y:ADJUST_Y(_newTouch.y)
-                                                t:[NSDate timeIntervalSinceReferenceDate]];
-        
+        touchTime = [NSDate timeIntervalSinceReferenceDate];
         if (_firstTouchTime == 0.0) {
-            _firstTouchTime = p.t;
+            _firstTouchTime = touchTime;
         }
         
-        [_currentInkCharacter addPoint:p];
-        [_classifier addPoint:p];
-    }
-	SPTouch *touchMove = [[event touchesWithTarget:_canvas
-                                          andPhase:SPTouchPhaseMoved]
-                          anyObject];
-	if(touchMove){
-		touchPosition = [touchMove locationInSpace:_canvas];
-		_newTouch = CGPointMake(touchPosition.x, touchPosition.y);
-        _drawing = YES;
-       
-        InkPoint *p = [[InkPoint alloc] initWithX:ADJUST_X(_newTouch.x)
-                                                y:ADJUST_Y(_newTouch.y)
-                                                t:[NSDate timeIntervalSinceReferenceDate]];
+        InkPoint *org_p = [[InkPoint alloc] initWithX:_newTouch.x
+                                                    y:_newTouch.y
+                                                    t:touchTime];
+        [_currentInkCharacter addPoint:org_p];
         
-        [_currentInkCharacter addPoint:p];
-        [_classifier addPoint:p];
+        InkPoint *adj_p = [[InkPoint alloc] initWithX:ADJUST_X(_newTouch.x)
+                                                    y:ADJUST_Y(_newTouch.y)
+                                                    t:touchTime];
+        [_classifier addPoint:adj_p];
     }
     
-	SPTouch *touchEnd = [[event touchesWithTarget:_canvas
+    SPTouch *touchMove = [[event touchesWithTarget:_canvas
+                                          andPhase:SPTouchPhaseMoved]
+                          anyObject];
+    if(touchMove){
+        touchPosition = [touchMove locationInSpace:_canvas];
+        _newTouch = CGPointMake(touchPosition.x, touchPosition.y);
+        _drawing = YES;
+        
+        touchTime = [NSDate timeIntervalSinceReferenceDate];
+        InkPoint *org_p = [[InkPoint alloc] initWithX:_newTouch.x
+                                                    y:_newTouch.y
+                                                    t:touchTime];
+        [_currentInkCharacter addPoint:org_p];
+        
+        InkPoint *adj_p = [[InkPoint alloc] initWithX:ADJUST_X(_newTouch.x)
+                                                    y:ADJUST_Y(_newTouch.y)
+                                                    t:touchTime];
+        [_classifier addPoint:adj_p];
+    }
+    
+    SPTouch *touchEnd = [[event touchesWithTarget:_canvas
                                          andPhase:SPTouchPhaseEnded]
                          anyObject];
     if(touchEnd){
-		touchPosition = [touchEnd locationInSpace:_canvas];
-		_lastTouch = CGPointMake(touchPosition.x, touchPosition.y);
-		_newTouch = CGPointMake(touchPosition.x, touchPosition.y);
+        touchPosition = [touchEnd locationInSpace:_canvas];
+        _lastTouch = CGPointMake(touchPosition.x, touchPosition.y);
+        _newTouch = CGPointMake(touchPosition.x, touchPosition.y);
         _drawing = NO;
         
         _lastTouchTime = [NSDate timeIntervalSinceReferenceDate];
         
-        InkPoint *p = [[InkPoint alloc] initWithX:ADJUST_X(_newTouch.x)
-                                                y:ADJUST_Y(_newTouch.y)
-                                                t:[NSDate timeIntervalSinceReferenceDate]];
-        p.penup = YES;
-        [_currentInkCharacter addPoint:p];
-        [_classifier addPoint:p];
-	}
+        InkPoint *org_p = [[InkPoint alloc] initWithX:_newTouch.x
+                                                    y:_newTouch.y
+                                                    t:_lastTouchTime
+                                                penup:YES];
+        [_currentInkCharacter addPoint:org_p];
+        
+        InkPoint *adj_p = [[InkPoint alloc] initWithX:ADJUST_X(_newTouch.x)
+                                                    y:ADJUST_Y(_newTouch.y)
+                                                    t:_lastTouchTime
+                                                penup:YES];
+        [_classifier addPoint:adj_p];
+    }
 }
 
 - (void)drawMarkerAt:(InkPoint *)point {
@@ -252,5 +224,52 @@
     _guide.visible = visible;
 }
 
+
+//////////////// Static textures /////////////////
+
++ (SPTexture *)circleTexture {
+    return [[SPTexture alloc]
+            initWithWidth:kBrushSize
+            height:kBrushSize
+            draw:^(CGContextRef ctx)
+            {
+                CGRect circle = CGRectMake(0, 0, kBrushSize, kBrushSize);
+                CGContextSetFillColorWithColor(ctx,[[UIColor whiteColor]
+                                                    CGColor]);
+                CGContextFillEllipseInRect(ctx, circle);
+            }];
+}
+
+
++ (SPTexture *)guideWithWidth:(float)width height:(float)height {
+    return [[SPTexture alloc]
+            initWithWidth:width
+            height:height
+            draw:^(CGContextRef ctx) {
+                CGContextSetLineCap(ctx, kCGLineCapRound);
+                CGContextSetLineWidth(ctx, 1.0);
+                CGContextSetStrokeColorWithColor(ctx, [[UIColor whiteColor]
+                                                       CGColor]);
+                // Base line
+                CGContextBeginPath(ctx);
+                CGContextMoveToPoint(ctx, 0, kBaseLineRatio * height);
+                CGContextAddLineToPoint(ctx, width, kBaseLineRatio * height);
+                CGContextStrokePath(ctx);
+                
+                // Top line
+                CGContextBeginPath(ctx);
+                CGContextMoveToPoint(ctx, 0, kTopLineRatio * height);
+                CGContextAddLineToPoint(ctx, width, kTopLineRatio * height);
+                CGContextStrokePath(ctx);
+                
+                // Center line
+                CGFloat dash[2] = {6,3};
+                CGContextSetLineDash(ctx, 0, dash, 2);
+                CGContextBeginPath(ctx);
+                CGContextMoveToPoint(ctx, width / 2, 0);
+                CGContextAddLineToPoint(ctx, width / 2, height);
+                CGContextStrokePath(ctx);
+            }];
+}
 
 @end

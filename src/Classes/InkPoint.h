@@ -14,7 +14,7 @@
 @property (readwrite) double t;
 @property (readwrite) float dx;
 @property (readwrite) float dy;
-@property (readwrite) BOOL penup;
+@property (readwrite) int penup;
 
 
 // Initialize the sample point with given x,y and t.

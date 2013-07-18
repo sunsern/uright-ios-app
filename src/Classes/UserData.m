@@ -170,7 +170,8 @@
 - (NSArray *)prototypesWithLabels:(NSArray *)labels {
     NSMutableArray *activeProtList = [[NSMutableArray alloc] init];
     for (id key in labels) {
-        for (BFPrototype *prot in _protosets[key]) {
+        Protoset *ps = _protosets[key];
+        for (BFPrototype *prot in ps.prototypes) {
             [activeProtList addObject:prot];
         }
     }

@@ -20,3 +20,5 @@
 #define kURBaseURL @"http://fpga1.ucsd.edu:8000"
 #define kURMagicKey @"iosexp3"
 #define kURGuestUserID (0)
+
+#define DEBUG_PRINT(fmt, ...) NSLog(fmt, ##__VA_ARGS__)

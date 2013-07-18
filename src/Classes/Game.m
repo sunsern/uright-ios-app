@@ -59,10 +59,9 @@
     
     [self updateLocations];
     
-    
     // Initialize the singleton storage
+    [GlobalStorage clearGlobalData];
     [GlobalStorage sharedInstance];
-    
 
     _menu = [[MenuScene alloc] init];
     [self showScene:_menu];
@@ -70,20 +69,6 @@
     // Initialize Facebook session
     [AccountManager initializeFacebookSession];
     
-    
-    /*
-    // play a sound when the image is touched
-    [image addEventListener:@selector(onImageTouched:) atObject:self forType:SP_EVENT_TYPE_TOUCH];
-    
-    // and animate it a little
-    SPTween *tween = [SPTween tweenWithTarget:image time:1.5 transition:SP_TRANSITION_EASE_IN_OUT];
-    [tween animateProperty:@"y" targetValue:image.y + 30];
-    [tween animateProperty:@"rotation" targetValue:0.1];
-    tween.repeatCount = 0; // repeat indefinitely
-    tween.reverse = YES;
-    [Sparrow.juggler addObject:tween];
-    */
-
     // The controller autorotates the game to all supported device orientations. 
     // Choose the orienations you want to support in the Xcode Target Settings ("Summary"-tab).
     // To update the game content accordingly, listen to the "RESIZE" event; it is dispatched
@@ -114,6 +99,8 @@
 
 - (void)showScene:(SPSprite *)scene {
     if ([_contents containsChild:_currentScene]) {
+        // Stop all running animation
+        [Sparrow.juggler removeAllObjects];
         [_contents removeChild:_currentScene];
     }
     [_contents addChild:scene];

@@ -20,6 +20,6 @@
 
 + (void)clearGlobalData;
 
-- (void)switchActiveUser:(int)userID;
+- (void)switchActiveUser:(int)userID onComplete:(void(^)(void))completeBlock;
 
 @end

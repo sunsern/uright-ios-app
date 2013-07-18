@@ -18,11 +18,13 @@
 
 @interface BFClassifier : NSObject <URJSONSerializable>
 
-@property (nonatomic,copy) NSString *targetLabel;
 @property (readwrite) int beamCount;
 @property (readwrite) float targetThreshold;
-@property (readonly) int classifierID;
+@property (nonatomic,strong) NSArray *prototypes;
+@property (nonatomic,copy) NSString *targetLabel;
 @property (nonatomic,weak) id<BFClassifierDelegate> delegate;
+
+- (id)initWithPrototypes:(NSArray *)prototypes;
 
 - (void)reset;
 

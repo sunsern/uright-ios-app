@@ -54,21 +54,19 @@ static GlobalStorage *__sharedInstance = nil;
 }
 
 - (void)saveGlobalData {
-    dispatch_async(_serialQueue, ^{
-        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-        
-        // Save active userID
-        [defaults setObject:@(_activeUserID) forKey:@"activeUserID"];
-        
-        // Save charsets
-        NSMutableArray *charsets = [[NSMutableArray alloc] init];
-        for (Charset *cs in _charsets) {
-            charsets = [cs toJSONObject];
-        }
-        [defaults setObject:charsets forKey:@"charsets"];
-        
-        DEBUG_PRINT(@"[GS] Global data saved.");
-    });
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+    // Save active userID
+    [defaults setObject:@(_activeUserID) forKey:@"activeUserID"];
+    
+    // Save charsets
+    NSMutableArray *charsets = [[NSMutableArray alloc] init];
+    for (Charset *cs in _charsets) {
+        charsets = [cs toJSONObject];
+    }
+    [defaults setObject:charsets forKey:@"charsets"];
+    
+    DEBUG_PRINT(@"[GS] Global data saved.");
 }
 
 - (void)loadGlobalData {
@@ -122,13 +120,11 @@ static GlobalStorage *__sharedInstance = nil;
 
 
 - (void)saveUserData {
-    dispatch_async(_serialQueue, ^{
-        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-        [defaults setObject:[_activeUserData toJSONObject]
-                     forKey:[NSString stringWithFormat:@"user-%d-version-%0.1f",
-                             _activeUserID, STORAGE_VERSION]];
-        DEBUG_PRINT(@"[GS] User-specific data saved.");
-    });
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setObject:[_activeUserData toJSONObject]
+                 forKey:[NSString stringWithFormat:@"user-%d-version-%0.1f",
+                         _activeUserID, STORAGE_VERSION]];
+    DEBUG_PRINT(@"[GS] User-specific data saved.");
 }
 
 
@@ -169,14 +165,21 @@ static GlobalStorage *__sharedInstance = nil;
     }
 }
 
-- (void)switchActiveUser:(int)userID {
-    if (_activeUserID != userID) {
-        DEBUG_PRINT(@"[GS] Switching user %d -> %d",_activeUserID, userID);
-        [self saveUserData];
-        _activeUserID = userID;
-        [self loadUserData];
-        [self saveGlobalData];
-    }
+- (void)switchActiveUser:(int)userID onComplete:(void(^)(void))completeBlock; {
+    dispatch_sync(_serialQueue, ^{
+        if (_activeUserID != userID) {
+            DEBUG_PRINT(@"[GS] Switching user %d -> %d",_activeUserID, userID);
+            if (_activeUserData != kURGuestUserID) {
+                [self saveUserData];
+            }
+            _activeUserID = userID;
+            [self loadUserData];
+            [self saveGlobalData];
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completeBlock();
+        });
+    });
 }
 
 + (void)clearGlobalData {

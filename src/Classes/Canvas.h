@@ -8,8 +8,8 @@
 
 #import "SPSprite.h"
 
-@class BFClassifier;
 @class InkPoint;
+@class BFClassifier;
 @class InkCharacter;
 
 @interface Canvas : SPSprite

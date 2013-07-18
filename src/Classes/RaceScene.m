@@ -9,16 +9,17 @@
 #import "RaceScene.h"
 
 #import "Canvas.h"
-#import "BFClassifier.h"
 #import "Media.h"
 #import "Game.h"
+#import "BFClassifier.h"
 #import "SessionData.h"
 #import "RoundData.h"
 #import "ClassificationResult.h"
-#import "LanguageData.h"
 #import "ServerManager.h"
 
 #define MODE_ID 3
+#define RACE_LENGTH 10
+
 #define GAMEWIDTH (Sparrow.stage.width)
 #define GAMEHEIGHT (Sparrow.stage.height)
 
@@ -27,6 +28,8 @@
     NSArray *_textfields;
     SPTextField *_targetLabel;
     Canvas *_canvas;
+    SPQuad *_canvasBg;
+    SPQuad *_bar;
     
     BFClassifier *_classifier;
     NSString *_testString;
@@ -49,10 +52,10 @@
     [self addChild:background];
     
     // Canvas background
-    SPQuad *canvasBg = [SPQuad quadWithWidth:300 height:220 color:0x333333];
-    canvasBg.x = (GAMEWIDTH - canvasBg.width)/2;
-    canvasBg.y = 200;
-    [self addChild:canvasBg];
+    _canvasBg = [SPQuad quadWithWidth:300 height:220 color:0x333333];
+    _canvasBg.x = (GAMEWIDTH - _canvasBg.width)/2;
+    _canvasBg.y = 200;
+    [self addChild:_canvasBg];
     
     _canvas = [[Canvas alloc] initWithWidth:300 height:220];
     _canvas.x = (GAMEWIDTH - _canvas.width)/2;
@@ -66,7 +69,7 @@
     SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
     SPButton *resetButton = [SPButton buttonWithUpState:buttonTexture text:@"Reset"];
     resetButton.x = 100;
-    resetButton.y = 425;
+    resetButton.y = 430;
     [self addChild:resetButton];
     [resetButton addEventListener:@selector(onReset) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
     
@@ -119,15 +122,28 @@
     [self addChild:quit];
     [quit addEventListener:@selector(quitRace) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
     
+    _bar = [[SPQuad alloc] initWithWidth:GAMEWIDTH - 20 height:10];
+    _bar.pivotX = _bar.width / 2;
+    _bar.x = GAMEWIDTH / 2;
+    _bar.y = 185;
+    _bar.color = 0x00ee00;
+    _bar.visible = NO;
+    [self addChild:_bar];
     
     // Auto start
     [self addEventListener:@selector(restartRace) atObject:self forType:SP_EVENT_TYPE_ADDED_TO_STAGE];
 }
 
-- (id)init {
+- (id)initWithPrototypes:(NSArray *)prototypes {
     self = [super init];
     if (self) {
         [self setupScene];
+    
+        // Setting up classifier
+        _classifier = [[BFClassifier alloc] initWithPrototypes:prototypes];
+        [_classifier setDelegate:self];
+        [_classifier setBeamCount:800];
+        [_canvas setClassifier:_classifier];
     }
     return self;
 }
@@ -143,41 +159,42 @@
 }
 
 - (void)restartRace {
-    // Set up classifier
-    GlobalStorage *gs = [GlobalStorage sharedInstance];
-    UserData *us = [gs activeUser];
-    _classifier = [us activeClassifier];
-    [_classifier setDelegate:self];
-    [_classifier setBeamCount:800];
-    [_canvas setClassifier:_classifier];
+    UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
     
+    // Create a new session
     _session = [[SessionData alloc] init];
-    _session.userID = us.userID;
-    _session.languageID = us.languageID;
+    _session.userID = ud.userID;
     _session.modeID = MODE_ID;
-    _session.classifierID = _classifier.classifierID;
+    
+    // Test string
+    NSArray *labelArray = ud.activeCharacters;
+    _testString = [self shuffleArray:labelArray maxLength:RACE_LENGTH];
+    
+    _session.activeCharacters = ud.activeCharacters;
+    _session.activeProtosetIDs = [ud protosetIDsWithLabels:labelArray];
+    
+    // Reset UI
+    _currentIdx = 0;
+    _score = 0;
+    _time = 0;
     
     _targetLabel.text = @"";
     for (SPTextField *tf in _textfields) {
         tf.text = @"0.00";
     }
-    
-    NSArray *labelArray = [[[gs languages] languageWithID:[us languageID]] labels];
-    _testString = [self shuffleArray:labelArray];
-    _currentIdx = 0;
-    _score = 0;
-    _time = 0;
-    
+
     [_canvas clear];
     _canvas.touchable = NO;
+    _canvasBg.color = 0x777777;
     
+    // Start count down
     SPTextField *banner = [[SPTextField alloc] initWithWidth:100 height:100];
     banner.hAlign = SPHAlignCenter;
     banner.vAlign = SPVAlignCenter;
     banner.pivotX = banner.width/2;
     banner.pivotY = banner.height/2;
     banner.x = GAMEWIDTH/2;
-    banner.y = GAMEHEIGHT/2 + 70;
+    banner.y = GAMEHEIGHT/2 + 50;
     banner.color = 0x00ff00;
     banner.fontSize = 100;
     [self addChild:banner];
@@ -205,19 +222,24 @@
 
 
 - (void)startRound {
-    [_canvas clear];
-    _canvas.touchable = YES;
-    _soundPlayed = NO;
-    
-    _round = [[RoundData alloc] init];
-    _round.startTime = [NSDate timeIntervalSinceReferenceDate];
-    
-    _targetLabel.text = [_testString substringWithRange:NSMakeRange(_currentIdx,1)];
-    [_classifier setTargetLabel:_targetLabel.text];
+    // Only start when race scene is visible
+    if (self.visible) {
+        [_canvas clear];
+        _canvas.touchable = YES;
+        _canvasBg.color = 0x333333;
+        _soundPlayed = NO;
+        
+        _round = [[RoundData alloc] init];
+        _round.startTime = [NSDate timeIntervalSinceReferenceDate];
+        
+        _targetLabel.text = [_testString substringWithRange:NSMakeRange(_currentIdx,1)];
+        [_classifier setTargetLabel:_targetLabel.text];
+    }
 }
 
 - (void)endRound {
     _canvas.touchable = NO;
+    _canvasBg.color = 0x777777;
     
     _round.firstPendownTime = _canvas.firstTouchTime;
     _round.lastPenupTime = _canvas.lastTouchTime;
@@ -243,8 +265,8 @@
         }
     }
     
-    SPTextField *current_score = [SPTextField textFieldWithText:[NSString stringWithFormat:@"%0.2f",_currentScore]];
-    current_score.x = 140;
+    SPTextField *current_score = [SPTextField textFieldWithText:[NSString stringWithFormat:@"%+0.2f",_currentScore]];
+    current_score.x = 120;
     current_score.y = 100;
     current_score.fontSize = 30;
     current_score.color = 0xff0000;
@@ -257,8 +279,8 @@
     [tween animateProperty:@"alpha" targetValue:0.0];
     [[Sparrow juggler] addObject:tween];
     
-    SPTextField *current_time = [SPTextField textFieldWithText:[NSString stringWithFormat:@"%0.2f",delta_time]];
-    current_time.x = 220;
+    SPTextField *current_time = [SPTextField textFieldWithText:[NSString stringWithFormat:@"%+0.2f",delta_time]];
+    current_time.x = 200;
     current_time.y = 100;
     current_time.fontSize = 30;
     current_time.color = 0x00ff00;
@@ -281,20 +303,39 @@
 
 - (void)raceComplete {
     _targetLabel.text = @"";
+     _canvas.touchable = NO;
+    
     [_canvas clear];
     
     _session.totalScore = _score;
     _session.totalTime = _time;
     _session.bps = _score / _time;
     
-    // Proceed to summary scene
-    [ServerManager uploadSessionData:_session];
+    UserData *ud = [GlobalStorage sharedInstance];
+    [ud addScore:_session.bps];
     
+    // Proceed to summary scene
+    UIAlertView *uploadAlert = [[UIAlertView alloc] initWithTitle:@"Uploading"
+                                                          message:@"Please wait while the data is being uploaded"
+                                                         delegate:self
+                                                cancelButtonTitle:nil
+                                                otherButtonTitles:nil];
+    [uploadAlert show];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+        [ServerManager uploadSessionData:_session];
+        dispatch_async(dispatch_get_main_queue(), ^ {
+            [uploadAlert dismissWithClickedButtonIndex:0 animated:YES];
+        });
+    });
+    
+   
 }
 
 - (void)onReset {
     [_canvas clear];
-    [NSObject cancelPreviousPerformRequestsWithTarget:self];
+    [Sparrow.juggler removeObjectsWithTarget:_bar];
+    _bar.width = GAMEWIDTH - 20;
+    _bar.visible = NO;
 }
 
 
@@ -315,10 +356,16 @@
 
 
 - (void)onTouch:(SPTouchEvent *)event {
-    [NSObject cancelPreviousPerformRequestsWithTarget:self];
+    [Sparrow.juggler removeObjectsWithTarget:_bar];
+    _bar.width = GAMEWIDTH - 20;
+    _bar.visible = NO;
     SPTouch *touchEnd = [[event touchesWithTarget:self andPhase:SPTouchPhaseEnded] anyObject];
     if(touchEnd){
-        [self performSelector:@selector(endRound) withObject:nil afterDelay:2.0];
+        _bar.visible = YES;
+        SPTween *shinking = [[SPTween alloc] initWithTarget:_bar time:1.5];
+        [shinking animateProperty:@"width" targetValue:0];
+        shinking.onComplete = ^{ [self endRound]; };
+        [Sparrow.juggler addObject:shinking];
     }
 }
 
@@ -336,7 +383,7 @@
     return randomizedText;
 }
 
-- (NSString *)shuffleArray:(NSArray *)labels {
+- (NSString *)shuffleArray:(NSArray *)labels maxLength:(int)length {
     NSMutableArray *temp = [[NSMutableArray alloc] initWithArray:labels];
     for (NSInteger i = [labels count] - 1, j; i >= 0; i--)
     {
@@ -347,7 +394,7 @@
         temp[j] = buffer;
     }
     NSMutableString *outStr = [[NSMutableString alloc] init];
-    for (int i = 0; i < [labels count]; i++) {
+    for (int i = 0; i < MIN([labels count], length); i++) {
         [outStr appendString:temp[i]];
     }
     return outStr;

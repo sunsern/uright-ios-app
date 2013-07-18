@@ -146,7 +146,7 @@
                             initWithX:[point[@"x"] floatValue]
                             y:[point[@"y"] floatValue]
                             t:[point[@"t"] doubleValue]
-                            penup:[point[@"penup"] boolValue]]];
+                            penup:[point[@"penup"] intValue]]];
         }
     }
     return self;

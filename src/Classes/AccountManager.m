@@ -57,24 +57,28 @@
                           
                           if (userID != kURGuestUserID) {
                               GlobalStorage *gs = [GlobalStorage sharedInstance];
-                              [gs switchActiveUser:userID];
+                              [gs switchActiveUser:userID onComplete:^{
+                                  UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
+                                  ud.username = username;
+                                  ud.password = password;
+                                  completeBlock(YES);
+                              }];
                           } else {
                               int newUserID = [ServerManager createAccountForUsername:username
                                                                              password:password
                                                                                 email:user[@"email"]
                                                                              fullname:user.name];
                               GlobalStorage *gs = [GlobalStorage sharedInstance];
-                              [gs switchActiveUser:newUserID];
+                              [gs switchActiveUser:newUserID onComplete:^{
+                                  UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
+                                  ud.username = username;
+                                  ud.password = password;
+                                  completeBlock(YES);
+                              }];
                           }
-                          
-                          UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
-                          ud.username = username;
-                          ud.password = password;
-                          
-                          completeBlock(YES);
-                          return;
+                      } else {
+                          completeBlock(NO);
                       }
-                      completeBlock(NO);
                   }];
              }
          }
@@ -86,20 +90,22 @@
     int userID = [ServerManager getUserIDFromUsername:username password:password];
     if (userID != kURGuestUserID) {
         GlobalStorage *gs = [GlobalStorage sharedInstance];
-        [gs switchActiveUser:userID];
-        UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
-        ud.username = username;
-        ud.password = password;
-        completeBlock(YES);
-        return;
+        [gs switchActiveUser:userID onComplete:^{
+            UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
+            ud.username = username;
+            ud.password = password;
+            completeBlock(YES);
+        }];
+    } else {
+        completeBlock(NO);
     }
-    completeBlock(NO);
 }
 
 + (void)logout:(void(^)(void))completeBlock; {
     GlobalStorage *gs = [GlobalStorage sharedInstance];
-    [gs switchActiveUser:kURGuestUserID];
-    completeBlock();
+    [gs switchActiveUser:kURGuestUserID onComplete:^{
+        completeBlock();
+    }];
 }
 
 
