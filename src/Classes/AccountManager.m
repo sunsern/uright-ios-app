@@ -67,9 +67,9 @@
                               [gs switchActiveUser:newUserID];
                           }
                           
-                          UserData *us = [[GlobalStorage sharedInstance] activeUser];
-                          us.username = username;
-                          us.password = password;
+                          UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
+                          ud.username = username;
+                          ud.password = password;
                           
                           completeBlock(YES);
                           return;
@@ -87,9 +87,9 @@
     if (userID != kURGuestUserID) {
         GlobalStorage *gs = [GlobalStorage sharedInstance];
         [gs switchActiveUser:userID];
-        UserData *us = [[GlobalStorage sharedInstance] activeUser];
-        us.username = username;
-        us.password = password;
+        UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
+        ud.username = username;
+        ud.password = password;
         completeBlock(YES);
         return;
     }
