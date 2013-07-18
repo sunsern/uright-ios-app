@@ -39,11 +39,14 @@ void normalizePointArray(NSArray *pointArray) {
     }
 }
 
-@implementation BFPrototype
+@implementation BFPrototype {
+    NSDictionary *_jsonObj;
+}
 
 - (id)initWithJSONObject:(id)jsonObj {
     self = [super init];
     if (self) {
+        _jsonObj = [jsonObj copy];
         _label = [jsonObj[@"label"] copy];
         _prior = [jsonObj[@"prior"] floatValue];
         NSMutableArray *mPointArray = [[NSMutableArray alloc] init];
@@ -53,7 +56,7 @@ void normalizePointArray(NSArray *pointArray) {
             inkPoint.y = [pointInfo[1] floatValue];
             inkPoint.dx = [pointInfo[2] floatValue];
             inkPoint.dy = [pointInfo[3] floatValue];
-            inkPoint.penup = [pointInfo[4] boolValue];
+            inkPoint.penup = [pointInfo[4] intValue];
             [mPointArray addObject:inkPoint];
         }
         _points = mPointArray;
@@ -63,8 +66,7 @@ void normalizePointArray(NSArray *pointArray) {
 }
 
 - (id)toJSONObject {
-    // Not implemented
-    return nil;
+    return _jsonObj;
 }
 
 - (int)length {
