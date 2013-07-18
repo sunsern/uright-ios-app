@@ -12,42 +12,7 @@
 #import "Reachability.h"
 #import "SessionData.h"
 
-static UIAlertView *__busy = nil;
-
 @implementation ServerManager
-
-+ (void)showConnectionError:(NSString *)message {
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection Error"
-                                                    message:message
-                                                   delegate:nil
-                                          cancelButtonTitle:@"Ok"
-                                          otherButtonTitles:nil];
-    [alert show];
-}
-
-+ (void)showBusyAlert:(NSString *)message {
-    __busy = [[UIAlertView alloc] initWithTitle:@"Please wait"
-                                        message:message
-                                       delegate:nil
-                              cancelButtonTitle:nil
-                              otherButtonTitles:nil];
-    if(__busy != nil) {
-        UIActivityIndicatorView *indicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-        
-        indicator.center = CGPointMake(__busy.bounds.size.width/2, __busy.bounds.size.height-45);
-        [indicator startAnimating];
-        [__busy addSubview:indicator];
-    }
-    [__busy show];
-}
-
-
-+ (void)closeBusyAlert {
-    if (__busy) {
-        [__busy dismissWithClickedButtonIndex:0 animated:YES];
-        __busy = nil;
-    }
-}
 
 + (BOOL)isOnline {
     NetworkStatus internetStatus = [[Reachability reachabilityForInternetConnection]
@@ -118,23 +83,36 @@ static UIAlertView *__busy = nil;
 }
 
 
++ (NSString *)convertToString:(id)jsonObj {
+    NSData *data = [[self class] NSDataFromJSONObject:jsonObj];
+    NSString *str = [[NSString alloc] initWithData:data
+                                          encoding:NSUTF8StringEncoding];
+    return str;
+}
+
 + (BOOL)uploadSessionData:(SessionData *)data {
     if ([data.rounds count] > 0 && data.userID != kURGuestUserID) {
         NSString *urlString = [NSString stringWithFormat:@"%@/upload", kURBaseURL];
         NSURL *url = [NSURL URLWithString:urlString];
         ASIFormDataRequest  *request = [ASIFormDataRequest requestWithURL:url];
+        
+        NSString *activeChars = [[self class] convertToString:data.activeCharacters];
+        NSString *activePIDs = [[self class] convertToString:data.activeProtosetIDs];
+        
         NSData *jsondata = [[self class] NSDataFromJSONObject:[data toJSONObject]];
         NSString *jsonStr = [[NSString alloc] initWithData:jsondata
                                                      encoding:NSUTF8StringEncoding];
+        
         [request setPostValue:kURMagicKey forKey:@"key"];
-        [request setPostValue:jsonStr forKey:@"raw_json"];
+        [request setPostValue:jsonStr forKey:@"session_json"];
         [request setPostValue:@(data.userID) forKey:@"user_id"];
         [request setPostValue:@(data.modeID) forKey:@"mode_id"];
-        [request setPostValue:@(data.classifierID) forKey:@"classifier_id"];
-        [request setPostValue:@(data.languageID) forKey:@"language_id"];
         [request setPostValue:@(data.bps) forKey:@"bps"];
         [request setPostValue:@(data.totalTime) forKey:@"total_time"];
         [request setPostValue:@(data.totalScore) forKey:@"total_score"];
+        [request setPostValue:activeChars forKey:@"active_characters"];
+        [request setPostValue:activePIDs forKey:@"active_protoset_ids"];
+
         [request startSynchronous];
         if ([request error] != nil) {
             return NO;
@@ -148,8 +126,8 @@ static UIAlertView *__busy = nil;
 }
 
 
-+ (NSDictionary *)fetchLanguageData {
-    NSString *urlString = [NSString stringWithFormat:@"%@/languages", kURBaseURL];
++ (id)fetchCharsets {
+    NSString *urlString = [NSString stringWithFormat:@"%@/charsets", kURBaseURL];
     NSURL *url = [NSURL URLWithString:urlString];
     ASIFormDataRequest  *request = [ASIFormDataRequest requestWithURL:url];
     [request setPostValue:kURMagicKey forKey:@"key"];
@@ -161,11 +139,10 @@ static UIAlertView *__busy = nil;
 }
 
 
-+ (NSDictionary *)fetchClassifiers {
-    NSString *urlString = [NSString stringWithFormat:@"%@/classifiers", kURBaseURL];
++ (id)fetchProtosets:(int)userID {
+    NSString *urlString = [NSString stringWithFormat:@"%@/protosets", kURBaseURL];
     NSURL *url = [NSURL URLWithString:urlString];
     ASIFormDataRequest  *request = [ASIFormDataRequest requestWithURL:url];
-    int userID = [[GlobalStorage sharedInstance] activeUserID];
     [request setPostValue:kURMagicKey forKey:@"key"];
     [request setPostValue:@(userID) forKey:@"user_id"];
     [request startSynchronous];

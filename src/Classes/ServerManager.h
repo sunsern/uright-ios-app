@@ -21,9 +21,9 @@
                           email:(NSString *)email
                        fullname:(NSString *)fullname;
 
-+ (NSDictionary *)fetchLanguageData;
++ (id)fetchCharsets;
 
-+ (NSDictionary *)fetchClassifiers;
++ (id)fetchProtosets:(int)userID;
 
 + (BOOL)uploadSessionData:(SessionData *)data;
 
