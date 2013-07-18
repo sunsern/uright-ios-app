@@ -7,23 +7,19 @@
 
 #import <Foundation/Foundation.h>
 
-#import "LanguageData.h"
-
 @class UserData;
 
 @interface GlobalStorage : NSObject
 
 @property int activeUserID;
-@property (nonatomic,strong) LanguageData *languages;
-@property (nonatomic,strong) UserData *activeUser;
+@property (nonatomic,strong) UserData *activeUserData;
+// Available character sets (Pre-defined by server)
+@property (nonatomic,strong) NSArray *charsets;
 
 + (id)sharedInstance;
 
-// change active user
++ (void)clearGlobalData;
+
 - (void)switchActiveUser:(int)userID;
-
-- (void)setLanguages:(LanguageData *)languages;
-
-- (void)clearGlobalData;
 
 @end

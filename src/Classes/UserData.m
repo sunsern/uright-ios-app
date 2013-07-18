@@ -8,23 +8,58 @@
 
 #import "UserData.h"
 
-#import "BFClassifier.h"
+#import "BFPrototype.h"
 #import "SessionData.h"
+#import "Charset.h"
 
 #define kMaxScoreHistory 10
+#define kDefaultScoreKey @"default"
+
+
+@implementation Protoset
+
+- (id)initWithJSONObject:(id)jsonObj {
+    self = [super init];
+    if (self) {
+        _protosetID = [jsonObj[@"protosetID"] intValue];
+        _label = [jsonObj[@"label"] copy];
+        _type = [jsonObj[@"type"] copy];
+        NSMutableArray *prototypes = [[NSMutableArray alloc] init];
+        for (id each_proto in jsonObj[@"prototypes"]) {
+            [prototypes addObject:[[BFPrototype alloc] initWithJSONObject:each_proto]];
+        }
+        _prototypes = (NSArray *)prototypes;
+    }
+    return self;
+}
+
+- (id)toJSONObject {
+    NSMutableDictionary *jsonObj = [[NSMutableDictionary alloc] init];
+    jsonObj[@"protosetID"] = @(_protosetID);
+    jsonObj[@"label"] = _label;
+    jsonObj[@"type"] = _type;
+    NSMutableArray *prototypes = [[NSMutableArray alloc] init];
+    for (BFPrototype *prot in _prototypes) {
+        [prototypes addObject:[prot toJSONObject]];
+    }
+    jsonObj[@"prototypes"] = (NSArray *)prototypes;
+    return jsonObj;
+}
+
+@end
 
 @implementation UserData
 
 - (id)init {
     self = [super init];
     if (self) {
-        _userID = -1;
-        _languageID = -1;
+        _userID = kURGuestUserID;
         _username = @"";
         _password = @"";
-        _classifiers = [[NSMutableDictionary alloc] init];
         _sessions = [[NSMutableArray alloc] init];
-        _scores = [[NSMutableDictionary alloc] init];        
+        _scores = [[NSMutableDictionary alloc] init];
+        _activeCharacters = [[NSMutableArray alloc] init];
+        _protosets = [[NSDictionary alloc] init];
     }
     return self;
 }
@@ -33,19 +68,19 @@
     self = [super init];
     if (self) {
         _userID = [jsonObj[@"userID"] intValue];
-        _languageID = [jsonObj[@"languageID"] intValue];
         _username = [jsonObj[@"username"] copy];
         _password = [jsonObj[@"password"] copy];
-        _classifiers = [[NSMutableDictionary alloc] init];
-        NSDictionary *classifiers = jsonObj[@"classifiers"];
-        for (id key in classifiers) {
-            _classifiers[key] = [[BFClassifier alloc]
-                                 initWithJSONObject:classifiers[key]];
-        }
         _sessions = [[NSMutableArray alloc]
                      initWithArray:jsonObj[@"sessions"]];
         _scores = [[NSMutableDictionary alloc]
                    initWithDictionary:jsonObj[@"scores"]];
+        _activeCharacters = [[NSMutableArray alloc]
+                             initWithArray:jsonObj[@"activeCharacters"]];
+        NSMutableDictionary *protosets = [[NSMutableDictionary alloc] init];
+        for (id key in jsonObj[@"protosets"]) {
+            protosets[key] = [[Protoset alloc] initWithJSONObject:jsonObj[@"protosets"][key]];
+        }
+        _protosets = (NSDictionary *)protosets;
     }
     return self;
 }
@@ -54,22 +89,37 @@
 - (NSDictionary *)toJSONObject {
     NSMutableDictionary *jsonObj = [[NSMutableDictionary alloc] init];
     jsonObj[@"userID"] = @(_userID);
-    jsonObj[@"languageID"] = @(_languageID);
     jsonObj[@"username"] = _username;
     jsonObj[@"password"] = _password;
     jsonObj[@"sessions"] = _sessions;
     jsonObj[@"scores"] = _scores;
-    NSMutableDictionary *classifiers = [[NSMutableDictionary alloc] init];
-    for (id key in _classifiers) {
-        classifiers[key] = [_classifiers[key] toJSONObject];
+    jsonObj[@"activeCharacters"] = _activeCharacters;
+    NSMutableDictionary *protosets = [[NSMutableDictionary alloc] init];
+    for (id key in _protosets) {
+        protosets[key] = [_protosets[key] toJSONObject];
     }
-    jsonObj[@"classifiers"] = classifiers;
+    jsonObj[@"protosets"] = protosets;
     return jsonObj;
 }
 
+
++ (UserData *)newUserData:(int)userID {
+    UserData *ud = [[UserData alloc] init];
+    ud.userID = userID;
+
+    if (userID == kURGuestUserID) {
+        ud.username = @"Guest";
+        ud.password = @"";
+    } else {
+        ud.username = @"unknown";
+        ud.password = @"";
+    }
+    return ud;
+}
+
+
 - (void)addScore:(float)score {
-    NSString *key = [@(_languageID) stringValue];
-    NSDictionary *scoreStruct = _scores[key];
+    NSDictionary *scoreStruct = _scores[kDefaultScoreKey];
     if (scoreStruct != nil) {
         float max_score = [scoreStruct[@"maxscore"] floatValue];
         float avg_score = [scoreStruct[@"avgscore"] floatValue];
@@ -89,22 +139,22 @@
                                          @"avgscore":@(avg_score),
                                          @"numsessions":@(num_sessions),
                                          @"scores":scoreArray};
-        _scores[key] = newScoreStruct;
+        _scores[kDefaultScoreKey] = newScoreStruct;
     } else {
         NSDictionary *newScoreStruct = @{@"maxscore":@(score),
                                          @"avgscore":@(score),
                                          @"numsessions":@(1),
                                          @"scores":@[@(score)]};
-        _scores[key] = newScoreStruct;
+        _scores[kDefaultScoreKey] = newScoreStruct;
     }
 }
 
 - (NSArray *)scoreArray {
-    return _scores[[@(_languageID) stringValue]][@"scores"];
+    return _scores[kDefaultScoreKey][@"scores"];
 }
 
 - (float)bestScore {
-    NSDictionary *scoreStruct = _scores[[@(_languageID) stringValue]];
+    NSDictionary *scoreStruct = _scores[kDefaultScoreKey];
     if (scoreStruct == nil) {
         return 0.0;
     } else {
@@ -117,21 +167,25 @@
 }
 
 
-- (void)switchActiveLanguage:(int)langID {
-    GlobalStorage *gs = [GlobalStorage sharedInstance];
-    if ([[gs languages] languageWithID:langID] != nil) {
-        _languageID = langID;
+- (NSArray *)prototypesWithLabels:(NSArray *)labels {
+    NSMutableArray *activeProtList = [[NSMutableArray alloc] init];
+    for (id key in labels) {
+        for (BFPrototype *prot in _protosets[key]) {
+            [activeProtList addObject:prot];
+        }
     }
-}
-
-- (void)setClassifier:(BFClassifier *)classifier
-          forLanguage:(int)languageID {
-    _classifiers[[@(languageID) stringValue]] = classifier;
-}
-
-- (BFClassifier *)activeClassifier {
-    return _classifiers[[@(_languageID) stringValue]];
+    return activeProtList;
 }
 
 
+- (NSArray *)protosetIDsWithLabels:(NSArray *)labels {
+    NSMutableArray *activeProtosetIDs = [[NSMutableArray alloc] init];
+    for (id key in labels) {
+        Protoset *ps = _protosets[key];
+        if (ps) {
+            [activeProtosetIDs addObject:@(ps.protosetID)];
+        }
+    }
+    return activeProtosetIDs;
+}
 @end

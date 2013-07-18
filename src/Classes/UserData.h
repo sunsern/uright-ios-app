@@ -9,21 +9,28 @@
 #import <Foundation/Foundation.h>
 #import "URJSONSerializable.h"
 
-@class BFClassifier;
 @class SessionData;
+
+@interface Protoset : NSObject <URJSONSerializable>
+
+@property (readwrite) int protosetID;
+@property (nonatomic,strong) NSString *label;
+@property (nonatomic,strong) NSString *type;
+@property (nonatomic,strong) NSArray *prototypes;
+
+@end
 
 @interface UserData : NSObject <URJSONSerializable>
 
 @property (readwrite) int userID;
-@property (readwrite) int languageID;
 @property (nonatomic,copy) NSString *username;
 @property (nonatomic,copy) NSString *password;
-// { languageID : BFClassifier* }
-@property (nonatomic,strong) NSMutableDictionary *classifiers;
-// [ JSONObject, ... ]
 @property (nonatomic,strong) NSMutableArray *sessions;
-// { languageID : NSDictionary* }
 @property (nonatomic,strong) NSMutableDictionary *scores;
+@property (nonatomic,strong) NSMutableArray *activeCharacters;
+@property (nonatomic,strong) NSDictionary *protosets;
+
++ (UserData *)newUserData:(int)userID;
 
 - (void)addScore:(float)score;
 
@@ -33,11 +40,8 @@
 
 - (void)addSessionJSON:(id)sessionJSON;
 
-- (void)switchActiveLanguage:(int)langID;
+- (NSArray *)prototypesWithLabels:(NSArray *)labels;
 
-- (BFClassifier *)activeClassifier;
-
-- (void)setClassifier:(BFClassifier *)classifier
-          forLanguage:(int)languageID;
+- (NSArray *)protosetIDsWithLabels:(NSArray *)labels;
 
 @end
