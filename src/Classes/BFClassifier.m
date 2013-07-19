@@ -177,10 +177,9 @@
         [InkPoint locationDistanceFrom:point to:_prevPoint] < kIgnoreAddpoint) {
         //NSLog(@"Point too close to the previous point, ignoring");
         return;
-    }
+    } 
     
     dispatch_async(_serialQueue, ^{
-        
         // Compute dx, dy
         if (!point.penup && _prevPoint) {
             float dx = point.x - _prevPoint.x;
@@ -191,7 +190,7 @@
         }
         
         //[_cacheDict removeAllObjects];
-        _cacheDict = [[NSMutableDictionary alloc] init];
+        _cacheDict = [[NSMutableDictionary alloc] initWithCapacity:_beamCount*2];
         
         StateData *state = [_beamPQ pop];
         

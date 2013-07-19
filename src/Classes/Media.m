@@ -74,8 +74,8 @@ static NSMutableDictionary *sounds = NULL;
     
     if (sound)
         [sound play];
-    else        
-        [[SPSound soundWithContentsOfFile:soundName] play];    
+    //else
+    //    [[SPSound soundWithContentsOfFile:soundName] play];
 }
 
 + (SPSoundChannel *)soundChannel:(NSString *)soundName

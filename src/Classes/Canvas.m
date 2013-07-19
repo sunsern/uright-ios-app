@@ -108,9 +108,10 @@
         [_renderTexture drawBundled:^{
             float dx = _newTouch.x - _lastTouch.x;
             float dy = _newTouch.y - _lastTouch.y;
-            int numSteps = CLIP(MAX(fabs(dx),
-                                    fabs(dy))/kDrawDelta,
-                                1, kMaxSteps);
+            //int numSteps = CLIP(MAX(fabs(dx),
+            //                        fabs(dy))/kDrawDelta,
+            //                    1, kMaxSteps);
+            int numSteps = 10;
             float incX = dx / numSteps;
             float incY = dy / numSteps;
             _brush.x = _lastTouch.x;
