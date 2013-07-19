@@ -39,6 +39,25 @@ void normalizePointArray(NSArray *pointArray) {
     }
 }
 
+void centerPointArray(NSArray *pointArray) {
+    float sum_x = 0;
+    int numPoints = 0;
+    for (InkPoint *point in pointArray) {
+        if (!point.penup) {
+		    sum_x = sum_x + point.x;
+            numPoints++;
+		}
+	}
+    if (numPoints > 0) {
+        float centerX = sum_x / numPoints;
+        for (InkPoint *point in pointArray) {
+            if (!point.penup) {
+                point.x = point.x - centerX;
+            }
+        }
+    }
+}
+
 @implementation BFPrototype {
     NSDictionary *_jsonObj;
 }
@@ -56,11 +75,13 @@ void normalizePointArray(NSArray *pointArray) {
             inkPoint.y = [pointInfo[1] floatValue];
             inkPoint.dx = [pointInfo[2] floatValue];
             inkPoint.dy = [pointInfo[3] floatValue];
-            inkPoint.penup = [pointInfo[4] intValue];
+            inkPoint.penup = [pointInfo[4] boolValue];
             [mPointArray addObject:inkPoint];
         }
         _points = mPointArray;
-        normalizePointArray(_points);
+        
+        //normalizePointArray(_points);
+        centerPointArray(_points);
     }
     return self;
 }

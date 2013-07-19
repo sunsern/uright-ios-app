@@ -139,7 +139,7 @@ static dispatch_queue_t __serialQueue = NULL;
 
 // sync method
 - (void)reset {
-    dispatch_sync([[self class]serialQueue], ^{
+    dispatch_sync([[self class] serialQueue], ^{
         //NSLog(@"Reset classifier");
         [_beamPQ clear];
         for (int i=0; i<[_prototypes count];i++) {
