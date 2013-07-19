@@ -8,6 +8,6 @@
 
 #import "Scene.h"
 
-@interface LoginScene : Scene
+@interface LoginScene : Scene <UITextFieldDelegate>
 
 @end
