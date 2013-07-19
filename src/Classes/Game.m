@@ -4,16 +4,12 @@
 //
 
 #import "Game.h" 
-#import "Canvas.h"
 #import "MenuScene.h"
-#import "RaceScene.h"
 #import "AccountManager.h"
 
 @implementation Game
 {
-    SPSprite *_contents;
-    SPSprite *_currentScene;
-    SPSprite *_menu;
+    SPSprite *_mainmenu;
 }
 
 - (id)init
@@ -39,7 +35,6 @@
     
     [SPAudioEngine start];  // starts up the sound engine
     
-    
     // The Application contains a very handy "Media" class which loads your texture atlas
     // and all available sound files automatically. Extend this class as you need it --
     // that way, you will be able to access your textures and sounds throughout your 
@@ -48,26 +43,17 @@
     [Media initAtlas];      // loads your texture atlas -> see Media.h/Media.m
     [Media initSound];      // loads all your sounds    -> see Media.h/Media.m
     
-    
-    // Create some placeholder content: a background image, the Sparrow logo, and a text field.
-    // The positions are updated when the device is rotated. To make that easy, we put all objects
-    // in one sprite (_contents): it will simply be rotated to be upright when the device rotates.
-
-    _contents = [SPSprite sprite];
-    
-    [self addChild:_contents];
-    
-    [self updateLocations];
-    
     // Initialize the singleton storage
     //[GlobalStorage clearGlobalData];
     [GlobalStorage sharedInstance];
 
-    _menu = [[MenuScene alloc] init];
-    [self showScene:_menu];
-    
     // Initialize Facebook session
     [AccountManager initializeFacebookSession];
+    
+    _mainmenu = [[MenuScene alloc] init];
+    [self addChild:_mainmenu];
+    
+    [self updateLocations];
     
     // The controller autorotates the game to all supported device orientations. 
     // Choose the orienations you want to support in the Xcode Target Settings ("Summary"-tab).
@@ -96,23 +82,5 @@
     
     [self updateLocations];
 }
-
-- (void)showScene:(SPSprite *)scene {
-    if ([_contents containsChild:_currentScene]) {
-        // Stop all running animation
-        [Sparrow.juggler removeAllObjects];
-        [_contents removeChild:_currentScene];
-    }
-    [_contents addChild:scene];
-    _currentScene = scene;
-    [self updateLocations];
-}
-
-- (void)showMenu {
-    if (_currentScene != _menu) {
-        [self showScene:_menu];
-    }
-}
-
 
 @end

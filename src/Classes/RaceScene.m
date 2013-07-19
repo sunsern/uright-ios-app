@@ -15,11 +15,12 @@
 #import "SessionData.h"
 #import "RoundData.h"
 #import "ClassificationResult.h"
-#import "ServerManager.h"
+#import "RaceSummaryScene.h"
 
-#define MODE_ID 3
-#define RACE_LENGTH 10
+#define RACE_MODE_ID 3
+#define RACE_LENGTH 5
 #define WAIT_TIME 1.0f
+#define BEAM_WIDTH 250
 
 @implementation RaceScene {
     // UI
@@ -27,19 +28,18 @@
     SPTextField *_bpsTf;
     Canvas *_canvas;
     SPQuad *_bar;
-    SPQuad *_tcBg;
     
     BFClassifier *_classifier;
     NSString *_testString;
     int _currentIdx;
+    int _numActiveChars;
     float _currentScore;
     float _totalScore;
     float _totalTime;
     double _roundTime;
-    double _lastUpdateBPS;
     BOOL _earlyStopFound;
-    int _numActiveChars;
-    BOOL _racing;
+    BOOL _withinRound;
+    CGPoint _targetLabelCenter;
     
     SessionData *_session;
     RoundData *_round;
@@ -54,9 +54,6 @@
     SPImage *background = [SPImage imageWithContentsOfFile:@"background.jpg" ];
     [self addChild:background];
     
-    
-    SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
-    
     // Canvas background
     SPQuad *canvasBg = [SPQuad quadWithWidth:300 height:220 color:0x555555];
     canvasBg.x = (gameWidth - canvasBg.width)/2;
@@ -66,11 +63,12 @@
     
     // Target character bg
     // Canvas background
-    _tcBg = [SPQuad quadWithWidth:100 height:100 color:0x000000];
-    _tcBg.x = canvasBg.x;
-    _tcBg.y = canvasBg.y - _tcBg.height - 40;
-    [self addChild:_tcBg];
-    
+    SPQuad *tcBg = [SPQuad quadWithWidth:100 height:100 color:0x000000];
+    tcBg.x = canvasBg.x;
+    tcBg.y = canvasBg.y - tcBg.height - 40;
+    _targetLabelCenter = CGPointMake(tcBg.x + tcBg.width/2,
+                                     tcBg.y + tcBg.height/2);
+    [self addChild:tcBg];
     
     // Target character
     _targetLabel = [SPTextField textFieldWithWidth:100 height:100 text:@""];
@@ -83,8 +81,10 @@
     //_targetLabel.fontName = @"Noteworthy-Bold";
     //_targetLabel.border = YES;
     _targetLabel.autoScale = YES;
+    _targetLabel.blendMode = SP_BLEND_MODE_ADD;
     [self addChild:_targetLabel];
-    
+
+
     // The canvas
     _canvas = [[Canvas alloc] initWithWidth:canvasBg.width height:canvasBg.height];
     _canvas.x = (gameWidth - _canvas.width)/2;
@@ -95,6 +95,7 @@
                       forType:SP_EVENT_TYPE_TOUCH];
     
     // Erase button
+    SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
     SPButton *resetButton = [SPButton buttonWithUpState:buttonTexture text:@"Erase"];
     resetButton.pivotX = resetButton.width / 2;
     resetButton.pivotY = resetButton.height / 2;
@@ -113,7 +114,7 @@
     _bpsTf.fontSize = 60;
     _bpsTf.fontName = @"GillSans-Bold";
     _bpsTf.autoScale = YES;
-    _bpsTf.border = YES;
+    //_bpsTf.border = YES;
     [self addChild:_bpsTf];
     
     SPTextField *bpsLabel = [SPTextField textFieldWithWidth:70
@@ -166,7 +167,7 @@
         // Setting up classifier
         _classifier = [[BFClassifier alloc] initWithPrototypes:prototypes];
         [_classifier setDelegate:self];
-        [_classifier setBeamCount:500];
+        [_classifier setBeamCount:BEAM_WIDTH];
         [_canvas setClassifier:_classifier];
         
         UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
@@ -182,13 +183,10 @@
 }
 
 - (void)enterFrame:(SPEnterFrameEvent *)event {
-    if (_racing) {
+    if (_withinRound) {
         _roundTime += event.passedTime;
-        if (_roundTime - _lastUpdateBPS > 0.1) {
-            float bps = _totalScore / (_totalTime + _roundTime);
-            _bpsTf.text = [NSString stringWithFormat:@"%0.2f", bps];
-            _lastUpdateBPS = _roundTime;
-        }
+        float bps = _totalScore / (_totalTime + _roundTime);
+        _bpsTf.text = [NSString stringWithFormat:@"%0.2f", bps];
     } else {
         _bpsTf.text = @"";
     }
@@ -196,7 +194,7 @@
 
 - (void)quitRace {
     [Sparrow.juggler removeAllObjects];
-    [(Game *)(Sparrow.root) showMenu];
+    [self removeFromParent];
 }
 
 - (void)restartRace {
@@ -205,7 +203,7 @@
     // Create a new session
     _session = [[SessionData alloc] init];
     _session.userID = ud.userID;
-    _session.modeID = MODE_ID;
+    _session.modeID = RACE_MODE_ID;
     
     // Test string
     NSArray *labelArray = ud.activeCharacters;
@@ -214,11 +212,11 @@
     _session.activeCharacters = ud.activeCharacters;
     _session.activeProtosetIDs = [ud protosetIDsWithLabels:labelArray];
     
-    // Reset UI
+    // Reset stats
     _currentIdx = 0;
     _totalScore = 0;
     _totalTime = 0;
-    _racing = NO;
+    _withinRound = NO;
     
     [_canvas clear];
     _canvas.touchable = NO;
@@ -262,15 +260,15 @@
 }
 
 - (void)startRound {
-    _racing = YES;
     _roundTime = 0.0;
-    _lastUpdateBPS = 0.0;
+    _withinRound = YES;
     _earlyStopFound = NO;
     
     _round = [[RoundData alloc] init];
     _round.startTime = [NSDate timeIntervalSinceReferenceDate];
     
     NSString *currentLabel = [_testString substringWithRange:NSMakeRange(_currentIdx,1)];
+    
     _targetLabel.text = currentLabel;
     _targetLabel.x = _canvas.x + _canvas.width/2;
     _targetLabel.y = _canvas.y + _canvas.height/2;
@@ -281,20 +279,20 @@
     targetAnimate.delay = 0.1;
     [targetAnimate animateProperty:@"scaleX" targetValue:1.0];
     [targetAnimate animateProperty:@"scaleY" targetValue:1.0];
-    [targetAnimate animateProperty:@"x" targetValue:_tcBg.x + _tcBg.width/2];
-    [targetAnimate animateProperty:@"y" targetValue:_tcBg.y + _tcBg.height/2];
+    [targetAnimate animateProperty:@"x" targetValue:_targetLabelCenter.x];
+    [targetAnimate animateProperty:@"y" targetValue:_targetLabelCenter.y];
     [Sparrow.juggler addObject:targetAnimate];
     
     [Media playSound:[NSString stringWithFormat:@"%@.caf", currentLabel]];
-    [_classifier setTargetLabel:_targetLabel.text];
     
+    [_classifier setTargetLabel:_targetLabel.text];
     [_canvas clear];
     _canvas.touchable = YES;
 }
 
 - (void)endRound {
     _canvas.touchable = NO;
-    _racing = NO;
+    _withinRound = NO;
     
     [Media playSound:@"DING.caf"];
     
@@ -330,8 +328,7 @@
     current_score.alpha = 1.0;
     [self addChild:current_score];
     SPTween *tween = [SPTween tweenWithTarget:current_score
-                                         time:1.5f
-                                   transition:SP_TRANSITION_EASE_IN];
+                                         time:1.5f];
     tween.delay = 0.01;
     tween.onComplete = ^{ [self removeChild:current_score]; };
     [tween animateProperty:@"y" targetValue:30];
@@ -342,14 +339,13 @@
     if (_currentIdx < _testString.length) {
         [self startRound];
     } else {
-        [self raceComplete];
+        [self raceCompleted];
     }
 }
 
-- (void)raceComplete {
+- (void)raceCompleted {
     _targetLabel.text = @"";
-     _canvas.touchable = NO;
-    
+    _canvas.touchable = NO;
     [_canvas clear];
     
     _session.totalScore = _totalScore;
@@ -359,29 +355,21 @@
     UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
     [ud addScore:_session.bps];
     
-    [Sparrow.juggler delayInvocationByTime:1.0f block:^{
-    // Proceed to summary scene
-    UIAlertView *uploadAlert = [[UIAlertView alloc] initWithTitle:@"Uploading"
-                                                          message:@"Please wait while the data is being uploaded"
-                                                         delegate:self
-                                                cancelButtonTitle:nil
-                                                otherButtonTitles:nil];
-    [uploadAlert show];
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-        [ServerManager uploadSessionData:_session];
-        dispatch_async(dispatch_get_main_queue(), ^ {
-            [uploadAlert dismissWithClickedButtonIndex:0 animated:YES];
-            [self quitRace];
-        });
-    });
+    RaceSummaryScene *summary = [[RaceSummaryScene alloc] initWithSession:_session];
+    [self addChild:summary];
+    [summary addEventListenerForType:SP_EVENT_TYPE_QUIT_RACE block:^(id event){
+        [self quitRace];
     }];
+    [summary addEventListenerForType:SP_EVENT_TYPE_RESTART_RACE block:^(id event){
+        [self restartRace];
+    }];
+    [summary dropFromTop];
 }
 
 - (void)reset {
     [_canvas clear];
     [Sparrow.juggler removeObjectsWithTarget:_bar];
     _bar.width = _canvas.width;
-    //_bar.visible = NO;
 }
 
 
@@ -404,10 +392,8 @@
 - (void)onTouch:(SPTouchEvent *)event {
     [Sparrow.juggler removeObjectsWithTarget:_bar];
     _bar.width = _canvas.width;
-    //_bar.visible = NO;
     SPTouch *touchEnd = [[event touchesWithTarget:self andPhase:SPTouchPhaseEnded] anyObject];
     if(touchEnd){
-        //_bar.visible = YES;
         SPTween *shinking = [[SPTween alloc] initWithTarget:_bar time:WAIT_TIME];
         [shinking animateProperty:@"width" targetValue:0];
         shinking.onComplete = ^{ [self endRound]; };
@@ -434,17 +420,5 @@
 }
 
 
-+ (SPTexture *)circleTexture:(float)diameter {
-    return [[SPTexture alloc]
-            initWithWidth:diameter
-            height:diameter
-            draw:^(CGContextRef ctx)
-            {
-                CGRect circle = CGRectMake(0, 0, diameter, diameter);
-                CGContextSetFillColorWithColor(ctx,[[UIColor whiteColor]
-                                                    CGColor]);
-                CGContextFillEllipseInRect(ctx, circle);
-            }];
-}
 
 @end

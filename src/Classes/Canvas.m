@@ -11,22 +11,18 @@
 #import "InkPoint.h"
 #import "InkCharacter.h"
 
-#define kBrushSize 12.0f
-#define kDefaultColor 0x0000ff
+#define kBrushSize 15.0f
+#define kDefaultColor 0x1028da
 #define kSpecialColor 0xff0000
 #define kBaseLineRatio 0.70f
 #define kTopLineRatio 0.30f
-#define kDrawDelta 3.0f
-#define kMaxSteps 20
+#define kNumSteps 15
 
 #define ADJUST_X(x) (((x - (self.width / 2)) / self.height) * 1.25)
 #define UNADJUST_X(x) (((x / 1.25) * self.height) + (self.width / 2))
 
 #define ADJUST_Y(y) (((y - (self.height / 2)) / self.height) * 1.25)
 #define UNADJUST_Y(y) (((y / 1.25) * self.height) + (self.height / 2))
-
-
-#define CLIP(X,a,b) (MAX(MIN(X,b),a))
 
 
 @implementation Canvas {
@@ -108,17 +104,13 @@
         [_renderTexture drawBundled:^{
             float dx = _newTouch.x - _lastTouch.x;
             float dy = _newTouch.y - _lastTouch.y;
-            //int numSteps = CLIP(MAX(fabs(dx),
-            //                        fabs(dy))/kDrawDelta,
-            //                    1, kMaxSteps);
-            int numSteps = 10;
-            float incX = dx / numSteps;
-            float incY = dy / numSteps;
+            float incX = dx / kNumSteps;
+            float incY = dy / kNumSteps;
             _brush.x = _lastTouch.x;
 			_brush.y = _lastTouch.y;
             // loop through so that if our touches are
             // far apart we still create a line
-            for (int i=0; i<numSteps; i++) {
+            for (int i=0; i<kNumSteps; i++) {
 				[_renderTexture drawObject:_brush];
 				_brush.x += incX;
                 _brush.y += incY;

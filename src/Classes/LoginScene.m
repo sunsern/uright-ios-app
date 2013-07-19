@@ -102,7 +102,7 @@
             button.text = _buttonText[i];
             button.name = button.text;
             [self addChild:button];
-            [button addEventListener:@selector(onButtonTriggered:)
+            [button addEventListener:@selector(buttonTriggered:)
                             atObject:self
                              forType:SP_EVENT_TYPE_TRIGGERED];
             
@@ -147,13 +147,13 @@
     [_password resignFirstResponder];
 }
 
-- (void)onButtonTriggered:(SPEvent *)event {
+- (void)buttonTriggered:(SPEvent *)event {
     [self removeKeyboard];
     SPButton *button = (SPButton *)event.target;
     if ([button.name isEqualToString:_buttonText[0]]) {
         if (_username.text.length > 0 &&
             _password.text.length > 0) {
-            UIAlertView *alert = [self showAlert:[NSString stringWithFormat:
+            UIAlertView *alert = [self showPleaseWait:[NSString stringWithFormat:
                                                   @"Signing in as %@", _username.text]];
             [AccountManager loginAsUsername:_username.text
                                    password:_password.text
@@ -162,7 +162,8 @@
                                          [alert dismissWithClickedButtonIndex:0 animated:YES];
                                          [_username removeFromSuperview];
                                          [_password removeFromSuperview];
-                                         [self removeFromParent];
+                                         [self shootUpAndClose];
+                                         //[self removeFromParent];
                                      } else {
                                          [alert dismissWithClickedButtonIndex:0 animated:YES];
                                          [self showErrorMsg:@"Please check your username and password."
@@ -171,13 +172,14 @@
                                  }];
         }
     } else if ([button.name isEqualToString:_buttonText[1]]) {
-        UIAlertView *alert = [self showAlert:@"Signing in with Facebook"];
+        UIAlertView *alert = [self showPleaseWait:@"Signing in with Facebook"];
         [AccountManager loginAsCurrentFacebookUser:^(BOOL successful){
             if (successful) {
                 [alert dismissWithClickedButtonIndex:0 animated:YES];
                 [_username removeFromSuperview];
                 [_password removeFromSuperview];
-                [self removeFromParent];
+                //[self removeFromParent];
+                [self shootUpAndClose];
             } else {
                 [alert dismissWithClickedButtonIndex:0 animated:YES];
                 [self showErrorMsg:@"Error signing in with Facebook"
@@ -198,7 +200,7 @@
 }
 
 
-- (UIAlertView *)showAlert:(NSString *)message {
+- (UIAlertView *)showPleaseWait:(NSString *)message {
     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Please wait"
                                                     message:message
                                                    delegate:nil

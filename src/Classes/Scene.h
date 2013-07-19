@@ -10,4 +10,7 @@
 
 @interface Scene : SPSprite
 
+- (void)dropFromTop;
+- (void)shootUpAndClose;
+
 @end
