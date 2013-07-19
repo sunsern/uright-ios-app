@@ -146,7 +146,7 @@
                             initWithX:[point[@"x"] floatValue]
                             y:[point[@"y"] floatValue]
                             t:[point[@"t"] doubleValue]
-                            penup:[point[@"penup"] intValue]]];
+                            penup:[point[@"penup"] boolValue]]];
         }
     }
     return self;
@@ -158,11 +158,12 @@
     characterInfo[@"topline"] = @(_topLine);
     NSMutableArray *pointArray = [[NSMutableArray alloc] init];
     for (InkPoint *point in _points) {
+        int penup_int = point.penup;
         [pointArray addObject: @{
          @"x" : @(point.x),
          @"y" : @(point.y),
          @"t" : @(point.t),
-         @"penup" : @(point.penup)}];
+         @"penup" : @(penup_int)}];
     }
     characterInfo[@"points"] = pointArray;
     return characterInfo;
