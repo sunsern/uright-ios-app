@@ -19,11 +19,12 @@
 #define kDrawDelta 3.0f
 #define kMaxSteps 20
 
-#define ADJUST_X(x) ((x / self.width) * 3.0 - 1.5)
-#define UNADJUST_X(x) (((x + 1.5) / 3.0) * self.width)
+#define ADJUST_X(x) (((x - (self.width / 2)) / self.height) * 1.25)
+#define UNADJUST_X(x) (((x / 1.25) * self.height) + (self.width / 2))
 
-#define ADJUST_Y(y) ((y / self.height) * 1.3 - 0.15)
-#define UNADJUST_Y(y) (((y + 0.15) / 1.3) * self.height)
+#define ADJUST_Y(y) (((y - (self.height / 2)) / self.height) * 1.25)
+#define UNADJUST_Y(y) (((y / 1.25) * self.height) + (self.height / 2))
+
 
 #define CLIP(X,a,b) (MAX(MIN(X,b),a))
 
@@ -71,8 +72,8 @@
         _marker = nil;
         _drawing = NO;
         _firstTouchTime = 0.0;
-        _baseline = height * kBaseLineRatio;
-        _topline = height * kTopLineRatio;
+        _baseline = ADJUST_Y(height * kBaseLineRatio);
+        _topline = ADJUST_Y(height * kTopLineRatio);
         _currentInkCharacter = [[InkCharacter alloc] initWithBaseline:_baseline
                                                               topline:_topline];
     }
@@ -158,14 +159,10 @@
             _firstTouchTime = touchTime;
         }
         
-        InkPoint *org_p = [[InkPoint alloc] initWithX:_newTouch.x
-                                                    y:_newTouch.y
-                                                    t:touchTime];
-        [_currentInkCharacter addPoint:org_p];
-        
         InkPoint *adj_p = [[InkPoint alloc] initWithX:ADJUST_X(_newTouch.x)
                                                     y:ADJUST_Y(_newTouch.y)
                                                     t:touchTime];
+        [_currentInkCharacter addPoint:adj_p];
         [_classifier addPoint:adj_p];
     }
     
@@ -178,14 +175,12 @@
         _drawing = YES;
         
         touchTime = [NSDate timeIntervalSinceReferenceDate];
-        InkPoint *org_p = [[InkPoint alloc] initWithX:_newTouch.x
-                                                    y:_newTouch.y
-                                                    t:touchTime];
-        [_currentInkCharacter addPoint:org_p];
         
         InkPoint *adj_p = [[InkPoint alloc] initWithX:ADJUST_X(_newTouch.x)
                                                     y:ADJUST_Y(_newTouch.y)
                                                     t:touchTime];
+    
+        [_currentInkCharacter addPoint:adj_p];
         [_classifier addPoint:adj_p];
     }
     
@@ -200,16 +195,11 @@
         
         _lastTouchTime = [NSDate timeIntervalSinceReferenceDate];
         
-        InkPoint *org_p = [[InkPoint alloc] initWithX:_newTouch.x
-                                                    y:_newTouch.y
-                                                    t:_lastTouchTime
-                                                penup:YES];
-        [_currentInkCharacter addPoint:org_p];
-        
         InkPoint *adj_p = [[InkPoint alloc] initWithX:ADJUST_X(_newTouch.x)
                                                     y:ADJUST_Y(_newTouch.y)
                                                     t:_lastTouchTime
                                                 penup:YES];
+        [_currentInkCharacter addPoint:adj_p];
         [_classifier addPoint:adj_p];
     }
 }
