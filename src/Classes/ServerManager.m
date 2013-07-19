@@ -11,6 +11,7 @@
 #import "ASIFormDataRequest.h"
 #import "Reachability.h"
 #import "SessionData.h"
+#import "Charset.h"
 
 @implementation ServerManager
 
@@ -126,7 +127,7 @@
 }
 
 
-+ (id)fetchCharsets {
++ (NSArray *)fetchCharsets {
     NSString *urlString = [NSString stringWithFormat:@"%@/charsets", kURBaseURL];
     NSURL *url = [NSURL URLWithString:urlString];
     ASIFormDataRequest  *request = [ASIFormDataRequest requestWithURL:url];
@@ -135,11 +136,17 @@
     if ([request error] != nil) {
         return nil;
     }
-    return [[self class] JSONObjectFromNSData:[request responseData]];
+    NSArray *charSetsJSON = [[self class]
+                             JSONObjectFromNSData:[request responseData]];
+    NSMutableArray *charsets = [[NSMutableArray alloc] init];
+    for (id eachCharset in charSetsJSON) {
+        [charsets addObject:[[Charset alloc] initWithJSONObject:eachCharset]];
+    }
+    return charsets;
 }
 
 
-+ (id)fetchProtosets:(int)userID {
++ (NSDictionary *)fetchProtosets:(int)userID {
     NSString *urlString = [NSString stringWithFormat:@"%@/protosets", kURBaseURL];
     NSURL *url = [NSURL URLWithString:urlString];
     ASIFormDataRequest  *request = [ASIFormDataRequest requestWithURL:url];
@@ -149,7 +156,15 @@
     if ([request error] != nil) {
         return nil;
     }
-    return [[self class] JSONObjectFromNSData:[request responseData]];    
+    NSDictionary *protosetsJSON = [[self class]
+                                   JSONObjectFromNSData:[request responseData]];
+    
+    NSMutableDictionary *protosets = [[NSMutableDictionary alloc] init];
+    for (id key in protosetsJSON) {
+        Protoset *ps = [[Protoset alloc] initWithJSONObject:protosetsJSON[key]];
+        protosets[ps.label] = ps;
+    }
+    return protosets;
 }
 
 

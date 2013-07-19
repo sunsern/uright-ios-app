@@ -62,7 +62,7 @@ static GlobalStorage *__sharedInstance = nil;
     // Save charsets
     NSMutableArray *charsets = [[NSMutableArray alloc] init];
     for (Charset *cs in _charsets) {
-        charsets = [cs toJSONObject];
+        [charsets addObject:[cs toJSONObject]];
     }
     [defaults setObject:charsets forKey:@"charsets"];
     
@@ -84,12 +84,8 @@ static GlobalStorage *__sharedInstance = nil;
     BOOL loadedCharset = NO;
     // check for langauge data online
     if ([ServerManager isOnline]) {
-        NSArray *charSetsJSON = [ServerManager fetchCharsets];
-        if (charSetsJSON) {
-            NSMutableArray *charsets = [[NSMutableArray alloc] init];
-            for (id eachCharset in charSetsJSON) {
-                [charsets addObject:[[Charset alloc] initWithJSONObject:eachCharset]];
-            }
+        NSArray *charsets = [ServerManager fetchCharsets];
+        if (charsets) {
             _charsets = charsets;
             loadedCharset = YES;
             DEBUG_PRINT(@"[GS] Loaded %d character sets from server",[_charsets count]);
@@ -152,13 +148,8 @@ static GlobalStorage *__sharedInstance = nil;
     
     // check for new prototypes
     if ([ServerManager isOnline]) {
-        NSDictionary *protosetsJSON = [ServerManager fetchProtosets:_activeUserID];
-        if (protosetsJSON) {
-            NSMutableDictionary *protosets = [[NSMutableDictionary alloc] init];
-            for (id key in protosetsJSON) {
-                Protoset *ps = [[Protoset alloc] initWithJSONObject:protosetsJSON[key]];
-                protosets[ps.label] = ps;
-            }
+        NSDictionary *protosets = [ServerManager fetchProtosets:_activeUserID];
+        if (protosets) {
             _activeUserData.protosets = protosets;
             DEBUG_PRINT(@"[GS] Loaded %d protosets from server",[protosets count]);
         }

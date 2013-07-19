@@ -68,15 +68,21 @@
                                                                              password:password
                                                                                 email:user[@"email"]
                                                                              fullname:user.name];
-                              GlobalStorage *gs = [GlobalStorage sharedInstance];
-                              [gs switchActiveUser:newUserID onComplete:^{
-                                  UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
-                                  ud.username = username;
-                                  ud.password = password;
-                                  completeBlock(YES);
-                              }];
+                              if (newUserID != kURGuestUserID) {
+                                  GlobalStorage *gs = [GlobalStorage sharedInstance];
+                                  [gs switchActiveUser:newUserID onComplete:^{
+                                      UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
+                                      ud.username = username;
+                                      ud.password = password;
+                                      completeBlock(YES);
+                                  }];
+                              } else {
+                                  // ERROR
+                                  completeBlock(NO);
+                              }
                           }
                       } else {
+                          // ERROR 
                           completeBlock(NO);
                       }
                   }];
