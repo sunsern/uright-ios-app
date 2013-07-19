@@ -60,7 +60,7 @@
     [self updateLocations];
     
     // Initialize the singleton storage
-    [GlobalStorage clearGlobalData];
+    //[GlobalStorage clearGlobalData];
     [GlobalStorage sharedInstance];
 
     _menu = [[MenuScene alloc] init];

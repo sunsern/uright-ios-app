@@ -175,7 +175,7 @@
             [activeProtList addObject:prot];
         }
     }
-    return activeProtList;
+    return (NSArray *)activeProtList;
 }
 
 
@@ -187,6 +187,6 @@
             [activeProtosetIDs addObject:@(ps.protosetID)];
         }
     }
-    return activeProtosetIDs;
+    return (NSArray *)activeProtosetIDs;
 }
 @end

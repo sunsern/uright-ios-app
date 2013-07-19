@@ -67,7 +67,13 @@ void centerPointArray(NSArray *pointArray) {
     if (self) {
         _jsonObj = [jsonObj copy];
         _label = [jsonObj[@"label"] copy];
-        _prior = [jsonObj[@"prior"] floatValue];
+        
+        if (!jsonObj[@"prior"]) {
+            _prior = 1.0;
+        } else {
+            _prior =[jsonObj[@"prior"] floatValue];
+        }
+        
         NSMutableArray *mPointArray = [[NSMutableArray alloc] init];
         for (NSArray *pointInfo in jsonObj[@"center"]) {
             InkPoint *inkPoint = [[InkPoint alloc] init];

@@ -75,41 +75,27 @@
 
 /////////////////////
 
-static dispatch_queue_t __serialQueue = NULL;
-
 @implementation BFClassifier  {
+    dispatch_queue_t _serialQueue;
     JCSuperPriorityQueue *_beamPQ;
     InkPoint *_prevPoint;
     NSMutableDictionary *_likelihood;
     NSMutableDictionary *_finalLikelihood;
     NSMutableDictionary *_cacheDict;
-    // Save this for serialization
-    NSDictionary *_jsonObj;
 }
 
-+ (dispatch_queue_t)serialQueue {
-    if (__serialQueue != NULL) {
-        return __serialQueue;
-    }
-    static dispatch_once_t pred;
-    dispatch_once(&pred, ^{
-        __serialQueue = dispatch_queue_create("uRight3.BFClassifier", NULL);
-    });
-    return __serialQueue;
-}
 
 - (id)init {
     self = [super init];
     if (self) {
         // create a queue if not yet
-        [[self class] serialQueue];
+        _serialQueue = dispatch_queue_create("uRight3.BFClassifier", NULL);
         _beamCount = kBeamWidth;
         _targetThreshold = kLikelihoodThreshold;
         _beamPQ = [[JCSuperPriorityQueue alloc] init];
         _likelihood = [[NSMutableDictionary alloc] init];
         _finalLikelihood = [[NSMutableDictionary alloc] init];
         _cacheDict = [[NSMutableDictionary alloc] init];
-        _jsonObj = nil;
     }
     return self;
 }
@@ -120,26 +106,9 @@ static dispatch_queue_t __serialQueue = NULL;
     return self;
 }
 
-- (id)initWithJSONObject:(id)jsonObj {
-    self = [self init];
-    NSMutableArray *prototypes = [[NSMutableArray alloc] init];
-    for (id protoJSON in jsonObj[@"prototypes"]) {
-        BFPrototype *p = [[BFPrototype alloc] initWithJSONObject:protoJSON];
-        [prototypes addObject:p];
-    }
-    _prototypes = (NSArray *)prototypes;
-    _jsonObj = [jsonObj copy];
-    return self;
-}
-
-- (id)toJSONObject {
-    return _jsonObj;
-}
-
-
 // sync method
 - (void)reset {
-    dispatch_sync([[self class] serialQueue], ^{
+    dispatch_sync(_serialQueue, ^{
         //NSLog(@"Reset classifier");
         [_beamPQ clear];
         for (int i=0; i<[_prototypes count];i++) {
@@ -210,7 +179,7 @@ static dispatch_queue_t __serialQueue = NULL;
         return;
     }
     
-    dispatch_async([[self class] serialQueue], ^{
+    dispatch_async(_serialQueue, ^{
         
         // Compute dx, dy
         if (!point.penup && _prevPoint) {

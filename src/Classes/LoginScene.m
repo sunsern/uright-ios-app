@@ -120,7 +120,7 @@
         }
         NSString *link = @"Don't have an account?\n Visit "
         "http://fpga1.ucsd.edu/uright to create an account.";
-        SPTextField *linktf = [[SPTextField alloc] initWithText:link];
+        SPTextField *linktf = [SPTextField textFieldWithText:link];
         linktf.width = WINDOW_WIDTH;
         linktf.height = 40;
         linktf.pivotX = linktf.width / 2;

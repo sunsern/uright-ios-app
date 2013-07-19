@@ -73,12 +73,11 @@
     [self addChild:resetButton];
     [resetButton addEventListener:@selector(onReset) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
     
-    _targetLabel = [[SPTextField alloc] initWithWidth:100 height:100];
+    _targetLabel = [SPTextField textFieldWithWidth:100 height:100 text:@""]; 
     _targetLabel.pivotX = _targetLabel.width / 2;
     _targetLabel.pivotY = _targetLabel.height / 2;
     _targetLabel.x = (GAMEWIDTH/2) / 2 + 20;
     _targetLabel.y = 150;
-    _targetLabel.text = @"";
     _targetLabel.fontSize = 50;
     [self addChild:_targetLabel];
    
@@ -122,11 +121,11 @@
     [self addChild:quit];
     [quit addEventListener:@selector(quitRace) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
     
-    _bar = [[SPQuad alloc] initWithWidth:GAMEWIDTH - 20 height:10];
+    _bar = [[SPQuad alloc] initWithWidth:GAMEWIDTH - 20 height:15];
     _bar.pivotX = _bar.width / 2;
     _bar.x = GAMEWIDTH / 2;
     _bar.y = 185;
-    _bar.color = 0x00ee00;
+    _bar.color = 0x00cc00;
     _bar.visible = NO;
     [self addChild:_bar];
     
@@ -142,7 +141,7 @@
         // Setting up classifier
         _classifier = [[BFClassifier alloc] initWithPrototypes:prototypes];
         [_classifier setDelegate:self];
-        [_classifier setBeamCount:800];
+        [_classifier setBeamCount:700];
         [_canvas setClassifier:_classifier];
     }
     return self;
@@ -188,6 +187,11 @@
     _canvasBg.color = 0x777777;
     
     // Start count down
+    [self countDown];
+}
+
+
+- (void)countDown {
     SPTextField *banner = [[SPTextField alloc] initWithWidth:100 height:100];
     banner.hAlign = SPHAlignCenter;
     banner.vAlign = SPVAlignCenter;
@@ -219,7 +223,6 @@
         [self startRound];
     }];
 }
-
 
 - (void)startRound {
     // Only start when race scene is visible
@@ -311,7 +314,7 @@
     _session.totalTime = _time;
     _session.bps = _score / _time;
     
-    UserData *ud = [GlobalStorage sharedInstance];
+    UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
     [ud addScore:_session.bps];
     
     // Proceed to summary scene
@@ -324,11 +327,9 @@
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
         [ServerManager uploadSessionData:_session];
         dispatch_async(dispatch_get_main_queue(), ^ {
-            [uploadAlert dismissWithClickedButtonIndex:0 animated:YES];
+            [uploadAlert dismissWithClickedButtonIndex:0 animated:NO];
         });
     });
-    
-   
 }
 
 - (void)onReset {

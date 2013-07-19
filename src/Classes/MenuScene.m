@@ -14,10 +14,13 @@
 #import "ServerManager.h"
 #import "Charset.h"
 
+#define BTN_Y_OFFSET 200
+
 @implementation MenuScene {
     LoginScene *_login;
     SPTextField *_info;
     NSArray *_buttonList;
+    BOOL _fetchingProtosets;
 }
 
 - (id)init
@@ -25,74 +28,122 @@
     self = [super init];
     if (self) {
         [self setupScene];
+        _fetchingProtosets = NO;
     }
     return self;
 }
 
-
-- (void)updateInfo {
-    UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
-    _info.text = [NSString stringWithFormat:@"User id: %d \
-                  Username: %@\nprotosets: %d \
-                  high score: %f",
-                  ud.userID, ud.username, [ud.protosets count], [ud bestScore]];
-    
-}
-
-
 - (void)setupScene {
     int gameWidth = Sparrow.stage.width;
-    //int gameHeight = Sparrow.stage.height;
+    int gameHeight = Sparrow.stage.height;
     
     // Background
     //SPQuad *background = [SPQuad quadWithWidth:gameWidth height:gameHeight color:0xffffff];
     SPImage *background = [SPImage imageWithContentsOfFile:@"background.jpg"];
     [self addChild:background];
     
+    // Banner
+    SPTextField *banner = [SPTextField textFieldWithText:@"uRight3"];
+    banner.width = gameWidth-40;
+    banner.height = 100;
+    banner.pivotX = banner.width / 2;
+    banner.x = gameWidth / 2;
+    banner.y = 10;
+    banner.autoScale = YES;
+    banner.fontSize = 100;
+    banner.fontName = @"Chalkduster";
+    [self addChild:banner];
+    
     // Create buttons
     SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
-    _buttonList = @[@"English", @"Digits", @"Thai", @"Logout"];
-    for (int i=0; i < [_buttonList count]; i+=2) {
-        SPButton *button_l = [SPButton buttonWithUpState:buttonTexture text:_buttonList[i]];
-        button_l.pivotX = button_l.width / 2;
-        button_l.pivotY = button_l.height / 2;
-        button_l.x = gameWidth / 4;
-        button_l.y = 250 + i * (button_l.height + 5);
-        button_l.name = button_l.text;
-        [button_l addEventListener:@selector(buttonTriggered:)
+    _buttonList = @[@"English", @"Digits", @"Thai", @"English + Digits", @"Logout"];
+    for (int i=0; i < [_buttonList count]; i++) {
+        SPButton *button = [SPButton buttonWithUpState:buttonTexture text:_buttonList[i]];
+        button.scaleX = 1.2;
+        button.scaleY = 1.2;
+        button.pivotX = button.width / 2;
+        button.pivotY = button.height / 2;
+        button.x = gameWidth / 2;
+        button.y = BTN_Y_OFFSET + i * (button.height + 10);
+        button.name = button.text;
+        [button addEventListener:@selector(buttonTriggered:)
                         atObject:self
                          forType:SP_EVENT_TYPE_TRIGGERED];
-        [self addChild:button_l];
-        
-        if (i+1 < [_buttonList count]) {
-            SPButton *button_r = [SPButton buttonWithUpState:buttonTexture text:_buttonList[i+1]];
-            button_r.pivotX = button_r.width / 2;
-            button_r.pivotY = button_r.height / 2;
-            button_r.x = gameWidth*3 / 4;
-            button_r.y = 250 + i * (button_r.height + 5);
-            button_r.name = button_r.text;
-            [button_r addEventListener:@selector(buttonTriggered:)
-                              atObject:self
-                               forType:SP_EVENT_TYPE_TRIGGERED];
-            [self addChild:button_r];
-        }
+        [self addChild:button];
     }
 
-    _info = [[SPTextField alloc] initWithWidth:gameWidth-20 height:100];
-    _info.pivotX = _info.width / 2;
-    _info.x = gameWidth / 2;
-    _info.color = 0x000000;
+    // Info bg
+    SPQuad *infobg = [SPQuad quadWithWidth:gameWidth height:100];
+    infobg.y = gameHeight - infobg.height;
+    infobg.color = 0x000000;
+    infobg.alpha = 0.5;
+    [self addChild:infobg];
+    
+    _info = [SPTextField textFieldWithWidth:gameWidth height:infobg.height text:@""];
+    _info.y = gameHeight - _info.height;
+    _info.fontName = @"Symbol";
+    _info.color = 0xffffff;
+    _info.autoScale = YES;
     [self addChild:_info];
-    [self updateInfo];
 
     [self addEventListener:@selector(onAddedToStage:)
                   atObject:self
                    forType:SP_EVENT_TYPE_ADDED_TO_STAGE];
-
 }
 
 - (void)dealloc {
     [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_ADDED_TO_STAGE];
+}
+
+
+- (void)updateInfo {
+    UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
+    
+    if (!_fetchingProtosets) {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+            _fetchingProtosets = YES;
+            NSDictionary *protosets = [ServerManager fetchProtosets:ud.userID];
+            int new_count = 0;
+            if (protosets) {
+                for (id key in ud.protosets) {
+                    Protoset *old_ps = ud.protosets[key];
+                    Protoset *new_ps = protosets[key];
+                    if (new_ps.protosetID > old_ps.protosetID) {
+                        new_count += 1;
+                    }
+                }
+                
+                // Update and notify user
+                if (new_count > 0) {
+                    ud.protosets = protosets;
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [self protosetUpdated:new_count];
+                    });
+                }
+            }
+            _fetchingProtosets = NO;
+
+        });
+    }
+    _info.text = [NSString stringWithFormat:
+                  @"[Debug info]\n"
+                  "user_id: %d \
+                  username: %@\n"
+                  "n_protosets: %d \
+                  best_score: %f\n",
+                  ud.userID, ud.username, [ud.protosets count], [ud bestScore]];
+}
+
+- (void)protosetUpdated:(int)new_count {
+    NSString *mesg = [NSString
+                      stringWithFormat:@"%d new prototypes were added to your collection", new_count];
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"New prototypes"
+                                                    message:mesg
+                                                   delegate:self
+                                          cancelButtonTitle:@"OK"
+                                          otherButtonTitles:nil];
+    [alert show];
 }
 
 
@@ -106,23 +157,37 @@
         // English
         if ([button.name isEqualToString:@"English"]) {
             Charset *cs = [[gs charsets] objectAtIndex:0];
+            NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
+            [allCharacters addObjectsFromArray:[cs characters]];
             // Set active characters
-            [ud setActiveCharacters:[[NSMutableArray alloc]
-                                     initWithArray:[cs characters]]];
-            prototypes = [ud prototypesWithLabels:[cs characters]];
+            [ud setActiveCharacters:allCharacters];
+            prototypes = [ud prototypesWithLabels:allCharacters];
         } else if ([button.name isEqualToString:@"Digits"]){
             // Digits
             Charset *cs = [[gs charsets] objectAtIndex:4];
+            NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
+            [allCharacters addObjectsFromArray:[cs characters]];
             // Set active characters
-            [ud setActiveCharacters:[[NSMutableArray alloc]
-                                     initWithArray:[cs characters]]];
-            prototypes = [ud prototypesWithLabels:[cs characters]];
+            [ud setActiveCharacters:allCharacters];
+            prototypes = [ud prototypesWithLabels:allCharacters];
         } else if ([button.name isEqualToString:@"Thai"]) {
             Charset *cs = [[gs charsets] objectAtIndex:1];
+            NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
+            [allCharacters addObjectsFromArray:[cs characters]];
             // Set active characters
-            [ud setActiveCharacters:[[NSMutableArray alloc]
-                                     initWithArray:[cs characters]]];
-            prototypes = [ud prototypesWithLabels:[cs characters]];
+            [ud setActiveCharacters:allCharacters];
+            prototypes = [ud prototypesWithLabels:allCharacters];
+        } else if ([button.name isEqualToString:@"English + Digits"]) {
+            Charset *cs_english = [[gs charsets] objectAtIndex:0];
+            Charset *cs_digits = [[gs charsets] objectAtIndex:4];
+            
+            NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
+            [allCharacters addObjectsFromArray:[cs_english characters]];
+            [allCharacters addObjectsFromArray:[cs_digits characters]];
+            
+            // Set active characters
+            [ud setActiveCharacters:allCharacters];
+            prototypes = [ud prototypesWithLabels:allCharacters];
         }
         
         RaceScene *race = [[RaceScene alloc] initWithPrototypes:prototypes];
@@ -134,29 +199,27 @@
     } else {
         [[GlobalStorage sharedInstance] switchActiveUser:kURGuestUserID onComplete:^{
             if ([[GlobalStorage sharedInstance] activeUserID] == kURGuestUserID) {
-                LoginScene *login = [[LoginScene alloc] init];
-                login.y = 30;
-                [login addEventListenerForType:SP_EVENT_TYPE_REMOVED_FROM_STAGE
-                                         block:^(id event) {
-                                             [self updateInfo];
-                                         }];
-                [self addChild:login];
+                [self showLogin];
             }
         }];
     }
-    [self updateInfo];
 }
 
 - (void)onAddedToStage:(SPEvent *)event {
     if ([[GlobalStorage sharedInstance] activeUserID] == kURGuestUserID) {
-        LoginScene *login = [[LoginScene alloc] init];
-        login.y = 30;
-        [login addEventListenerForType:SP_EVENT_TYPE_REMOVED_FROM_STAGE
-                                 block:^(id event) {
-                                     [self updateInfo];
-                                 }];
-        [self addChild:login];
+        [self showLogin];
+    } else {
+        [self updateInfo];
     }
+}
+
+- (void)showLogin {
+    LoginScene *login = [[LoginScene alloc] init];
+    [login addEventListenerForType:SP_EVENT_TYPE_REMOVED_FROM_STAGE
+                             block:^(id event) {
+                                 [self updateInfo];
+                             }];
+    [self addChild:login];
 }
 
 @end

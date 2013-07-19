@@ -16,7 +16,7 @@
 - (void)updateScore:(float)targetProb;
 @end
 
-@interface BFClassifier : NSObject <URJSONSerializable>
+@interface BFClassifier : NSObject
 
 @property (readwrite) int beamCount;
 @property (readwrite) float targetThreshold;
