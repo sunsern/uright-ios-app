@@ -12,12 +12,12 @@
 #import "InkPoint.h"
 #import "InkCharacter.h"
 
-#define kBrushSize 14.0f
+#define kBrushSize 12.0f
 #define kDefaultColor 0x1028da
 #define kSpecialColor 0xff0000
 #define kPrototypeColor 0xbbbbbb
-#define kBaseLineRatio 0.70f
-#define kTopLineRatio 0.30f
+#define kBaseLineRatio 0.75f
+#define kTopLineRatio 0.25f
 #define kNumSteps 15
 
 #define ADJUST_X(x) (((x - (self.width / 2.0)) / self.height) * 3.00)

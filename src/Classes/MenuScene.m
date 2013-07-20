@@ -16,8 +16,6 @@
 #import "RaceScene.h"
 #import "CustomRaceScene.h"
 
-#define BTN_Y_OFFSET 150
-
 @implementation MenuScene {
     LoginScene *_login;
     SPTextField *_info;
@@ -44,32 +42,44 @@
         banner.pivotX = banner.width / 2;
         banner.x = gameWidth / 2;
         banner.y = 10;
-        banner.autoScale = YES;
         banner.fontSize = 100;
         banner.fontName = @"Chalkduster";
+        banner.autoScale = YES;
         [self addChild:banner];
+        
+        // button box
+        SPSprite *buttons = [[SPSprite alloc] init];
+        [self addChild:buttons];
         
         // Create buttons
         SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
         _buttonList = @[@"English", @"Digits", @"Thai",
-                        @"English + Digits", @"Custom", @"Edit", @"Logout"];
+                        @"English + Digits", @"Full", @"Custom",
+                        @"Edit", @"Logout"];
         for (int i=0; i < [_buttonList count]; i++) {
             SPButton *button = [SPButton buttonWithUpState:buttonTexture text:_buttonList[i]];
-            button.scaleX = 1.2;
-            button.scaleY = 1.2;
             button.pivotX = button.width / 2;
             button.pivotY = button.height / 2;
-            button.x = gameWidth / 2;
-            button.y = BTN_Y_OFFSET + i * (button.height + 10);
+            if (i % 2 == 0) {
+                button.x = gameWidth / 4;
+                button.y = (i/2) * (button.height + 10);
+            } else {
+                button.x = 3 * gameWidth / 4;
+                button.y = (i/2) * (button.height + 10);
+            }
             button.name = button.text;
+            button.scaleX = 1.1;
+            button.scaleY = 1.1;
             [button addEventListener:@selector(buttonTriggered:)
                             atObject:self
                              forType:SP_EVENT_TYPE_TRIGGERED];
-            [self addChild:button];
+            [buttons addChild:button];
         }
+        // Center verti
+        buttons.y = 20 + (gameHeight - buttons.height) / 2;
         
-        // Info bg
-        SPQuad *infobg = [SPQuad quadWithWidth:gameWidth height:100];
+        // Info panel
+        SPQuad *infobg = [SPQuad quadWithWidth:gameWidth height:80];
         infobg.y = gameHeight - infobg.height;
         infobg.color = 0x000000;
         infobg.alpha = 0.5;
@@ -113,10 +123,15 @@
                         [updatedLabels addObject:key];
                     }
                 }
-                
+                for (id key in protosets) {
+                    if (ud.protosets[key] == nil) {
+                        [updatedLabels addObject:key];
+                    }
+                }
+                    
                 // Update and notify user
                 if ([updatedLabels count] > 0) {
-                    ud.protosets = protosets;
+                    [ud setProtosets:protosets];
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [self protosetUpdated:updatedLabels];
                     });
@@ -194,12 +209,27 @@
             [ud setActiveCharacters:allCharacters];
             prototypes = [ud prototypesWithLabels:allCharacters];
         } else if ([button.name isEqualToString:@"English + Digits"]) {
-            Charset *cs_english = [gs charsetByID:1];;
-            Charset *cs_digits = [gs charsetByID:12];;
+            Charset *cs_english = [gs charsetByID:1];
+            Charset *cs_digits = [gs charsetByID:12];
             
             NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
             [allCharacters addObjectsFromArray:[cs_english characters]];
             [allCharacters addObjectsFromArray:[cs_digits characters]];
+            
+            // Set active characters
+            [ud setActiveCharacters:allCharacters];
+            prototypes = [ud prototypesWithLabels:allCharacters];
+        } else if ([button.name isEqualToString:@"Full"]) {
+            Charset *cs_english = [gs charsetByID:1];
+            Charset *cs_digits = [gs charsetByID:12];
+            Charset *cs_punc = [gs charsetByID:14];
+            Charset *cs_upper = [gs charsetByID:13];
+            
+            NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
+            [allCharacters addObjectsFromArray:[cs_english characters]];
+            [allCharacters addObjectsFromArray:[cs_digits characters]];
+            [allCharacters addObjectsFromArray:[cs_upper characters]];
+            [allCharacters addObjectsFromArray:[cs_punc characters]];
             
             // Set active characters
             [ud setActiveCharacters:allCharacters];
@@ -237,6 +267,9 @@
                                  [self updateInfo];
                              }];
     [self addChild:login];
+    [Sparrow.juggler delayInvocationByTime:0.01f block:^{
+        [login showTextFields];
+    }];
 }
 
 @end

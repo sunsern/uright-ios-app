@@ -24,9 +24,10 @@
         _session = session;
         
         // Window
-        SPQuad *window = [SPQuad quadWithWidth:gameWidth height:gameHeight color:0xcccccc];
+        SPQuad *window = [SPQuad quadWithWidth:gameWidth height:gameHeight color:0xeeeeee];
         window.x = (gameWidth - window.width) / 2;
         window.y = (gameHeight - window.height) / 2;
+        window.alpha = 1.0;
         [self addChild:window];
         
 
@@ -55,8 +56,8 @@
                                                                 height:300
                                                                   text:summary
                                                               fontName:@"ArialMT"
-                                                              fontSize:25
-                                                                 color:0x000000];
+                                                              fontSize:35
+                                                                 color:0x123721];
         session_summary.y = summary_banner.y + summary_banner.height;
         //session_summary.border = YES;
         session_summary.autoScale = YES;
@@ -66,8 +67,12 @@
         // Restart button
         SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
         SPButton *restartButton = [SPButton buttonWithUpState:buttonTexture text:@"Restart"];
-        restartButton.x = gameWidth / 2 - restartButton.width - 5;
+        restartButton.pivotX = restartButton.width / 2;
+        restartButton.pivotY = restartButton.height / 2;
+        restartButton.x = gameWidth/4;
         restartButton.y = gameHeight - restartButton.height - 50;
+        restartButton.scaleX = 1.1;
+        restartButton.scaleY = 1.1;
         [self addChild:restartButton];
         [restartButton addEventListener:@selector(restartRace)
                                atObject:self
@@ -75,8 +80,12 @@
         
         // Quit button
         SPButton *okButton = [SPButton buttonWithUpState:buttonTexture text:@"Quit"];
-        okButton.x = gameWidth / 2 + 5;
+        okButton.pivotX = okButton.width / 2;
+        okButton.pivotY = okButton.height / 2;
+        okButton.x = 3*gameWidth/4;
         okButton.y = gameHeight - okButton.height - 50;
+        okButton.scaleX = 1.1;
+        okButton.scaleY = 1.1;
         [self addChild:okButton];
         [okButton addEventListener:@selector(quitRace)
                                atObject:self
@@ -87,23 +96,13 @@
 
 
 - (void)quitRace {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-        [ServerManager uploadSessionData:_session];
-        dispatch_async(dispatch_get_main_queue(), ^ {
-            [self dispatchEventWithType:SP_EVENT_TYPE_QUIT_RACE];
-            [self removeFromParent];
-        });
-    });
+    [self dispatchEventWithType:SP_EVENT_TYPE_QUIT_RACE];
+    [self removeFromParent];
 }
 
 - (void)restartRace {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-        [ServerManager uploadSessionData:_session];
-        dispatch_async(dispatch_get_main_queue(), ^ {
-            [self dispatchEventWithType:SP_EVENT_TYPE_RESTART_RACE];
-            [self shootUpAndClose];
-        });
-    });
+    [self dispatchEventWithType:SP_EVENT_TYPE_RESTART_RACE];
+    [self shootUpAndClose];
 }
 
 @end

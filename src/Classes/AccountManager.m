@@ -37,6 +37,9 @@
              
              FBSession *session = [[FBSession alloc] init];
              [FBSession setActiveSession:session];
+             
+             // ERROR
+             completeBlock(NO);
          } else {
              if (FBSession.activeSession.isOpen) {
                  
@@ -97,7 +100,7 @@
     if (userID != kURGuestUserID) {
         GlobalStorage *gs = [GlobalStorage sharedInstance];
         [gs switchActiveUser:userID onComplete:^{
-            UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
+            UserData *ud = [gs activeUserData];
             ud.username = username;
             ud.password = password;
             completeBlock(YES);

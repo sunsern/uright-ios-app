@@ -67,8 +67,8 @@
     SPButton *quitButton = [SPButton buttonWithUpState:buttonTexture text:@"Quit"];
     quitButton.x = 0;
     quitButton.y = 0;
-    quitButton.scaleX = 0.75;
-    quitButton.scaleY = 0.75;
+    quitButton.scaleX = 0.8;
+    quitButton.scaleY = 0.8;
     quitButton.name = @"quit";
     [self addChild:quitButton];
     [quitButton addEventListener:@selector(quit) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
@@ -76,16 +76,16 @@
     SPButton *addButton = [SPButton buttonWithUpState:buttonTexture text:@"Add new character"];
     addButton.x = 100;
     addButton.name = @"add";
-    addButton.scaleX = 0.75;
-    addButton.scaleY = 0.75;
+    addButton.scaleX = 0.8;
+    addButton.scaleY = 0.8;
     [self addChild:addButton];
     [addButton addEventListener:@selector(addLabel) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
     
     SPButton *removeButton = [SPButton buttonWithUpState:buttonTexture text:@"Remove character"];
     removeButton.x = 200;
     removeButton.name = @"remove";
-    removeButton.scaleX = 0.75;
-    removeButton.scaleY = 0.75;
+    removeButton.scaleX = 0.8;
+    removeButton.scaleY = 0.8;
     [self addChild:removeButton];
     [removeButton addEventListener:@selector(removeLabel) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
     
@@ -104,6 +104,8 @@
     _label.y = 250;
     _label.border = YES;
     _label.fontSize = 100;
+    _label.fontName = @"AppleColorEmoji";
+    _label.autoScale = YES;
     [self addChild:_label];
     
     // canvas
@@ -233,11 +235,9 @@
             float angle = vec.angle;
             double speed = dist / (event.timestamp - _lastTouchTime);
             if (IS_SWIPE_RIGHT(dist, speed, angle)) {
-                NSLog(@"sWipre right?");
-                [self loadNextCharacter];
-            } else if (IS_SWIPE_LEFT(dist, speed, angle)) {
-                NSLog(@"sWipre left?");
                 [self loadPreviousCharacter];
+            } else if (IS_SWIPE_LEFT(dist, speed, angle)) {
+                [self loadNextCharacter];
             }
         }
     }

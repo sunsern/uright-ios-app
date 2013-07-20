@@ -16,10 +16,11 @@
 #import "RoundData.h"
 #import "ClassificationResult.h"
 #import "RaceSummaryScene.h"
+#import "ServerManager.h"
 
 #define RACE_MODE_ID 3
-#define RACE_LENGTH 5
-#define WAIT_TIME 1.0f
+#define RACE_LENGTH 15
+#define WAIT_TIME 0.8f
 #define BEAM_WIDTH 250
 
 @implementation RaceScene {
@@ -52,6 +53,7 @@
 
     // Background
     SPImage *background = [SPImage imageWithContentsOfFile:@"background.jpg" ];
+    background.touchable = NO;
     [self addChild:background];
     
     // Canvas background
@@ -59,32 +61,20 @@
     canvasBg.x = (gameWidth - canvasBg.width)/2;
     canvasBg.y = 250;
     canvasBg.alpha = 0.9;
+    canvasBg.touchable = NO;
     [self addChild:canvasBg];
     
     // Target character bg
     // Canvas background
-    SPQuad *tcBg = [SPQuad quadWithWidth:100 height:100 color:0x000000];
+    SPQuad *tcBg = [SPQuad quadWithWidth:100 height:100 color:0x333333];
     tcBg.x = canvasBg.x;
     tcBg.y = canvasBg.y - tcBg.height - 40;
+    tcBg.alpha = 0.9;
     _targetLabelCenter = CGPointMake(tcBg.x + tcBg.width/2,
                                      tcBg.y + tcBg.height/2);
+    tcBg.touchable = NO;
     [self addChild:tcBg];
     
-    // Target character
-    _targetLabel = [SPTextField textFieldWithWidth:100 height:100 text:@""];
-    _targetLabel.hAlign = SPHAlignCenter;
-    _targetLabel.vAlign = SPVAlignCenter;
-    _targetLabel.pivotX = _targetLabel.width / 2;
-    _targetLabel.pivotY = _targetLabel.height / 2;
-    _targetLabel.fontSize = 80;
-    _targetLabel.color = 0xddc92a;
-    //_targetLabel.fontName = @"Noteworthy-Bold";
-    //_targetLabel.border = YES;
-    _targetLabel.autoScale = YES;
-    _targetLabel.blendMode = SP_BLEND_MODE_ADD;
-    [self addChild:_targetLabel];
-
-
     // The canvas
     _canvas = [[Canvas alloc] initWithWidth:canvasBg.width height:canvasBg.height];
     _canvas.x = (gameWidth - _canvas.width)/2;
@@ -93,6 +83,23 @@
     [_canvas addEventListener:@selector(onTouch:)
                      atObject:self
                       forType:SP_EVENT_TYPE_TOUCH];
+
+    
+    // Target character
+    _targetLabel = [SPTextField textFieldWithWidth:100 height:100 text:@""];
+    _targetLabel.hAlign = SPHAlignCenter;
+    _targetLabel.vAlign = SPVAlignCenter;
+    _targetLabel.pivotX = _targetLabel.width / 2;
+    _targetLabel.pivotY = _targetLabel.height / 2;
+    _targetLabel.fontSize = 72;
+    _targetLabel.color = 0xddc92a;
+    _targetLabel.fontName = @"AppleColorEmoji";
+    //_targetLabel.border = YES;
+    _targetLabel.autoScale = YES;
+    _targetLabel.touchable = NO;
+    [self addChild:_targetLabel];
+
+    
     
     // Erase button
     SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
@@ -226,15 +233,16 @@
 
 
 - (void)countDown {
-    SPTextField *banner = [[SPTextField alloc] initWithWidth:100 height:100];
+    SPTextField *banner = [[SPTextField alloc] initWithWidth:120 height:120];
     banner.hAlign = SPHAlignCenter;
     banner.vAlign = SPVAlignCenter;
     banner.pivotX = banner.width/2;
     banner.pivotY = banner.height/2;
     banner.x = _canvas.x + _canvas.width/2;
     banner.y = _canvas.y + _canvas.height/2;
-    banner.color = 0x00ff00;
-    banner.fontSize = 100;
+    banner.color = 0xffffff;
+    banner.fontSize = 120;
+    //banner.border = YES;
     [self addChild:banner];
     
     [[Sparrow juggler] delayInvocationByTime:0.25f block:^{
@@ -294,6 +302,8 @@
 - (void)endRound {
     _canvas.touchable = NO;
     _withinRound = NO;
+    
+    _bpsTf.text = @"";
     
     [Media playSound:@"DING.caf"];
     
@@ -356,15 +366,35 @@
     UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
     [ud addScore:_session.bps];
     
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+        bool sentOK = [ServerManager uploadSessionData:_session];
+        if (sentOK) {
+            // Try to send other stored sessions as well.
+            while ([ud.sessions count] > 0) {
+                SessionData *ses = [[SessionData alloc] initWithJSONObject:[ud.sessions lastObject]];
+                if ([ServerManager uploadSessionData:ses]) {
+                    [ud.sessions removeLastObject];
+                } else {
+                    break;
+                }
+            }
+        } else {
+            [ud addSessionJSON:[_session toJSONObject]];
+        }
+    });
+    
     RaceSummaryScene *summary = [[RaceSummaryScene alloc] initWithSession:_session];
-    [self addChild:summary];
     [summary addEventListenerForType:SP_EVENT_TYPE_QUIT_RACE block:^(id event){
         [self quitRace];
     }];
     [summary addEventListenerForType:SP_EVENT_TYPE_RESTART_RACE block:^(id event){
         [self restartRace];
     }];
-    [summary dropFromTop];
+    
+    [Sparrow.juggler delayInvocationByTime:0.01f block:^{
+        [self addChild:summary];
+        [summary dropFromTop];
+    }];
 }
 
 - (void)reset {

@@ -10,4 +10,6 @@
 
 @interface LoginScene : Scene <UITextFieldDelegate>
 
+- (void)showTextFields;
+
 @end
