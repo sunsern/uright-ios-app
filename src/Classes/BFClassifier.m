@@ -68,6 +68,7 @@
 @interface CacheData : NSObject
 @property (readwrite) float cost;
 @property (nonatomic, strong) StateData *state;
+@property (readwrite) BOOL valid;
 @end
 
 @implementation CacheData
@@ -160,7 +161,18 @@
         CacheData *newData = [[CacheData alloc] init];
         newData.cost = cost;
         newData.state = state;
+        newData.valid = YES;
         _cacheDict[key] = newData;
+    } else if (!data.valid) {
+        cost = [[self class] computeCostInkPoint:(pData.points)[stateIdx]
+                                              to:inputPoint];
+        StateData *state = data.state;
+        state.prototypeIdx = prototypeIdx;
+        state.stateIdx = stateIdx;
+        state.alpha = extraCost + cost;
+        data.cost = cost;
+        data.state = state;
+        data.valid = YES;
     } else {
         cost = data.cost;
         StateData *existingState = data.state;
@@ -189,8 +201,9 @@
             point.dy = dy / MAX(norm,1e-6);
         }
         
-        [_cacheDict removeAllObjects];
+        //[_cacheDict removeAllObjects];
         //_cacheDict = [[NSMutableDictionary alloc] initWithCapacity:_beamCount*2];
+        [self invalidateCacheData];
         
         StateData *state = [_beamPQ pop];
         
@@ -229,32 +242,36 @@
         float sum_like = -FLT_MAX;
         for (id key in _cacheDict) {
             CacheData *cache = _cacheDict[key];
-            StateData *state = cache.state;
-            sum_like = logsumexp(sum_like, state.alpha);
+            if (cache.valid) {
+                StateData *state = cache.state;
+                sum_like = logsumexp(sum_like, state.alpha);
+            }
         }
         for (id key in _cacheDict) {
             CacheData *cache = _cacheDict[key];
-            StateData *state = cache.state;
-            
-            // perform normalization
-            state.alpha = state.alpha - sum_like;
-            // insert the state to PQ
-            if (state.alpha > kQueueThreshold) {
-                [_beamPQ addObject:state value:state.alpha];
-            }
-            
-            // update likelihood
-            NSString *label = [_prototypes[state.prototypeIdx] label];
-            NSNumber *existing = _likelihood[label];
-            if (existing != nil) {
-                _likelihood[label] = @(logsumexp([existing floatValue], state.alpha));
-            } else {
-                _likelihood[label] = @(state.alpha);
-            }
-            
-            // update final likelihood
-            if (state.stateIdx == [_prototypes[state.prototypeIdx] length] - 1) {
-                _finalLikelihood[label] = @(state.alpha);
+            if (cache.valid) {
+                StateData *state = cache.state;
+                
+                // perform normalization
+                state.alpha = state.alpha - sum_like;
+                // insert the state to PQ
+                if (state.alpha > kQueueThreshold) {
+                    [_beamPQ addObject:state value:state.alpha];
+                }
+                
+                // update likelihood
+                NSString *label = [_prototypes[state.prototypeIdx] label];
+                NSNumber *existing = _likelihood[label];
+                if (existing != nil) {
+                    _likelihood[label] = @(logsumexp([existing floatValue], state.alpha));
+                } else {
+                    _likelihood[label] = @(state.alpha);
+                }
+                
+                // update final likelihood
+                if (state.stateIdx == [_prototypes[state.prototypeIdx] length] - 1) {
+                    _finalLikelihood[label] = @(state.alpha);
+                }
             }
         }
         
@@ -291,6 +308,13 @@
             _prevPoint = [[InkPoint alloc] initWithInkPoint:point];
         }
     });
+}
+
+- (void)invalidateCacheData {
+    for (id key in _cacheDict) {
+        CacheData *data = _cacheDict[key];
+        data.valid = NO;
+    }
 }
 
 - (NSDictionary *)likelihood {
