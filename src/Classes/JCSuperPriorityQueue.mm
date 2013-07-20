@@ -53,6 +53,9 @@ static bool NodeLessThan(struct JCPQNode &n1, struct JCPQNode &n2)
 - (void)dealloc
 {
     free(mObjs);
+    
+    // ARC
+    [_storage removeAllObjects];
 }
 
 - (void)clear
@@ -107,7 +110,7 @@ static bool NodeLessThan(struct JCPQNode &n1, struct JCPQNode &n2)
     mCount--;
     
     // ARC
-    [_storage removeObject:mObjs[mCount].obj];
+    //[_storage removeObject:mObjs[mCount].obj];
     
     return mObjs[mCount].obj;
 }
