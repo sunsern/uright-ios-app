@@ -17,7 +17,7 @@
 #define kQueueThreshold -10.0
 #define kBeamWidth 500
 #define kLikelihoodThreshold 1.0
-#define kIgnoreAddpoint 0.0002
+#define kIgnoreAddpoint 0.01
 
 #define HASHKEY(x,y) ([SimpleHashKey hashkey:((x)*1000+(y))])
 #define logsumexp(x,y) ((x)<(y) ? y+log(1+exp(x-y)) : x+log(1+exp(y-x)))
@@ -120,6 +120,9 @@
             [_beamPQ addObject:state value:state.alpha];
         }
         _prevPoint = nil;
+        
+        // Make a new cache
+        _cacheDict = [[NSMutableDictionary alloc] initWithCapacity:_beamCount*2];
     });
 }
 
@@ -189,7 +192,7 @@
         [InkPoint locationDistanceFrom:point to:_prevPoint] < kIgnoreAddpoint) {
         //NSLog(@"Point too close to the previous point, ignoring");
         return;
-    } 
+    }
     
     dispatch_async(_serialQueue, ^{
         // Compute dx, dy
