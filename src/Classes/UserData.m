@@ -60,6 +60,7 @@
         _scores = [[NSMutableDictionary alloc] init];
         _activeCharacters = [[NSMutableArray alloc] init];
         _protosets = [[NSDictionary alloc] init];
+        _customCharset = [Charset emptyCharset];
     }
     return self;
 }
@@ -81,6 +82,7 @@
             protosets[key] = [[Protoset alloc] initWithJSONObject:jsonObj[@"protosets"][key]];
         }
         _protosets = (NSDictionary *)protosets;
+        _customCharset = [[Charset alloc] initWithJSONObject:jsonObj[@"customCharset"]];
     }
     return self;
 }
@@ -99,6 +101,7 @@
         protosets[key] = [_protosets[key] toJSONObject];
     }
     jsonObj[@"protosets"] = protosets;
+    jsonObj[@"customCharset"] = [_customCharset toJSONObject];
     return jsonObj;
 }
 

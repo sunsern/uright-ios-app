@@ -12,7 +12,10 @@
 @interface Charset : NSObject <URJSONSerializable>
 
 @property (nonatomic,copy) NSString *name;
-@property (nonatomic,strong) NSArray *characters;
+@property (nonatomic,strong) NSMutableArray *characters;
 @property int charsetID;
+
+// Create an empty charset
++ (Charset *)emptyCharset;
 
 @end

@@ -39,7 +39,7 @@
                                                                 color:0x000000];
         summary_banner.x = (gameWidth - summary_banner.width) / 2;
         summary_banner.y = window.y + 10;
-        summary_banner.border = YES;
+        //summary_banner.border = YES;
         [self addChild:summary_banner];
         
         NSString *summary = [NSString stringWithFormat:

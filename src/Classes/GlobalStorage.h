@@ -8,6 +8,7 @@
 #import <Foundation/Foundation.h>
 
 @class UserData;
+@class Charset;
 
 @interface GlobalStorage : NSObject
 
@@ -21,5 +22,7 @@
 + (void)clearGlobalData;
 
 - (void)switchActiveUser:(int)userID onComplete:(void(^)(void))completeBlock;
+
+- (Charset *)charsetByID:(int)charsetID;
 
 @end

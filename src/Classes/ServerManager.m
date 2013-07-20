@@ -99,10 +99,7 @@
         
         NSString *activeChars = [[self class] convertToString:data.activeCharacters];
         NSString *activePIDs = [[self class] convertToString:data.activeProtosetIDs];
-        
-        NSData *jsondata = [[self class] NSDataFromJSONObject:[data toJSONObject]];
-        NSString *jsonStr = [[NSString alloc] initWithData:jsondata
-                                                     encoding:NSUTF8StringEncoding];
+        NSString *jsonStr = [[self class] convertToString:[data toJSONObject]];
         
         [request setPostValue:kURMagicKey forKey:@"key"];
         [request setPostValue:jsonStr forKey:@"session_json"];

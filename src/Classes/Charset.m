@@ -15,7 +15,7 @@
     if (self) {
         _charsetID = [jsonObj[@"charsetID"] intValue];
         _name = [jsonObj[@"name"] copy];
-        _characters = [[NSArray alloc] initWithArray:jsonObj[@"characters"]];
+        _characters = [[NSMutableArray alloc] initWithArray:jsonObj[@"characters"]];
     }
     return self;
 }
@@ -23,7 +23,16 @@
 - (id)toJSONObject {
     return @{@"charsetID":@(_charsetID),
              @"name":_name,
-             @"characters":_characters};
+             @"characters":(NSArray *)_characters};
+}
+
+
++ (Charset *)emptyCharset {
+    Charset *cs = [[Charset alloc] init];
+    cs.charsetID = -1;
+    cs.name = @"";
+    cs.characters = [[NSMutableArray alloc] init];
+    return cs;
 }
 
 @end

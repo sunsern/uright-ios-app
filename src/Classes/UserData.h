@@ -29,6 +29,7 @@
 @property (nonatomic,strong) NSMutableDictionary *scores;
 @property (nonatomic,strong) NSMutableArray *activeCharacters;
 @property (nonatomic,strong) NSDictionary *protosets;
+@property (nonatomic,strong) Charset *customCharset;
 
 + (UserData *)newUserData:(int)userID;
 

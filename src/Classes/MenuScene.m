@@ -9,12 +9,14 @@
 #import "MenuScene.h"
 
 #import "Game.h"
-#import "LoginScene.h"
-#import "RaceScene.h"
 #import "ServerManager.h"
 #import "Charset.h"
 
-#define BTN_Y_OFFSET 200
+#import "LoginScene.h"
+#import "RaceScene.h"
+#import "CustomRaceScene.h"
+
+#define BTN_Y_OFFSET 150
 
 @implementation MenuScene {
     LoginScene *_login;
@@ -49,7 +51,8 @@
         
         // Create buttons
         SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
-        _buttonList = @[@"English", @"Digits", @"Thai", @"English + Digits", @"Logout"];
+        _buttonList = @[@"English", @"Digits", @"Thai",
+                        @"English + Digits", @"Custom", @"Edit", @"Logout"];
         for (int i=0; i < [_buttonList count]; i++) {
             SPButton *button = [SPButton buttonWithUpState:buttonTexture text:_buttonList[i]];
             button.scaleX = 1.2;
@@ -153,14 +156,23 @@
 
 - (void)buttonTriggered:(SPEvent *)event {
     SPButton *button = (SPButton *)event.target;
-    if (![button.name isEqualToString:@"Logout"]) {
+    if ([button.name isEqualToString:@"Logout"]) {
+        [[GlobalStorage sharedInstance] switchActiveUser:kURGuestUserID onComplete:^{
+            if ([[GlobalStorage sharedInstance] activeUserID] == kURGuestUserID) {
+                [self showLoginScene];
+            }
+        }];
+    } else if ([button.name isEqualToString:@"Edit"]) {
+        CustomRaceScene *crs = [[CustomRaceScene alloc] init];
+        [self addChild:crs];
+    } else {
         GlobalStorage *gs = [GlobalStorage sharedInstance];
         UserData *ud = [gs activeUserData];
         NSArray *prototypes;
         
         // English
         if ([button.name isEqualToString:@"English"]) {
-            Charset *cs = [[gs charsets] objectAtIndex:0];
+            Charset *cs = [gs charsetByID:1];
             NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
             [allCharacters addObjectsFromArray:[cs characters]];
             // Set active characters
@@ -168,27 +180,34 @@
             prototypes = [ud prototypesWithLabels:allCharacters];
         } else if ([button.name isEqualToString:@"Digits"]){
             // Digits
-            Charset *cs = [[gs charsets] objectAtIndex:4];
+            Charset *cs = [gs charsetByID:12];
             NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
             [allCharacters addObjectsFromArray:[cs characters]];
             // Set active characters
             [ud setActiveCharacters:allCharacters];
             prototypes = [ud prototypesWithLabels:allCharacters];
         } else if ([button.name isEqualToString:@"Thai"]) {
-            Charset *cs = [[gs charsets] objectAtIndex:1];
+            Charset *cs = [gs charsetByID:2];;
             NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
             [allCharacters addObjectsFromArray:[cs characters]];
             // Set active characters
             [ud setActiveCharacters:allCharacters];
             prototypes = [ud prototypesWithLabels:allCharacters];
         } else if ([button.name isEqualToString:@"English + Digits"]) {
-            Charset *cs_english = [[gs charsets] objectAtIndex:0];
-            Charset *cs_digits = [[gs charsets] objectAtIndex:4];
+            Charset *cs_english = [gs charsetByID:1];;
+            Charset *cs_digits = [gs charsetByID:12];;
             
             NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
             [allCharacters addObjectsFromArray:[cs_english characters]];
             [allCharacters addObjectsFromArray:[cs_digits characters]];
             
+            // Set active characters
+            [ud setActiveCharacters:allCharacters];
+            prototypes = [ud prototypesWithLabels:allCharacters];
+        } else if ([button.name isEqualToString:@"Custom"]) {
+            Charset *cs = ud.customCharset;
+            NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
+            [allCharacters addObjectsFromArray:[cs characters]];
             // Set active characters
             [ud setActiveCharacters:allCharacters];
             prototypes = [ud prototypesWithLabels:allCharacters];
@@ -200,12 +219,6 @@
                                     [self updateInfo];
                                 }];
         [self addChild:race];
-    } else {
-        [[GlobalStorage sharedInstance] switchActiveUser:kURGuestUserID onComplete:^{
-            if ([[GlobalStorage sharedInstance] activeUserID] == kURGuestUserID) {
-                [self showLoginScene];
-            }
-        }];
     }
 }
 

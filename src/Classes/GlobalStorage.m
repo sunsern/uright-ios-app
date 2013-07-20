@@ -173,6 +173,15 @@ static GlobalStorage *__sharedInstance = nil;
     });
 }
 
+- (Charset *)charsetByID:(int)charsetID {
+    for (Charset *cs in _charsets) {
+        if (cs.charsetID == charsetID) {
+            return cs;
+        }
+    }
+    return nil;
+}
+
 + (void)clearGlobalData {
     NSString *appDomain = [[NSBundle mainBundle] bundleIdentifier];
     [[NSUserDefaults standardUserDefaults] removePersistentDomainForName:appDomain];

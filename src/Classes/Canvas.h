@@ -10,10 +10,12 @@
 
 @class InkPoint;
 @class BFClassifier;
+@class BFPrototype;
 @class InkCharacter;
 
 @interface Canvas : SPSprite
 
+@property float brushSize;
 @property (nonatomic,strong) InkCharacter *currentInkCharacter;
 @property (nonatomic,weak) BFClassifier *classifier;
 @property (readonly) double firstTouchTime;
@@ -25,5 +27,6 @@
 - (void)clear;
 - (void)drawMarkerAt:(InkPoint *)point;
 - (void)setGuideVisible:(BOOL)visible;
+- (void)drawPrototype:(BFPrototype *)prototype;
 
 @end

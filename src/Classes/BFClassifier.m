@@ -95,7 +95,7 @@
         _beamPQ = [[JCSuperPriorityQueue alloc] init];
         _likelihood = [[NSMutableDictionary alloc] init];
         _finalLikelihood = [[NSMutableDictionary alloc] init];
-        _cacheDict = [[NSMutableDictionary alloc] init];
+        _cacheDict = [[NSMutableDictionary alloc] initWithCapacity:kBeamWidth * 2];
     }
     return self;
 }
@@ -189,8 +189,8 @@
             point.dy = dy / MAX(norm,1e-6);
         }
         
-        //[_cacheDict removeAllObjects];
-        _cacheDict = [[NSMutableDictionary alloc] initWithCapacity:_beamCount*2];
+        [_cacheDict removeAllObjects];
+        //_cacheDict = [[NSMutableDictionary alloc] initWithCapacity:_beamCount*2];
         
         StateData *state = [_beamPQ pop];
         

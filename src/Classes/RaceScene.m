@@ -30,7 +30,7 @@
     SPQuad *_bar;
     
     BFClassifier *_classifier;
-    NSString *_testString;
+    NSArray *_testArray;
     int _currentIdx;
     int _numActiveChars;
     float _currentScore;
@@ -156,6 +156,7 @@
     // Auto start
     [self addEventListener:@selector(restartRace) atObject:self forType:SP_EVENT_TYPE_ADDED_TO_STAGE];
     
+    // Update BPS meter
     [self addEventListener:@selector(enterFrame:) atObject:self forType:SP_EVENT_TYPE_ENTER_FRAME];
 }
 
@@ -187,9 +188,7 @@
         _roundTime += event.passedTime;
         float bps = _totalScore / (_totalTime + _roundTime);
         _bpsTf.text = [NSString stringWithFormat:@"%0.2f", bps];
-    } else {
-        _bpsTf.text = @"";
-    }
+    } 
 }
 
 - (void)quitRace {
@@ -207,7 +206,7 @@
     
     // Test string
     NSArray *labelArray = ud.activeCharacters;
-    _testString = [self shuffleArray:labelArray maxLength:RACE_LENGTH];
+    _testArray = [self shuffleArray:labelArray maxLength:RACE_LENGTH];
     
     _session.activeCharacters = ud.activeCharacters;
     _session.activeProtosetIDs = [ud protosetIDsWithLabels:labelArray];
@@ -267,7 +266,7 @@
     _round = [[RoundData alloc] init];
     _round.startTime = [NSDate timeIntervalSinceReferenceDate];
     
-    NSString *currentLabel = [_testString substringWithRange:NSMakeRange(_currentIdx,1)];
+    NSString *currentLabel = _testArray[_currentIdx];
     
     _targetLabel.text = currentLabel;
     _targetLabel.x = _canvas.x + _canvas.width/2;
@@ -283,7 +282,9 @@
     [targetAnimate animateProperty:@"y" targetValue:_targetLabelCenter.y];
     [Sparrow.juggler addObject:targetAnimate];
     
-    [Media playSound:[NSString stringWithFormat:@"%@.caf", currentLabel]];
+    [Media playSound:[[NSString stringWithFormat:@"%@.caf", currentLabel]
+                      lowercaseString]];
+    
     
     [_classifier setTargetLabel:_targetLabel.text];
     [_canvas clear];
@@ -336,7 +337,7 @@
     [[Sparrow juggler] addObject:tween];
 
     _currentIdx++;
-    if (_currentIdx < _testString.length) {
+    if (_currentIdx < [_testArray count]) {
         [self startRound];
     } else {
         [self raceCompleted];
@@ -402,7 +403,7 @@
 }
 
 
-- (NSString *)shuffleArray:(NSArray *)labels maxLength:(int)length {
+- (NSArray *)shuffleArray:(NSArray *)labels maxLength:(int)length {
     NSMutableArray *temp = [[NSMutableArray alloc] initWithArray:labels];
     for (NSInteger i = [labels count] - 1, j; i >= 0; i--)
     {
@@ -412,11 +413,11 @@
         temp[i] = temp[j];
         temp[j] = buffer;
     }
-    NSMutableString *outStr = [[NSMutableString alloc] init];
+    NSMutableArray *outArray = [[NSMutableArray alloc] init];
     for (int i = 0; i < MIN([labels count], length); i++) {
-        [outStr appendString:temp[i]];
+        [outArray addObject:temp[i]];
     }
-    return outStr;
+    return outArray;
 }
 
 

@@ -99,6 +99,7 @@
 		3CD2603C179904DB007DDB75 /* z.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3CD25FFC179904DB007DDB75 /* z.caf */; };
 		3CD2603D179904DB007DDB75 /* zayin.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3CD25FFD179904DB007DDB75 /* zayin.caf */; };
 		3CD2604017994299007DDB75 /* RaceSummaryScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CD2603F17994298007DDB75 /* RaceSummaryScene.m */; };
+		3CD260441799DA0D007DDB75 /* CustomRaceScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CD260431799DA0B007DDB75 /* CustomRaceScene.m */; };
 		3CE1B17E178BED370041D1BF /* DING.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3CE1B17D178BED370041D1BF /* DING.caf */; };
 		3CE1B180178BF1EE0041D1BF /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3CE1B17F178BF1ED0041D1BF /* Default-568h@2x.png */; };
 		3CE1B183178C03CB0041D1BF /* briefcase-lock-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3CE1B182178C03CB0041D1BF /* briefcase-lock-2.caf */; };
@@ -295,6 +296,8 @@
 		3CD25FFD179904DB007DDB75 /* zayin.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = zayin.caf; sourceTree = "<group>"; };
 		3CD2603E17994298007DDB75 /* RaceSummaryScene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RaceSummaryScene.h; sourceTree = "<group>"; };
 		3CD2603F17994298007DDB75 /* RaceSummaryScene.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RaceSummaryScene.m; sourceTree = "<group>"; };
+		3CD260421799DA09007DDB75 /* CustomRaceScene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomRaceScene.h; sourceTree = "<group>"; };
+		3CD260431799DA0B007DDB75 /* CustomRaceScene.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CustomRaceScene.m; sourceTree = "<group>"; };
 		3CE1B17D178BED370041D1BF /* DING.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = DING.caf; sourceTree = "<group>"; };
 		3CE1B17F178BF1ED0041D1BF /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		3CE1B182178C03CB0041D1BF /* briefcase-lock-2.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "briefcase-lock-2.caf"; sourceTree = "<group>"; };
@@ -522,6 +525,8 @@
 				3CA096301787853F000B8A0E /* RaceScene.m */,
 				3CD2603E17994298007DDB75 /* RaceSummaryScene.h */,
 				3CD2603F17994298007DDB75 /* RaceSummaryScene.m */,
+				3CD260421799DA09007DDB75 /* CustomRaceScene.h */,
+				3CD260431799DA0B007DDB75 /* CustomRaceScene.m */,
 			);
 			name = Scenes;
 			sourceTree = "<group>";
@@ -1011,6 +1016,7 @@
 				3C38FAF717921B71003CC8C0 /* Charset.m in Sources */,
 				3CE29DDB17943A5500769A23 /* AccountManager.m in Sources */,
 				3CD2604017994299007DDB75 /* RaceSummaryScene.m in Sources */,
+				3CD260441799DA0D007DDB75 /* CustomRaceScene.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

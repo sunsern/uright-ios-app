@@ -8,21 +8,23 @@
 
 #import "Canvas.h"
 #import "BFClassifier.h"
+#import "BFPrototype.h"
 #import "InkPoint.h"
 #import "InkCharacter.h"
 
-#define kBrushSize 15.0f
+#define kBrushSize 14.0f
 #define kDefaultColor 0x1028da
 #define kSpecialColor 0xff0000
+#define kPrototypeColor 0xbbbbbb
 #define kBaseLineRatio 0.70f
 #define kTopLineRatio 0.30f
 #define kNumSteps 15
 
-#define ADJUST_X(x) (((x - (self.width / 2)) / self.height) * 1.25)
-#define UNADJUST_X(x) (((x / 1.25) * self.height) + (self.width / 2))
+#define ADJUST_X(x) (((x - (self.width / 2.0)) / self.height) * 3.00)
+#define UNADJUST_X(x) (((x / 3.00) * self.height) + (self.width / 2))
 
-#define ADJUST_Y(y) (((y - (self.height / 2)) / self.height) * 1.25)
-#define UNADJUST_Y(y) (((y / 1.25) * self.height) + (self.height / 2))
+#define ADJUST_Y(y) (((y - (self.height / 2.0)) / self.height) * 3.00)
+#define UNADJUST_Y(y) (((y / 3.00) * self.height) + (self.height / 2.0))
 
 
 @implementation Canvas {
@@ -32,7 +34,6 @@
     SPRenderTexture *_renderTexture;
     CGPoint _lastTouch;
     CGPoint _newTouch;
-    InkPoint *_marker;
     BOOL _drawing;
 }
 
@@ -65,13 +66,13 @@
                           forType:SP_EVENT_TYPE_ENTER_FRAME];
         [self addChild:_canvas];
         
-        _marker = nil;
         _drawing = NO;
         _firstTouchTime = 0.0;
         _baseline = ADJUST_Y(height * kBaseLineRatio);
         _topline = ADJUST_Y(height * kTopLineRatio);
         _currentInkCharacter = [[InkCharacter alloc] initWithBaseline:_baseline
                                                               topline:_topline];
+        
     }
     return self;
 }
@@ -89,7 +90,6 @@
     // The reset is synced so it can take a while.
     [_classifier reset];
     [_renderTexture clearWithColor:0x000000 alpha:0.0f];
-    _marker = nil;
     _drawing = NO;
     _firstTouchTime = 0.0;
     _currentInkCharacter = [[InkCharacter alloc] initWithBaseline:_baseline
@@ -115,22 +115,9 @@
 				_brush.x += incX;
                 _brush.y += incY;
             }
-		}];
-		_lastTouch = CGPointMake(_newTouch.x, _newTouch.y);
+        }];
+        _lastTouch = CGPointMake(_newTouch.x, _newTouch.y);
         _drawing = NO;
-    }
-    
-    if (_marker) {
-        _brush.x = _marker.x;
-        _brush.y = _marker.y;
-        _brush.color = kSpecialColor;
-        _brush.scaleX = 2.0;
-        _brush.scaleY = 2.0;
-        [_renderTexture drawObject:_brush];
-        _brush.color = kDefaultColor;
-        _brush.scaleX = 1.0;
-        _brush.scaleY = 1.0;
-        _marker = nil;
     }
 }
 
@@ -198,10 +185,62 @@
 }
 
 - (void)drawMarkerAt:(InkPoint *)point {
-    _marker = [[InkPoint alloc] initWithX:UNADJUST_X(point.x)
-                                        y:UNADJUST_Y(point.y)];
+    InkPoint *marker = [[InkPoint alloc] initWithX:UNADJUST_X(point.x)
+                                                y:UNADJUST_Y(point.y)];
+    if (marker) {
+        _brush.x = marker.x;
+        _brush.y = marker.y;
+        _brush.color = kSpecialColor;
+        _brush.scaleX = 2.0;
+        _brush.scaleY = 2.0;
+        [_renderTexture drawObject:_brush];
+        _brush.color = kDefaultColor;
+        _brush.scaleX = 1.0;
+        _brush.scaleY = 1.0;
+    }
 }
 
+- (void)drawPrototype:(BFPrototype *)prototype {
+    InkPoint *prev_point = nil;
+    for (InkPoint *ip in prototype.points) {
+        // convert to screen co-ord
+        InkPoint *cur_point = [[InkPoint alloc] initWithInkPoint:ip];
+        cur_point.x = UNADJUST_X(cur_point.x);
+        cur_point.y = UNADJUST_Y(cur_point.y);
+        if (prev_point != nil) {
+            float tx = cur_point.x;
+            float ty = cur_point.y;
+            if (cur_point.penup) {
+                tx = prev_point.x;
+                ty = prev_point.y;
+            }
+            float dx = tx - prev_point.x;
+            float dy = ty - prev_point.y;
+            int numSteps = 20;
+            float incX = dx / numSteps;
+            float incY = dy / numSteps;
+            [_renderTexture drawBundled:^{
+                _brush.x = prev_point.x;
+                _brush.y = prev_point.y;
+                _brush.color = kPrototypeColor;
+                _brush.alpha = 0.5;
+                // loop through so that if our touches are
+                // far apart we still create a line
+                for (int i=0; i<numSteps; i++) {
+                    [_renderTexture drawObject:_brush];
+                    _brush.x += incX;
+                    _brush.y += incY;
+                }
+                _brush.color = kDefaultColor;
+                _brush.alpha = 1.0;
+            }];
+        }
+        prev_point = cur_point;
+        if (prev_point.penup) {
+            prev_point = nil;
+        }
+    }
+}
 
 - (void)setGuideVisible:(BOOL)visible {
     _guide.visible = visible;
