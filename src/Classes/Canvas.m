@@ -35,6 +35,7 @@
     CGPoint _lastTouch;
     CGPoint _newTouch;
     BOOL _drawing;
+    BOOL _clearing;
 }
 
 
@@ -66,6 +67,7 @@
                           forType:SP_EVENT_TYPE_ENTER_FRAME];
         [self addChild:_canvas];
         
+        _clearing = NO;
         _drawing = NO;
         _firstTouchTime = 0.0;
         _baseline = ADJUST_Y(height * kBaseLineRatio);
@@ -87,13 +89,17 @@
 
 
 - (void)clear {
-    // The reset is synced so it can take a while.
-    [_classifier reset];
-    [_renderTexture clearWithColor:0x000000 alpha:0.0f];
-    _drawing = NO;
-    _firstTouchTime = 0.0;
-    _currentInkCharacter = [[InkCharacter alloc] initWithBaseline:_baseline
-                                                          topline:_topline];
+    if (!_clearing) {
+        _clearing = YES;
+        // The reset is synced so it can take a while.
+        [_classifier reset];
+        [_renderTexture clearWithColor:0x000000 alpha:0.0f];
+        _drawing = NO;
+        _firstTouchTime = 0.0;
+        _currentInkCharacter = [[InkCharacter alloc] initWithBaseline:_baseline
+                                                              topline:_topline];
+        _clearing = NO;
+    }
 }
 
 
