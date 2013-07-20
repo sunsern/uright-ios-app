@@ -162,24 +162,28 @@
     // Sign in
     if ([button.name isEqualToString:BTN_1]) {
         if (_username.text.length > 0 && _password.text.length > 0) {
-            UIAlertView *alert = [self showPleaseWait:[NSString stringWithFormat:
-                                                       @"Signing in as %@", _username.text]];
-            [AccountManager loginAsUsername:_username.text
-                                   password:_password.text
-                                 onComplete:^(BOOL successful){
-                                     if (successful) {
-                                         [alert dismissWithClickedButtonIndex:0 animated:YES];
-                                         [Sparrow.juggler delayInvocationByTime:0.1 block:^{
-                                             [_username removeFromSuperview];
-                                             [_password removeFromSuperview];
-                                             [self removeFromParent];
-                                         }];
-                                     } else {
-                                         [alert dismissWithClickedButtonIndex:0 animated:YES];
-                                         [self showErrorMsg:@"Please check your username and password."
-                                                      title:@"Login failed"];
-                                     }
-                                 }];
+            UIAlertView *alert = [self
+                                  showPleaseWait:[NSString stringWithFormat:
+                                                  @"Signing in as %@", _username.text]];
+            [AccountManager
+             loginAsUsername:_username.text
+             password:_password.text
+             onComplete:^(BOOL successful){
+                 if ([alert isVisible]) {
+                     if (successful) {
+                         [alert dismissWithClickedButtonIndex:0 animated:YES];
+                         [Sparrow.juggler delayInvocationByTime:0.1 block:^{
+                             [_username removeFromSuperview];
+                             [_password removeFromSuperview];
+                             [self removeFromParent];
+                         }];
+                     } else {
+                         [alert dismissWithClickedButtonIndex:0 animated:YES];
+                         [self showErrorMsg:@"Please check your username and password."
+                                      title:@"Login failed"];
+                     }
+                 }
+             }];
         }
     }
     
@@ -187,17 +191,19 @@
     if ([button.name isEqualToString:BTN_2]) {
         UIAlertView *alert = [self showPleaseWait:@"Signing in with Facebook"];
         [AccountManager loginAsCurrentFacebookUser:^(BOOL successful){
-            if (successful) {
-                [alert dismissWithClickedButtonIndex:0 animated:YES];
-                [Sparrow.juggler delayInvocationByTime:0.1 block:^{
-                    [_username removeFromSuperview];
-                    [_password removeFromSuperview];
-                    [self removeFromParent];
-                }];
-            } else {
-                [alert dismissWithClickedButtonIndex:0 animated:YES];
-                [self showErrorMsg:@"Error signing in with Facebook"
-                             title:@"Login failed"];
+            if ([alert isVisible]) {
+                if (successful) {
+                    [alert dismissWithClickedButtonIndex:0 animated:YES];
+                    [Sparrow.juggler delayInvocationByTime:0.1 block:^{
+                        [_username removeFromSuperview];
+                        [_password removeFromSuperview];
+                        [self removeFromParent];
+                    }];
+                } else {
+                    [alert dismissWithClickedButtonIndex:0 animated:YES];
+                    [self showErrorMsg:@"Error signing in with Facebook"
+                                 title:@"Login failed"];
+                }
             }
         }];
     }
@@ -208,7 +214,7 @@
     UIAlertView *errorMsg = [[UIAlertView alloc]
                              initWithTitle:title
                              message:message
-                             delegate:self
+                             delegate:nil
                              cancelButtonTitle:@"OK"
                              otherButtonTitles:nil];
     [errorMsg show];
@@ -216,16 +222,19 @@
 
 
 - (UIAlertView *)showPleaseWait:(NSString *)message {
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Please wait"
-                                                    message:message
-                                                   delegate:nil
-                                          cancelButtonTitle:nil
-                                          otherButtonTitles:nil];
+    UIAlertView *alert = [[UIAlertView alloc]
+                          initWithTitle:@"Please wait"
+                          message:[NSString stringWithFormat:@"%@\n\n\n", message]
+                          delegate:nil
+                          cancelButtonTitle:@"Cancel"
+                          otherButtonTitles:nil];
     [alert show];
     if(alert != nil) {
-        UIActivityIndicatorView *indicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+        UIActivityIndicatorView *indicator = [[UIActivityIndicatorView alloc]
+                                              initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
         
-        indicator.center = CGPointMake(alert.bounds.size.width/2, alert.bounds.size.height-45);
+        indicator.center = CGPointMake(alert.bounds.size.width / 2,
+                                       alert.bounds.size.height - 87);
         [indicator startAnimating];
         [alert addSubview:indicator];
     }
