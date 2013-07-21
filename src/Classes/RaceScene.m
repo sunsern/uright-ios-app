@@ -20,8 +20,8 @@
 
 #define RACE_MODE_ID 3
 #define RACE_LENGTH 15
-#define WAIT_TIME 0.8f
-#define BEAM_WIDTH 250
+#define WAIT_TIME 1.0f
+#define BEAM_WIDTH 300
 
 @implementation RaceScene {
     // UI

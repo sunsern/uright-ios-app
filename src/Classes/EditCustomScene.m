@@ -6,7 +6,7 @@
 //
 //
 
-#import "CustomRaceScene.h"
+#import "EditCustomScene.h"
 #import "Canvas.h"
 #import "Charset.h"
 
@@ -19,7 +19,7 @@
 #define IS_SWIPE_LEFT(dist, speed, angle) \
 (dist > 50 && fabs(angle) > 3*M_PI/4 && speed > 500.0)
 
-@implementation CustomRaceScene {
+@implementation EditCustomScene {
     Canvas *_leftCanvas;
     Canvas *_rightCanvas;
     SPTextField *_label;
@@ -67,34 +67,31 @@
     SPButton *quitButton = [SPButton buttonWithUpState:buttonTexture text:@"Quit"];
     quitButton.x = 0;
     quitButton.y = 0;
-    quitButton.scaleX = 0.8;
-    quitButton.scaleY = 0.8;
+    quitButton.scaleX = 1.0;
+    quitButton.scaleY = 1.0;
     quitButton.name = @"quit";
     [self addChild:quitButton];
     [quitButton addEventListener:@selector(quit) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
-    
-    SPButton *addButton = [SPButton buttonWithUpState:buttonTexture text:@"Add new character"];
-    addButton.x = 100;
-    addButton.name = @"add";
-    addButton.scaleX = 0.8;
-    addButton.scaleY = 0.8;
-    [self addChild:addButton];
-    [addButton addEventListener:@selector(addLabel) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
-    
+ 
     SPButton *removeButton = [SPButton buttonWithUpState:buttonTexture text:@"Remove character"];
-    removeButton.x = 200;
+    removeButton.x = gameWidth - removeButton.width;
+    removeButton.y = 0;
     removeButton.name = @"remove";
-    removeButton.scaleX = 0.8;
-    removeButton.scaleY = 0.8;
+    removeButton.scaleX = 1.0;
+    removeButton.scaleY = 1.0;
     [self addChild:removeButton];
     [removeButton addEventListener:@selector(removeLabel) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
     
-    
-    _newLabel = [[UITextField alloc] initWithFrame:CGRectMake(150, 50, 150, 30)];
+    _newLabel = [[UITextField alloc] initWithFrame:CGRectMake(gameWidth/2 - 250/2, 90,
+                                                              250, 40)];
     _newLabel.backgroundColor = [UIColor whiteColor];
     _newLabel.borderStyle = UITextBorderStyleRoundedRect;
     _newLabel.delegate = self;
     _newLabel.placeholder = @"Type a new symbol or words here";
+    _newLabel.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
+    _newLabel.autocorrectionType = UITextAutocorrectionTypeNo;
+    _newLabel.autocapitalizationType = UITextAutocapitalizationTypeNone;
+    _newLabel.returnKeyType = UIReturnKeyDone;
     [Sparrow.currentController.view addSubview:_newLabel];
     
     _label = [SPTextField textFieldWithWidth:150 height:150 text:@""];
@@ -107,6 +104,39 @@
     _label.fontName = @"AppleColorEmoji";
     _label.autoScale = YES;
     [self addChild:_label];
+    
+    // < , >
+    SPTextField *bracketLeft = [SPTextField textFieldWithText:@"<"];
+    bracketLeft.pivotX = bracketLeft.width / 2;
+    bracketLeft.pivotY = bracketLeft.height / 2;
+    bracketLeft.x = 30;
+    bracketLeft.y = _label.y;
+    bracketLeft.fontSize = 30;
+    bracketLeft.fontName = @"EuphemiaUCAS";
+    bracketLeft.color = 0x333333;
+    bracketLeft.alpha = 0.7;
+    //bracketLeft.border = YES;
+    [self addChild:bracketLeft];
+    
+    SPTextField *bracketRight = [SPTextField textFieldWithText:@">"];
+    bracketRight.pivotX = bracketRight.width / 2;
+    bracketRight.pivotY = bracketRight.height / 2;
+    bracketRight.x = gameWidth - 30;
+    bracketRight.y = _label.y;
+    bracketRight.fontSize = 30;
+    bracketRight.fontName = @"EuphemiaUCAS";
+    bracketRight.color = 0x333333;
+    bracketRight.alpha = 0.7;
+    //bracketRight.border = YES;
+    [self addChild:bracketRight];
+    
+    SPTextField *instruction = [SPTextField
+                                textFieldWithWidth:gameWidth
+                                height:40
+                                text:@"Swipe left and right to nagivate."];
+    instruction.x = 0;
+    instruction.y = gameHeight - instruction.height;
+    [self addChild:instruction];
     
     // canvas
     _leftCanvas = [[Canvas alloc] initWithWidth:150 height:(150/1.3)];
@@ -221,7 +251,10 @@
                            anyObject];
 	SPPoint *touchPosition;
     if(touchStart){
+        // Remove keyboard
+        [_newLabel resignFirstResponder];
         _lastTouch = [touchStart locationInSpace:self];
+        
         _lastTouchTime = event.timestamp;
 	}
     SPTouch *touchEnd = [[event touchesWithTarget:self
@@ -244,7 +277,7 @@
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
-    [_newLabel resignFirstResponder];
+    [self addLabel];
     return YES;
 }
 

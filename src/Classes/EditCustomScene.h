@@ -8,6 +8,6 @@
 
 #import "Scene.h"
 
-@interface CustomRaceScene : Scene <UITextFieldDelegate>
+@interface EditCustomScene : Scene <UITextFieldDelegate>
 
 @end

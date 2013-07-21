@@ -67,8 +67,8 @@
 
 @interface CacheData : NSObject
 @property (readwrite) float cost;
-@property (nonatomic, strong) StateData *state;
 @property (readwrite) BOOL valid;
+@property (nonatomic, strong) StateData *state;
 @end
 
 @implementation CacheData
@@ -204,8 +204,6 @@
             point.dy = dy / MAX(norm,1e-6);
         }
         
-        //[_cacheDict removeAllObjects];
-        //_cacheDict = [[NSMutableDictionary alloc] initWithCapacity:_beamCount*2];
         [self invalidateCacheData];
         
         StateData *state = [_beamPQ pop];
@@ -250,6 +248,7 @@
                 sum_like = logsumexp(sum_like, state.alpha);
             }
         }
+        
         for (id key in _cacheDict) {
             CacheData *cache = _cacheDict[key];
             if (cache.valid) {

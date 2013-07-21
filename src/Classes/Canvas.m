@@ -15,10 +15,11 @@
 #define kBrushSize 12.0f
 #define kDefaultColor 0x1028da
 #define kSpecialColor 0xff0000
-#define kPrototypeColor 0xbbbbbb
+#define kPrototypeColor 0x555555
+#define kPrototypeScale 0.5
 #define kBaseLineRatio 0.75f
 #define kTopLineRatio 0.25f
-#define kNumSteps 15
+#define kNumSteps 20
 
 #define ADJUST_X(x) (((x - (self.width / 2.0)) / self.height) * 3.00)
 #define UNADJUST_X(x) (((x / 3.00) * self.height) + (self.width / 2))
@@ -229,7 +230,9 @@
                 _brush.x = prev_point.x;
                 _brush.y = prev_point.y;
                 _brush.color = kPrototypeColor;
-                _brush.alpha = 0.5;
+                //_brush.alpha = 1.0;
+                _brush.scaleX = kPrototypeScale;
+                _brush.scaleY = kPrototypeScale;
                 // loop through so that if our touches are
                 // far apart we still create a line
                 for (int i=0; i<numSteps; i++) {
@@ -238,7 +241,9 @@
                     _brush.y += incY;
                 }
                 _brush.color = kDefaultColor;
-                _brush.alpha = 1.0;
+                //_brush.alpha = 1.0;
+                _brush.scaleX = 1.0;
+                _brush.scaleY = 1.0;
             }];
         }
         prev_point = cur_point;
