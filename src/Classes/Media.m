@@ -10,6 +10,7 @@
 
 static SPTextureAtlas *atlas = NULL;
 static NSMutableDictionary *sounds = NULL;
+static NSDictionary *asciiNameDB = NULL;
 
 #pragma mark Texture Atlas
 
@@ -59,19 +60,52 @@ static NSMutableDictionary *sounds = NULL;
             sounds[filename] = sound;
         }
     }
+    
+    asciiNameDB = @{@"א.caf" : @"alef.caf",
+                    @"ב.caf" : @"bet.caf",
+                    @"ג.caf" : @"gimel.caf",
+                    @"ד.caf" : @"dalet.caf",
+                    @"ה.caf" : @"he.caf",
+                    @"ו.caf" : @"vav.caf",
+                    @"ז.caf" : @"zayin.caf",
+                    @"ח.caf" : @"het.caf",
+                    @"ט.caf" : @"tet.caf",
+                    @"י.caf" : @"yod.caf",
+                    @"כ.caf" : @"kaf.caf",
+                    @"ל.caf" : @"lamed.caf",
+                    @"מ.caf" : @"mem.caf",
+                    @"נ.caf" : @"nun.caf",
+                    @"ס.caf" : @"samekh.caf",
+                    @"ע.caf" : @"ayin.caf",
+                    @"פ.caf" : @"pe.caf",
+                    @"צ.caf" : @"tsadi.caf",
+                    @"ק.caf" : @"qof.caf",
+                    @"ר.caf" : @"resh.caf",
+                    @"ש.caf" : @"shin.caf",
+                    @"ת.caf" : @"tav.caf",
+                    @"ם.caf" : @"mem_final.caf",
+                    @"ן.caf" : @"nun_final.caf",
+                    @"ף.caf" : @"pe_final.caf",
+                    @"ך.caf" : @"kaf_final.caf",
+                    @"ץ.caf" : @"tsadi_final.caf"};
+    
 }
 
 + (void)releaseSound
 {
     sounds = nil;
     
-    [SPAudioEngine stop];    
+    [SPAudioEngine stop];
 }
 
 + (void)playSound:(NSString *)soundName
 {
-    SPSound *sound = sounds[soundName];
+    if (asciiNameDB[soundName] != nil) {
+        soundName = asciiNameDB[soundName];
+    }
     
+    SPSound *sound = sounds[soundName];
+
     if (sound)
         [sound play];
     //else
