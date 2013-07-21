@@ -14,6 +14,10 @@
 		288765FD0DF74451002DB57D /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 288765FC0DF74451002DB57D /* CoreGraphics.framework */; };
 		3C38FAF11791592E003CC8C0 /* RoundData.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C38FAF01791592D003CC8C0 /* RoundData.m */; };
 		3C38FAF717921B71003CC8C0 /* Charset.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C38FAF617921B71003CC8C0 /* Charset.m */; };
+		3C815330179B8A450079EB06 /* blueButton@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3C81532E179B8A450079EB06 /* blueButton@2x.png */; };
+		3C815331179B8A450079EB06 /* blueButtonHighlight@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3C81532F179B8A450079EB06 /* blueButtonHighlight@2x.png */; };
+		3C815334179B8A530079EB06 /* blueButton.png in Resources */ = {isa = PBXBuildFile; fileRef = 3C815332179B8A530079EB06 /* blueButton.png */; };
+		3C815335179B8A530079EB06 /* blueButtonHighlight.png in Resources */ = {isa = PBXBuildFile; fileRef = 3C815333179B8A530079EB06 /* blueButtonHighlight.png */; };
 		3C89AB96178B572400874DC8 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C89AB95178B572400874DC8 /* CFNetwork.framework */; };
 		3C89AB98178B575100874DC8 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C89AB97178B575100874DC8 /* MobileCoreServices.framework */; };
 		3C89AB9A178B576200874DC8 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C89AB99178B576200874DC8 /* SystemConfiguration.framework */; };
@@ -196,6 +200,10 @@
 		3C38FAF01791592D003CC8C0 /* RoundData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RoundData.m; sourceTree = "<group>"; };
 		3C38FAF517921B71003CC8C0 /* Charset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Charset.h; sourceTree = "<group>"; };
 		3C38FAF617921B71003CC8C0 /* Charset.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Charset.m; sourceTree = "<group>"; };
+		3C81532E179B8A450079EB06 /* blueButton@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "blueButton@2x.png"; sourceTree = "<group>"; };
+		3C81532F179B8A450079EB06 /* blueButtonHighlight@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "blueButtonHighlight@2x.png"; sourceTree = "<group>"; };
+		3C815332179B8A530079EB06 /* blueButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = blueButton.png; sourceTree = "<group>"; };
+		3C815333179B8A530079EB06 /* blueButtonHighlight.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = blueButtonHighlight.png; sourceTree = "<group>"; };
 		3C89AB95178B572400874DC8 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
 		3C89AB97178B575100874DC8 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
 		3C89AB99178B576200874DC8 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
@@ -750,6 +758,8 @@
 		DE4F80DD14E1541400655D44 /* 1x */ = {
 			isa = PBXGroup;
 			children = (
+				3C815332179B8A530079EB06 /* blueButton.png */,
+				3C815333179B8A530079EB06 /* blueButtonHighlight.png */,
 				3CA09632178788FE000B8A0E /* button_big.png */,
 				DE4F80DE14E1541400655D44 /* atlas.png */,
 				DE4F80DF14E1541400655D44 /* atlas.xml */,
@@ -761,6 +771,8 @@
 		DE4F80E214E1541400655D44 /* 2x */ = {
 			isa = PBXGroup;
 			children = (
+				3C81532E179B8A450079EB06 /* blueButton@2x.png */,
+				3C81532F179B8A450079EB06 /* blueButtonHighlight@2x.png */,
 				3CA096341787890F000B8A0E /* button_big@2x.png */,
 				DE4F80E314E1541400655D44 /* atlas@2x.png */,
 				DE4F80E414E1541400655D44 /* atlas@2x.xml */,
@@ -950,6 +962,10 @@
 				3CD2603B179904DB007DDB75 /* yod.caf in Resources */,
 				3CD2603C179904DB007DDB75 /* z.caf in Resources */,
 				3CD2603D179904DB007DDB75 /* zayin.caf in Resources */,
+				3C815330179B8A450079EB06 /* blueButton@2x.png in Resources */,
+				3C815331179B8A450079EB06 /* blueButtonHighlight@2x.png in Resources */,
+				3C815334179B8A530079EB06 /* blueButton.png in Resources */,
+				3C815335179B8A530079EB06 /* blueButtonHighlight.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -83,6 +83,8 @@
     NSMutableDictionary *_likelihood;
     NSMutableDictionary *_finalLikelihood;
     NSMutableDictionary *_cacheDict;
+    BOOL _thresholdReached;
+    BOOL _earlyStopEnabled;
 }
 
 
@@ -97,13 +99,16 @@
         _likelihood = [[NSMutableDictionary alloc] init];
         _finalLikelihood = [[NSMutableDictionary alloc] init];
         _cacheDict = [[NSMutableDictionary alloc] initWithCapacity:kBeamWidth * 2];
+        _thresholdReached = NO;
+        _earlyStopEnabled = NO;
     }
     return self;
 }
 
-- (id)initWithPrototypes:(NSArray *)prototypes {
+- (id)initWithPrototypes:(NSArray *)prototypes earlyStopEnabled:(BOOL)early {
     self = [self init];
     _prototypes = [[NSArray alloc] initWithArray:prototypes];
+    _earlyStopEnabled = early;
     return self;
 }
 
@@ -123,6 +128,7 @@
         
         // Make a new cache
         _cacheDict = [[NSMutableDictionary alloc] initWithCapacity:_beamCount*2];
+        _thresholdReached = NO;
     });
 }
 
@@ -212,6 +218,17 @@
         while (state != nil && c < _beamCount) {
             float alpha = [state alpha];
             BFPrototype *pData = _prototypes[state.prototypeIdx];
+            
+            // Special rule: Jump to the end if penup after threshold has been reached.
+            if (_earlyStopEnabled && point.penup && _thresholdReached) {
+                [self setCostForStateIdx:[pData length] - 1
+                            prototypeIdx:state.prototypeIdx
+                               extraCost:alpha
+                              inputPoint:point
+                                   pData:pData];
+            }
+            
+            
             // Case 1: stay
             if ([state stateIdx] >= 0) {
                 [self setCostForStateIdx:state.stateIdx
@@ -236,8 +253,11 @@
         // Clear the queue
         [_beamPQ clear];
         
-        [_likelihood removeAllObjects];
         [_finalLikelihood removeAllObjects];
+        
+        if (_earlyStopEnabled) {
+            [_likelihood removeAllObjects];
+        }
         
         // Normalize live states
         float sum_like = -FLT_MAX;
@@ -263,11 +283,14 @@
                 
                 // update likelihood
                 NSString *label = [_prototypes[state.prototypeIdx] label];
-                NSNumber *existing = _likelihood[label];
-                if (existing != nil) {
-                    _likelihood[label] = @(logsumexp([existing floatValue], state.alpha));
-                } else {
-                    _likelihood[label] = @(state.alpha);
+                
+                if (_earlyStopEnabled) {
+                    NSNumber *existing = _likelihood[label];
+                    if (existing != nil) {
+                        _likelihood[label] = @(logsumexp([existing floatValue], state.alpha));
+                    } else {
+                        _likelihood[label] = @(state.alpha);
+                    }
                 }
                 
                 // update final likelihood
@@ -278,14 +301,22 @@
         }
         
         // Likelihood normalization
-        sum_like = -FLT_MAX;
-        for (id key in _likelihood) {
-            float x = [_likelihood[key] floatValue];
-            sum_like = logsumexp(sum_like, x);
-        }
-        for (id key in [_likelihood allKeys]) {
-            _likelihood[key] = @(exp([_likelihood[key]
-                                      floatValue] - sum_like));
+        
+        if (_earlyStopEnabled) {
+            sum_like = -FLT_MAX;
+            for (id key in _likelihood) {
+                float x = [_likelihood[key] floatValue];
+                sum_like = logsumexp(sum_like, x);
+            }
+            for (id key in [_likelihood allKeys]) {
+                _likelihood[key] = @(exp([_likelihood[key]
+                                          floatValue] - sum_like));
+            }
+            float p = 1.0 / [_likelihood[_targetLabel] floatValue];
+            if (log2(p) < _targetThreshold) {
+                [_delegate thresholdReached:point];
+                _thresholdReached = YES;
+            }
         }
         
         sum_like = -FLT_MAX;
@@ -296,11 +327,6 @@
         for (id key in [_finalLikelihood allKeys]) {
             _finalLikelihood[key] = @(exp([_finalLikelihood[key]
                                            floatValue] - sum_like));
-        }
-        
-        float p = 1.0 / [_likelihood[_targetLabel] floatValue];
-        if (log2(p) < _targetThreshold) {
-            [_delegate thresholdReached:point];
         }
         
         if (point.penup) {

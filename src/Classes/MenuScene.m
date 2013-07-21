@@ -16,6 +16,9 @@
 #import "RaceScene.h"
 #import "EditCustomScene.h"
 
+#define RACE_MODE_ID 3
+#define EARLY_STOP_MODE_ID 7
+
 @implementation MenuScene {
     LoginScene *_login;
     SPTextField *_info;
@@ -54,9 +57,9 @@
         // Create buttons
         SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
         _buttonList = @[@"English", @"Digits",
-                        @"Thai", @"English + Digits",
-                        @"Hebrew", @"Japanese",
-                        @"Full", @"Custom",
+                        @"Thai", @"Hebrew",
+                        @"Japanese", @"Full",
+                        @"English-early-stop", @"Custom",
                         @"Edit Custom", @"Logout"];
         for (int i=0; i < [_buttonList count]; i++) {
             SPButton *button = [SPButton buttonWithUpState:buttonTexture text:_buttonList[i]];
@@ -186,6 +189,30 @@
     } else if ([button.name isEqualToString:@"Edit Custom"]) {
         EditCustomScene *crs = [[EditCustomScene alloc] init];
         [self addChild:crs];
+    } else if ([button.name isEqualToString:@"English-early-stop"]) {
+        GlobalStorage *gs = [GlobalStorage sharedInstance];
+        UserData *ud = [gs activeUserData];
+        NSArray *prototypes;
+        NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
+     
+        // English
+        Charset *cs = [gs charsetByID:1];
+        [allCharacters addObjectsFromArray:[cs characters]];
+        
+        // Set active characters
+        [ud setActiveCharacters:allCharacters];
+        prototypes = [ud prototypesWithLabels:allCharacters];
+        
+        RaceScene *race = [[RaceScene alloc] initWithPrototypes:prototypes
+                                               earlyStopEnabled:YES
+                                                         modeID:EARLY_STOP_MODE_ID];
+        [race addEventListenerForType:SP_EVENT_TYPE_REMOVED_FROM_STAGE
+                                block:^(id event) {
+                                    [self updateInfo];
+                                }];
+        [self addChild:race];
+        //[race slideFromRight];
+        
     } else {
         GlobalStorage *gs = [GlobalStorage sharedInstance];
         UserData *ud = [gs activeUserData];
@@ -197,39 +224,27 @@
             [allCharacters addObjectsFromArray:[cs characters]];
         } else if ([button.name isEqualToString:@"Digits"]){
             Charset *cs = [gs charsetByID:12];
-            NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
             [allCharacters addObjectsFromArray:[cs characters]];
         } else if ([button.name isEqualToString:@"Thai"]) {
             Charset *cs = [gs charsetByID:2];;
-            NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
             [allCharacters addObjectsFromArray:[cs characters]];
         } else if ([button.name isEqualToString:@"Hebrew"]) {
             Charset *cs = [gs charsetByID:3];;
-            NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
             [allCharacters addObjectsFromArray:[cs characters]];
         } else if ([button.name isEqualToString:@"Japanese"]) {
             Charset *cs = [gs charsetByID:15];;
-            NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
             [allCharacters addObjectsFromArray:[cs characters]];
-        } else if ([button.name isEqualToString:@"English + Digits"]) {
-            Charset *cs_english = [gs charsetByID:1];
-            Charset *cs_digits = [gs charsetByID:12];
-            NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
-            [allCharacters addObjectsFromArray:[cs_english characters]];
-            [allCharacters addObjectsFromArray:[cs_digits characters]];
         } else if ([button.name isEqualToString:@"Full"]) {
             Charset *cs_english = [gs charsetByID:1];
             Charset *cs_digits = [gs charsetByID:12];
             Charset *cs_punc = [gs charsetByID:14];
             Charset *cs_upper = [gs charsetByID:13];
-            NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
             [allCharacters addObjectsFromArray:[cs_english characters]];
             [allCharacters addObjectsFromArray:[cs_digits characters]];
             [allCharacters addObjectsFromArray:[cs_upper characters]];
             [allCharacters addObjectsFromArray:[cs_punc characters]];
         } else if ([button.name isEqualToString:@"Custom"]) {
             Charset *cs = ud.customCharset;
-            NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
             [allCharacters addObjectsFromArray:[cs characters]];
         }
         
@@ -237,13 +252,17 @@
         [ud setActiveCharacters:allCharacters];
         prototypes = [ud prototypesWithLabels:allCharacters];
         
-        RaceScene *race = [[RaceScene alloc] initWithPrototypes:prototypes];
+        RaceScene *race = [[RaceScene alloc] initWithPrototypes:prototypes
+                                               earlyStopEnabled:NO
+                                                         modeID:RACE_MODE_ID];
         [race addEventListenerForType:SP_EVENT_TYPE_REMOVED_FROM_STAGE
                                 block:^(id event) {
                                     [self updateInfo];
                                 }];
         [self addChild:race];
     }
+    
+    
 }
 
 - (void)addedToStage:(SPEvent *)event {

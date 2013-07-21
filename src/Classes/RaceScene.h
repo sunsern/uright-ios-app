@@ -11,6 +11,8 @@
 
 @interface RaceScene : Scene <BFClassifierDelegate>
 
-- (id)initWithPrototypes:(NSArray *)prototypes;
+- (id)initWithPrototypes:(NSArray *)prototypes
+        earlyStopEnabled:(BOOL)early
+                  modeID:(int)modeID;
 
 @end

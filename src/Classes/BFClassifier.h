@@ -24,7 +24,7 @@
 @property (nonatomic,copy) NSString *targetLabel;
 @property (nonatomic,weak) id<BFClassifierDelegate> delegate;
 
-- (id)initWithPrototypes:(NSArray *)prototypes;
+- (id)initWithPrototypes:(NSArray *)prototypes earlyStopEnabled:(BOOL)early;
 
 - (void)reset;
 

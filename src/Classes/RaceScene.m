@@ -18,12 +18,13 @@
 #import "RaceSummaryScene.h"
 #import "ServerManager.h"
 
-#define RACE_MODE_ID 3
 #define RACE_LENGTH 15
 #define WAIT_TIME 1.0f
 #define BEAM_WIDTH 300
 
 @implementation RaceScene {
+    int _modeID;
+    
     // UI
     SPTextField *_targetLabel;
     SPTextField *_bpsTf;
@@ -134,13 +135,14 @@
     [self addChild:bpsLabel];
     
     // quit button
-    SPButton *quit = [SPButton buttonWithUpState:buttonTexture text:@"Quit"];
-    quit.x = 0;
-    quit.y = 0;
-    quit.scaleX = 0.75;
-    quit.scaleY = 0.75;
-    [self addChild:quit];
-    [quit addEventListener:@selector(quitRace) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
+    //SPTexture *blueButton = [SPTexture textureWithContentsOfFile:@"blueButton.png"];
+    SPButton *quitButton = [SPButton buttonWithUpState:buttonTexture text:@"Quit"];
+    quitButton.x = 0;
+    quitButton.y = 0;
+    //quit.scaleX = 0.75;
+    //quit.scaleY = 0.75;
+    [self addChild:quitButton];
+    [quitButton addEventListener:@selector(quitRace) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
     
     // restart button
 //    SPButton *restart = [SPButton buttonWithUpState:buttonTexture text:@"Restart"];
@@ -167,19 +169,19 @@
     [self addEventListener:@selector(enterFrame:) atObject:self forType:SP_EVENT_TYPE_ENTER_FRAME];
 }
 
-- (id)initWithPrototypes:(NSArray *)prototypes {
+- (id)initWithPrototypes:(NSArray *)prototypes earlyStopEnabled:(BOOL)early modeID:(int)modeID {
     self = [super init];
     if (self) {
         [self setupScene];
-    
         // Setting up classifier
-        _classifier = [[BFClassifier alloc] initWithPrototypes:prototypes];
+        _classifier = [[BFClassifier alloc] initWithPrototypes:prototypes earlyStopEnabled:early];
         [_classifier setDelegate:self];
         [_classifier setBeamCount:BEAM_WIDTH];
         [_canvas setClassifier:_classifier];
         
         UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
-        _numActiveChars = [ud.activeCharacters count]; 
+        _numActiveChars = [ud.activeCharacters count];
+        _modeID = modeID;
     }
     return self;
 }
@@ -209,7 +211,7 @@
     // Create a new session
     _session = [[SessionData alloc] init];
     _session.userID = ud.userID;
-    _session.modeID = RACE_MODE_ID;
+    _session.modeID = _modeID;
     
     // Test string
     NSArray *labelArray = ud.activeCharacters;
