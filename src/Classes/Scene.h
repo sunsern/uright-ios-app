@@ -11,6 +11,7 @@
 @interface Scene : SPSprite
 
 - (void)dropFromTop;
+- (void)dropFromTopNoBounce;
 - (void)slideFromRight;
 - (void)shootUpAndClose;
 

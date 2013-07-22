@@ -10,6 +10,7 @@
 
 #import "SessionData.h"
 #import "ServerManager.h"
+#import "RaceReviewScene.h"
 
 @implementation RaceSummaryScene {
     SessionData *_session;
@@ -24,7 +25,7 @@
         _session = session;
         
         // Window
-        SPQuad *window = [SPQuad quadWithWidth:gameWidth height:gameHeight color:0xeeeeee];
+        SPQuad *window = [SPQuad quadWithWidth:gameWidth height:gameHeight color:0xdddddd];
         window.x = (gameWidth - window.width) / 2;
         window.y = (gameHeight - window.height) / 2;
         window.alpha = 1.0;
@@ -78,8 +79,8 @@
                                atObject:self
                                 forType:SP_EVENT_TYPE_TRIGGERED];
         
-        // Quit button
-        SPButton *okButton = [SPButton buttonWithUpState:buttonTexture text:@"Quit"];
+        // Close button
+        SPButton *okButton = [SPButton buttonWithUpState:buttonTexture text:@"Close"];
         okButton.pivotX = okButton.width / 2;
         okButton.pivotY = okButton.height / 2;
         okButton.x = 3*gameWidth/4;
@@ -90,10 +91,29 @@
         [okButton addEventListener:@selector(quitRace)
                                atObject:self
                                 forType:SP_EVENT_TYPE_TRIGGERED];
+
+        // Review button
+        SPButton *reviewButton = [SPButton buttonWithUpState:buttonTexture text:@"Review"];
+        reviewButton.pivotX = reviewButton.width / 2;
+        reviewButton.pivotY = reviewButton.height / 2;
+        reviewButton.x = gameWidth/2;
+        reviewButton.y = gameHeight - okButton.height - 120;
+        reviewButton.scaleX = 1.1;
+        reviewButton.scaleY = 1.1;
+        [self addChild:reviewButton];
+        [reviewButton addEventListener:@selector(review)
+                              atObject:self
+                               forType:SP_EVENT_TYPE_TRIGGERED];
     }
     return self;
 }
 
+
+- (void)review {
+    RaceReviewScene *review = [[RaceReviewScene alloc] initWithSessionData:_session];
+    [self addChild:review];
+    [review dropFromTopNoBounce];
+}
 
 - (void)quitRace {
     [self dispatchEventWithType:SP_EVENT_TYPE_QUIT_RACE];

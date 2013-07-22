@@ -18,6 +18,9 @@
 		3C815331179B8A450079EB06 /* blueButtonHighlight@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3C81532F179B8A450079EB06 /* blueButtonHighlight@2x.png */; };
 		3C815334179B8A530079EB06 /* blueButton.png in Resources */ = {isa = PBXBuildFile; fileRef = 3C815332179B8A530079EB06 /* blueButton.png */; };
 		3C815335179B8A530079EB06 /* blueButtonHighlight.png in Resources */ = {isa = PBXBuildFile; fileRef = 3C815333179B8A530079EB06 /* blueButtonHighlight.png */; };
+		3C815338179CC9E30079EB06 /* SwipeScene.m in Resources */ = {isa = PBXBuildFile; fileRef = 3C815337179CC9E30079EB06 /* SwipeScene.m */; };
+		3C815387179CCC500079EB06 /* SwipeScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C815337179CC9E30079EB06 /* SwipeScene.m */; };
+		3C81538A179CD6700079EB06 /* RaceReviewScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C815389179CD66F0079EB06 /* RaceReviewScene.m */; };
 		3C89AB96178B572400874DC8 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C89AB95178B572400874DC8 /* CFNetwork.framework */; };
 		3C89AB98178B575100874DC8 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C89AB97178B575100874DC8 /* MobileCoreServices.framework */; };
 		3C89AB9A178B576200874DC8 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C89AB99178B576200874DC8 /* SystemConfiguration.framework */; };
@@ -204,6 +207,10 @@
 		3C81532F179B8A450079EB06 /* blueButtonHighlight@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "blueButtonHighlight@2x.png"; sourceTree = "<group>"; };
 		3C815332179B8A530079EB06 /* blueButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = blueButton.png; sourceTree = "<group>"; };
 		3C815333179B8A530079EB06 /* blueButtonHighlight.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = blueButtonHighlight.png; sourceTree = "<group>"; };
+		3C815337179CC9E30079EB06 /* SwipeScene.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SwipeScene.m; sourceTree = "<group>"; };
+		3C81533A179CC9FE0079EB06 /* SwipeScene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SwipeScene.h; sourceTree = "<group>"; };
+		3C815388179CD66F0079EB06 /* RaceReviewScene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RaceReviewScene.h; sourceTree = "<group>"; };
+		3C815389179CD66F0079EB06 /* RaceReviewScene.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RaceReviewScene.m; sourceTree = "<group>"; };
 		3C89AB95178B572400874DC8 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
 		3C89AB97178B575100874DC8 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
 		3C89AB99178B576200874DC8 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
@@ -525,12 +532,16 @@
 			children = (
 				3CA09626178778C4000B8A0E /* Scene.h */,
 				3CA09627178778C4000B8A0E /* Scene.m */,
+				3C81533A179CC9FE0079EB06 /* SwipeScene.h */,
+				3C815337179CC9E30079EB06 /* SwipeScene.m */,
 				3CA0962917878462000B8A0E /* LoginScene.h */,
 				3CA0962A17878462000B8A0E /* LoginScene.m */,
 				3CA0962C17878524000B8A0E /* MenuScene.h */,
 				3CA0962D17878525000B8A0E /* MenuScene.m */,
 				3CA0962F1787853F000B8A0E /* RaceScene.h */,
 				3CA096301787853F000B8A0E /* RaceScene.m */,
+				3C815388179CD66F0079EB06 /* RaceReviewScene.h */,
+				3C815389179CD66F0079EB06 /* RaceReviewScene.m */,
 				3CD2603E17994298007DDB75 /* RaceSummaryScene.h */,
 				3CD2603F17994298007DDB75 /* RaceSummaryScene.m */,
 				3CD260421799DA09007DDB75 /* EditCustomScene.h */,
@@ -966,6 +977,7 @@
 				3C815331179B8A450079EB06 /* blueButtonHighlight@2x.png in Resources */,
 				3C815334179B8A530079EB06 /* blueButton.png in Resources */,
 				3C815335179B8A530079EB06 /* blueButtonHighlight.png in Resources */,
+				3C815338179CC9E30079EB06 /* SwipeScene.m in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1023,6 +1035,7 @@
 				DE4F80D614E153E600655D44 /* Media.m in Sources */,
 				3CA096251787505D000B8A0E /* Canvas.m in Sources */,
 				3CA09628178778C4000B8A0E /* Scene.m in Sources */,
+				3C815387179CCC500079EB06 /* SwipeScene.m in Sources */,
 				3CA0962B17878463000B8A0E /* LoginScene.m in Sources */,
 				3CA0962E17878525000B8A0E /* MenuScene.m in Sources */,
 				3CA0963117878540000B8A0E /* RaceScene.m in Sources */,
@@ -1033,6 +1046,7 @@
 				3CE29DDB17943A5500769A23 /* AccountManager.m in Sources */,
 				3CD2604017994299007DDB75 /* RaceSummaryScene.m in Sources */,
 				3CD260441799DA0D007DDB75 /* EditCustomScene.m in Sources */,
+				3C81538A179CD6700079EB06 /* RaceReviewScene.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

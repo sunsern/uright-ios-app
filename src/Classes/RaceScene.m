@@ -242,7 +242,7 @@
     banner.pivotY = banner.height/2;
     banner.x = _canvas.x + _canvas.width/2;
     banner.y = _canvas.y + _canvas.height/2;
-    banner.color = 0xffffff;
+    banner.color = 0x00ff00;
     banner.fontSize = 120;
     //banner.border = YES;
     [self addChild:banner];

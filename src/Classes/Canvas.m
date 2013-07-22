@@ -128,14 +128,14 @@
     }
 }
 
-- (void)onTouch:(SPTouchEvent*)event{
+- (void)onTouch:(SPTouchEvent*)event {
     SPTouch *touchStart = [[event touchesWithTarget:_canvas
                                            andPhase:SPTouchPhaseBegan]
                            anyObject];
 	SPPoint *touchPosition;
     double touchTime = 0.0;
     
-    if(touchStart){
+    if (touchStart) {
         touchPosition = [touchStart locationInSpace:_canvas];
 		_lastTouch = CGPointMake(touchPosition.x, touchPosition.y);
 		_newTouch = CGPointMake(touchPosition.x, touchPosition.y);
@@ -156,7 +156,7 @@
     SPTouch *touchMove = [[event touchesWithTarget:_canvas
                                           andPhase:SPTouchPhaseMoved]
                           anyObject];
-    if(touchMove){
+    if (touchMove) {
         touchPosition = [touchMove locationInSpace:_canvas];
         _newTouch = CGPointMake(touchPosition.x, touchPosition.y);
         _drawing = YES;
@@ -174,7 +174,7 @@
     SPTouch *touchEnd = [[event touchesWithTarget:_canvas
                                          andPhase:SPTouchPhaseEnded]
                          anyObject];
-    if(touchEnd){
+    if (touchEnd) {
         touchPosition = [touchEnd locationInSpace:_canvas];
         _lastTouch = CGPointMake(touchPosition.x, touchPosition.y);
         _newTouch = CGPointMake(touchPosition.x, touchPosition.y);
@@ -230,7 +230,6 @@
                 _brush.x = prev_point.x;
                 _brush.y = prev_point.y;
                 _brush.color = kPrototypeColor;
-                //_brush.alpha = 1.0;
                 _brush.scaleX = kPrototypeScale;
                 _brush.scaleY = kPrototypeScale;
                 // loop through so that if our touches are
@@ -241,7 +240,6 @@
                     _brush.y += incY;
                 }
                 _brush.color = kDefaultColor;
-                //_brush.alpha = 1.0;
                 _brush.scaleX = 1.0;
                 _brush.scaleY = 1.0;
             }];
@@ -252,6 +250,45 @@
         }
     }
 }
+
+- (void)drawInkCharacter:(InkCharacter *)ink {
+    InkPoint *prev_point = nil;
+    for (InkPoint *ip in ink.points) {
+        // convert to screen co-ord
+        InkPoint *cur_point = [[InkPoint alloc] initWithInkPoint:ip];
+        cur_point.x = UNADJUST_X(cur_point.x);
+        cur_point.y = UNADJUST_Y(cur_point.y);
+        if (prev_point != nil) {
+            float tx = cur_point.x;
+            float ty = cur_point.y;
+            if (cur_point.penup) {
+                tx = prev_point.x;
+                ty = prev_point.y;
+            }
+            float dx = tx - prev_point.x;
+            float dy = ty - prev_point.y;
+            int numSteps = 20;
+            float incX = dx / numSteps;
+            float incY = dy / numSteps;
+            [_renderTexture drawBundled:^{
+                _brush.x = prev_point.x;
+                _brush.y = prev_point.y;
+                // loop through so that if our touches are
+                // far apart we still create a line
+                for (int i=0; i<numSteps; i++) {
+                    [_renderTexture drawObject:_brush];
+                    _brush.x += incX;
+                    _brush.y += incY;
+                }
+            }];
+        }
+        prev_point = cur_point;
+        if (prev_point.penup) {
+            prev_point = nil;
+        }
+    }
+}
+
 
 - (void)setGuideVisible:(BOOL)visible {
     _guide.visible = visible;

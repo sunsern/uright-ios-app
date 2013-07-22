@@ -25,8 +25,9 @@
 
 - (id)initWithWidth:(float)width height:(float)height;
 - (void)clear;
-- (void)drawMarkerAt:(InkPoint *)point;
 - (void)setGuideVisible:(BOOL)visible;
+- (void)drawMarkerAt:(InkPoint *)point;
 - (void)drawPrototype:(BFPrototype *)prototype;
+- (void)drawInkCharacter:(InkCharacter *)ink;
 
 @end

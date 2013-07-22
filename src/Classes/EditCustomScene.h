@@ -6,8 +6,8 @@
 //
 //
 
-#import "Scene.h"
+#import "SwipeScene.h"
 
-@interface EditCustomScene : Scene <UITextFieldDelegate>
+@interface EditCustomScene : SwipeScene <UITextFieldDelegate>
 
 @end

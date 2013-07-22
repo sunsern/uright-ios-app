@@ -13,19 +13,10 @@
 #define CUSTOM_CHARSET_ID 0
 #define INIT_CHARSET_ID 1
 
-#define IS_SWIPE_RIGHT(dist, speed, angle) \
-(dist > 50 && fabs(angle) < M_PI/4 && speed > 500.0)
-
-#define IS_SWIPE_LEFT(dist, speed, angle) \
-(dist > 50 && fabs(angle) > 3*M_PI/4 && speed > 500.0)
-
 @implementation EditCustomScene {
     Canvas *_leftCanvas;
     Canvas *_rightCanvas;
     SPTextField *_label;
-    
-    SPPoint *_lastTouch;
-    double _lastTouchTime;
     
     UITextField *_newLabel;
     
@@ -64,14 +55,14 @@
 
     // buttons
     SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
-    SPButton *quitButton = [SPButton buttonWithUpState:buttonTexture text:@"Quit"];
-    quitButton.x = 0;
-    quitButton.y = 0;
-    quitButton.scaleX = 1.0;
-    quitButton.scaleY = 1.0;
-    quitButton.name = @"quit";
-    [self addChild:quitButton];
-    [quitButton addEventListener:@selector(quit) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
+    SPButton *backButton = [SPButton buttonWithUpState:buttonTexture text:@"Back"];
+    backButton.x = 0;
+    backButton.y = 0;
+    backButton.scaleX = 1.0;
+    backButton.scaleY = 1.0;
+    backButton.name = @"quit";
+    [self addChild:backButton];
+    [backButton addEventListener:@selector(back) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
  
     SPButton *removeButton = [SPButton buttonWithUpState:buttonTexture text:@"Remove character"];
     removeButton.x = gameWidth - removeButton.width;
@@ -105,31 +96,6 @@
     _label.autoScale = YES;
     [self addChild:_label];
     
-    // < , >
-    SPTextField *bracketLeft = [SPTextField textFieldWithText:@"<"];
-    bracketLeft.pivotX = bracketLeft.width / 2;
-    bracketLeft.pivotY = bracketLeft.height / 2;
-    bracketLeft.x = 30;
-    bracketLeft.y = _label.y;
-    bracketLeft.fontSize = 30;
-    bracketLeft.fontName = @"EuphemiaUCAS";
-    bracketLeft.color = 0x333333;
-    bracketLeft.alpha = 0.7;
-    //bracketLeft.border = YES;
-    [self addChild:bracketLeft];
-    
-    SPTextField *bracketRight = [SPTextField textFieldWithText:@">"];
-    bracketRight.pivotX = bracketRight.width / 2;
-    bracketRight.pivotY = bracketRight.height / 2;
-    bracketRight.x = gameWidth - 30;
-    bracketRight.y = _label.y;
-    bracketRight.fontSize = 30;
-    bracketRight.fontName = @"EuphemiaUCAS";
-    bracketRight.color = 0x333333;
-    bracketRight.alpha = 0.7;
-    //bracketRight.border = YES;
-    [self addChild:bracketRight];
-    
     SPTextField *instruction = [SPTextField
                                 textFieldWithWidth:gameWidth
                                 height:40
@@ -138,7 +104,7 @@
     instruction.y = gameHeight - instruction.height;
     [self addChild:instruction];
     
-    // canvas
+    // canvases
     _leftCanvas = [[Canvas alloc] initWithWidth:150 height:(150/1.3)];
     _leftCanvas.x = 10;
     _leftCanvas.y = 350;
@@ -153,6 +119,12 @@
     
     [self addEventListener:@selector(touched:) atObject:self forType:SP_EVENT_TYPE_TOUCH];
     
+    [self addEventListener:@selector(loadNextCharacter) atObject:self
+                   forType:SP_EVENT_TYPE_SWIPE_LEFT];
+    [self addEventListener:@selector(loadPreviousCharacter) atObject:self
+                   forType:SP_EVENT_TYPE_SWIPE_RIGHT];
+    
+    
     _currentIdx = 0;
     [self loadCharacterAtIndex:_currentIdx];
 }
@@ -163,7 +135,8 @@
 
 
 - (void)loadCharacterAtIndex:(int)idx {
-    if (idx < [_charset.characters count]) {
+    if (idx >= 0 && idx < [_charset.characters count] &&
+        [_charset.characters count] > 0) {
         _label.text = _charset.characters[idx];
         
         UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
@@ -207,72 +180,66 @@
         
         [self loadCharacterAtIndex:_currentIdx];
     }
+    if ([_charset.characters count] == 0) {
+        _label.text = @"";
+        [_leftCanvas clear];
+        [_rightCanvas clear];
+    }
 }
 
 
 
 - (void)loadNextCharacter {
-    if (_currentIdx < [_charset.characters count] - 1) {
-        _currentIdx = _currentIdx + 1;
-        [self loadCharacterAtIndex:_currentIdx];
-
-//        int gameWidth = Sparrow.stage.width;
-//
-//        SPTween *move1 = [SPTween tweenWithTarget:_label time:0.2f];
-//        [move1 animateProperty:@"x" targetValue:gameWidth+_label.width];
-//        [Sparrow.juggler addObject:move1];
-//        
-//        [Sparrow.juggler delayInvocationByTime:move1.totalTime block:^{
-//            [self loadCharacterAtIndex:_currentIdx];
-//            _label.x = -_label.width;
-//            SPTween *move2 = [SPTween tweenWithTarget:_label time:0.2f];
-//            [move2 animateProperty:@"x" targetValue:gameWidth/2];
-//            [Sparrow.juggler addObject:move2];
-//        }];
+    if (_currentIdx < (int)[_charset.characters count] - 1) {
+        SPTween *slide_out = [SPTween tweenWithTarget:_label time:0.1];
+        [slide_out animateProperty:@"x" targetValue:-_label.width];
+        [Sparrow.juggler addObject:slide_out];
+        
+        [Sparrow.juggler delayInvocationByTime:slide_out.totalTime block:^{
+            _currentIdx = _currentIdx + 1;
+            [self loadCharacterAtIndex:_currentIdx];
+            
+            
+            int gameWidth = Sparrow.stage.width;
+            _label.x = gameWidth + _label.width;
+            SPTween *slide_in = [SPTween tweenWithTarget:_label time:0.1];
+            [slide_in animateProperty:@"x" targetValue:gameWidth/2];
+            [Sparrow.juggler addObject:slide_in];
+        }];
     }
 }
 
 - (void)loadPreviousCharacter {
     if (_currentIdx > 0) {
-        _currentIdx = _currentIdx - 1;
-        [self loadCharacterAtIndex:_currentIdx];
+        int gameWidth = Sparrow.stage.width;
+        SPTween *slide_out = [SPTween tweenWithTarget:_label time:0.1];
+        [slide_out animateProperty:@"x" targetValue:gameWidth + _label.width];
+        [Sparrow.juggler addObject:slide_out];
+        
+        [Sparrow.juggler delayInvocationByTime:slide_out.totalTime block:^{
+            _currentIdx = _currentIdx - 1;
+            [self loadCharacterAtIndex:_currentIdx];
+            
+            _label.x = -_label.width;
+            SPTween *slide_in = [SPTween tweenWithTarget:_label time:0.1];
+            [slide_in animateProperty:@"x" targetValue:gameWidth/2];
+            [Sparrow.juggler addObject:slide_in];
+        }];        
     }
 }
 
-- (void)quit {
+- (void)back {
     [_newLabel removeFromSuperview];
     [Sparrow.juggler removeAllObjects];
     [self removeFromParent];
 }
 
 - (void)touched:(SPTouchEvent*)event{
-    SPTouch *touchStart = [[event touchesWithTarget:self
-                                           andPhase:SPTouchPhaseBegan]
+    SPTouch *touchStart = [[event touchesWithTarget:self andPhase:SPTouchPhaseBegan]
                            anyObject];
-	SPPoint *touchPosition;
-    if(touchStart){
+	if (touchStart) {
         // Remove keyboard
         [_newLabel resignFirstResponder];
-        _lastTouch = [touchStart locationInSpace:self];
-        
-        _lastTouchTime = event.timestamp;
-	}
-    SPTouch *touchEnd = [[event touchesWithTarget:self
-                                         andPhase:SPTouchPhaseEnded]
-                         anyObject];
-    if(touchEnd){
-        touchPosition = [touchEnd locationInSpace:self];
-        SPPoint *vec = [touchPosition subtractPoint:_lastTouch];
-        if (vec.lengthSquared > 1) {
-            float dist = vec.length;
-            float angle = vec.angle;
-            double speed = dist / (event.timestamp - _lastTouchTime);
-            if (IS_SWIPE_RIGHT(dist, speed, angle)) {
-                [self loadPreviousCharacter];
-            } else if (IS_SWIPE_LEFT(dist, speed, angle)) {
-                [self loadNextCharacter];
-            }
-        }
     }
 }
 

@@ -18,6 +18,13 @@
     [Sparrow.juggler addObject:slidein];
 }
 
+- (void)dropFromTopNoBounce {
+    self.y = -(Sparrow.stage.height);
+    SPTween *slidein = [SPTween tweenWithTarget:self time:0.5 transition:SP_TRANSITION_LINEAR];
+    [slidein animateProperty:@"y" targetValue:0];
+    [Sparrow.juggler addObject:slidein];
+}
+
 
 - (void)slideFromRight {
     self.x = (Sparrow.stage.width) * 2;
