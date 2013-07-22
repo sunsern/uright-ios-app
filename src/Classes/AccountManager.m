@@ -5,7 +5,7 @@
 //  Created by Sunsern Cheamanunkul on 7/15/13.
 //
 //
-
+#import <Parse/Parse.h>
 #import <FacebookSDK/FacebookSDK.h>
 
 #import "AccountManager.h"
@@ -13,109 +13,116 @@
 
 @implementation AccountManager
 
-
-+ (void)initializeFacebookSession {
-    FBSession *session = [[FBSession alloc] init];
-    [FBSession setActiveSession:session];
-}
-
-+ (void)loginAsCurrentFacebookUser:(void(^)(BOOL))completeBlock; {
-    NSArray *permissions = @[@"email"];
-    
-    // Attempt to open the session. If the session is not open,
-    // show the user the Facebook login UX
-    [FBSession openActiveSessionWithReadPermissions:permissions
-                                       allowLoginUI:YES
-                                  completionHandler:^(FBSession *session,                                           FBSessionState status, NSError *error)
-     {
-         // Did something go wrong during login? I.e. did the user cancel?
-         if (status == FBSessionStateClosedLoginFailed || status == FBSessionStateCreatedOpening) {
-             
-             // If so, just send them round the loop again
-             [[FBSession activeSession] closeAndClearTokenInformation];
-             [FBSession setActiveSession:nil];
-             
-             FBSession *session = [[FBSession alloc] init];
-             [FBSession setActiveSession:session];
-             
-             // ERROR
-             completeBlock(NO);
-         } else {
-             if (FBSession.activeSession.isOpen) {
++ (void)loginAsParseUser:(PFUser *)user onComplete:(void(^)(BOOL))completeBlock {
+    // FB user
+    if ([PFFacebookUtils session].isOpen) {
+        
+        // Request data
+        [[FBRequest requestForMe] startWithCompletionHandler:
+         ^(FBRequestConnection *connection,
+           NSDictionary <FBGraphUser> *fbuser,
+           NSError *error) {
+             if (!error) {
                  
-                 // Request data
-                 [[FBRequest requestForMe] startWithCompletionHandler:
-                  ^(FBRequestConnection *connection,
-                    NSDictionary <FBGraphUser> *user,
-                    NSError *error) {
-                      if (!error) {
-                          
-                          // Create username and password
-                          NSString *username = [NSString stringWithFormat:@"FB_%@",user.username];
-                          NSString *password = user.id;
-                        
-                          // Attemp to login
-                          int userID = [ServerManager getUserIDFromUsername:username
-                                                                   password:password];
-                          
-                          if (userID != kURGuestUserID) {
-                              GlobalStorage *gs = [GlobalStorage sharedInstance];
-                              [gs switchActiveUser:userID onComplete:^{
-                                  UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
-                                  ud.username = username;
-                                  ud.password = password;
-                                  completeBlock(YES);
-                              }];
-                          } else {
-                              int newUserID = [ServerManager createAccountForUsername:username
-                                                                             password:password
-                                                                                email:user[@"email"]
-                                                                             fullname:user.name];
-                              if (newUserID != kURGuestUserID) {
-                                  GlobalStorage *gs = [GlobalStorage sharedInstance];
-                                  [gs switchActiveUser:newUserID onComplete:^{
-                                      UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
-                                      ud.username = username;
-                                      ud.password = password;
-                                      completeBlock(YES);
-                                  }];
-                              } else {
-                                  // ERROR
-                                  completeBlock(NO);
-                              }
-                          }
-                      } else {
-                          // ERROR 
-                          completeBlock(NO);
-                      }
-                  }];
+                 // Create username and password
+                 NSString *username = [NSString stringWithFormat:@"FB_%@",fbuser.username];
+                 NSString *password = fbuser.id;
+                 
+                 // Attemp to login
+                 int userID = [ServerManager userIDFromUsername:username
+                                                          password:password];
+                 
+                 if (userID != kURGuestUserID) {
+                     // Success!
+                     GlobalStorage *gs = [GlobalStorage sharedInstance];
+                     [gs switchActiveUser:userID onComplete:^{
+                         Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
+                         ud.username = username;
+                         completeBlock(YES);
+                     }];
+                 } else {
+                     // User not found. Create a new one!
+                     int newUserID = [ServerManager createAccountForUsername:username
+                                                                    password:password
+                                                                       email:fbuser[@"email"]
+                                                                    fullname:fbuser.name];
+                     if (newUserID != kURGuestUserID) {
+                         // Success!
+                         GlobalStorage *gs = [GlobalStorage sharedInstance];
+                         [gs switchActiveUser:newUserID onComplete:^{
+                             Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
+                             ud.username = username;
+                             completeBlock(YES);
+                         }];
+                     } else {
+                         // ERROR
+                         completeBlock(NO);
+                     }
+                 }
+             } else {
+                 // ERROR
+                 completeBlock(NO);
              }
-         }
-     }];
-}
-
-+ (void)loginAsUsername:(NSString *)username password:(NSString *)password
-             onComplete:(void(^)(BOOL))completeBlock {
-    int userID = [ServerManager getUserIDFromUsername:username password:password];
-    if (userID != kURGuestUserID) {
-        GlobalStorage *gs = [GlobalStorage sharedInstance];
-        [gs switchActiveUser:userID onComplete:^{
-            UserData *ud = [gs activeUserData];
-            ud.username = username;
-            ud.password = password;
-            completeBlock(YES);
-        }];
-    } else {
-        completeBlock(NO);
+         }];
+    }
+    else {
+        //  Non-FB user
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+            // Create username and password
+            NSString *username = [NSString stringWithFormat:@"PF_%@",user.username];
+            NSString *password = user.objectId;
+            NSString *email = user.email;
+            
+            // Attemp to login
+            int userID = [ServerManager userIDFromUsername:username
+                                                     password:password];
+            
+            if (userID != kURGuestUserID) {
+                // Success!
+                GlobalStorage *gs = [GlobalStorage sharedInstance];
+                [gs switchActiveUser:userID onComplete:^{
+                    Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
+                    ud.username = username;
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        completeBlock(YES);
+                    });
+                }];
+            } else {
+                // User not found. Create a new one!
+                int newUserID = [ServerManager createAccountForUsername:username
+                                                               password:password
+                                                                  email:email
+                                                               fullname:@""];
+                if (newUserID != kURGuestUserID) {
+                    // Success!
+                    GlobalStorage *gs = [GlobalStorage sharedInstance];
+                    [gs switchActiveUser:newUserID onComplete:^{
+                        Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
+                        ud.username = username;
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            completeBlock(YES);
+                        });
+                    }];
+                } else {
+                    // ERROR
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        completeBlock(NO);
+                    });
+                }
+            }
+        });
     }
 }
 
-+ (void)logout:(void(^)(void))completeBlock; {
-    GlobalStorage *gs = [GlobalStorage sharedInstance];
-    [gs switchActiveUser:kURGuestUserID onComplete:^{
-        completeBlock();
-    }];
++ (void)logout:(void(^)(void))completeBlock {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+        GlobalStorage *gs = [GlobalStorage sharedInstance];
+        [gs switchActiveUser:kURGuestUserID onComplete:^{
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completeBlock();
+            });
+        }];
+    });
 }
-
 
 @end

@@ -50,7 +50,7 @@
 
 - (void)setupScene {
     int gameWidth = Sparrow.stage.width;
-    //int gameHeight = Sparrow.stage.height;
+    int gameHeight = Sparrow.stage.height;
 
     // Background
     SPImage *background = [SPImage imageWithContentsOfFile:@"background.jpg" ];
@@ -60,7 +60,11 @@
     // Canvas background
     SPQuad *canvasBg = [SPQuad quadWithWidth:300 height:220 color:0x555555];
     canvasBg.x = (gameWidth - canvasBg.width)/2;
-    canvasBg.y = 250;
+    if (gameHeight > 480) {
+        canvasBg.y = 250;
+    } else {
+        canvasBg.y = 210;
+    }
     canvasBg.alpha = 0.9;
     canvasBg.touchable = NO;
     [self addChild:canvasBg];
@@ -100,15 +104,14 @@
     _targetLabel.touchable = NO;
     [self addChild:_targetLabel];
 
-    
-    
     // Erase button
     SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
     SPButton *resetButton = [SPButton buttonWithUpState:buttonTexture text:@"Erase"];
     resetButton.pivotX = resetButton.width / 2;
     resetButton.pivotY = resetButton.height / 2;
     resetButton.x = gameWidth / 2;
-    resetButton.y = _canvas.y + _canvas.height + resetButton.height;
+    resetButton.y = MIN(_canvas.y + _canvas.height + resetButton.height,
+                        gameHeight - resetButton.height/2);
     [self addChild:resetButton];
     [resetButton addEventListener:@selector(reset)
                          atObject:self
@@ -179,7 +182,7 @@
         [_classifier setBeamCount:BEAM_WIDTH];
         [_canvas setClassifier:_classifier];
         
-        UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
+        Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
         _numActiveChars = [ud.activeCharacters count];
         _modeID = modeID;
     }
@@ -206,7 +209,7 @@
 }
 
 - (void)restartRace {
-    UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
+    Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
     
     // Create a new session
     _session = [[SessionData alloc] init];
@@ -365,7 +368,7 @@
     _session.totalTime = _totalTime;
     _session.bps = _totalScore / _totalTime;
     
-    UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
+    Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
     [ud addScore:_session.bps];
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{

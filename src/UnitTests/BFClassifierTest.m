@@ -10,7 +10,7 @@
 
 #import "BFClassifier.h"
 #import "GlobalStorage.h"
-#import "UserData.h"
+#import "Userdata.h"
 #import "ServerManager.h"
 #import "InkPoint.h"
 
@@ -32,11 +32,7 @@
     [super setUp];
     
     // Initialize the singleton storage
-    GlobalStorage *gs = [GlobalStorage sharedInstance];
-    [gs loadGlobalData];
-    [gs loadUserData];
-    UserData *us = [gs activeUser];
-    _classifier = [us classifier];
+    _classifier = [[BFClassifier alloc] initWithPrototypes:nil earlyStopEnabled:NO];
     [_classifier setDelegate:self];
     
     // Set-up code here.

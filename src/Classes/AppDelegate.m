@@ -2,7 +2,7 @@
 //  AppDelegate.m
 //  AppScaffold
 //
-#import <FacebookSDK/FacebookSDK.h>
+#import <Parse/Parse.h>
 
 #import "AppDelegate.h"
 #import "Game.h"
@@ -31,6 +31,18 @@ void onUncaughtException(NSException *exception)
     
     _viewController = [[SPViewController alloc] init];
     
+    // Parse
+    [Parse setApplicationId:@"ZipLoxI33o1cT0tNlyxno0nXE9o1EaTGfVEgmKjF"
+                  clientKey:@"QrZmj7ADH1cRXMbJpYaNtNPvg5xjP16J8bPn6CUJ"];
+    
+    [PFAnalytics trackAppOpenedWithLaunchOptions:launchOptions];
+    
+    // Enable FB
+    [PFFacebookUtils initializeFacebook];
+    
+    // Initialize the singleton storage
+    [GlobalStorage sharedInstance];
+        
     // Enable some common settings here:
     //
     // _viewController.showStats = YES;
@@ -48,15 +60,13 @@ void onUncaughtException(NSException *exception)
     return YES;
 }
 
-- (BOOL)application:(UIApplication *)application
-            openURL:(NSURL *)url
-  sourceApplication:(NSString *)sourceApplication
-         annotation:(id)annotation {
-    return [FBAppCall handleOpenURL:url sourceApplication:sourceApplication];
+- (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url {
+    return [PFFacebookUtils handleOpenURL:url];
 }
 
-- (void)applicationWillTerminate:(UIApplication *)application {
-    [[FBSession activeSession] close];
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url
+  sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+    return [PFFacebookUtils handleOpenURL:url];
 }
 
 @end

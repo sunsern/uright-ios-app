@@ -48,14 +48,13 @@
 
 @end
 
-@implementation UserData
+@implementation Userdata
 
 - (id)init {
     self = [super init];
     if (self) {
         _userID = kURGuestUserID;
         _username = @"";
-        _password = @"";
         _sessions = [[NSMutableArray alloc] init];
         _scores = [[NSMutableDictionary alloc] init];
         _activeCharacters = [[NSMutableArray alloc] init];
@@ -70,7 +69,6 @@
     if (self) {
         _userID = [jsonObj[@"userID"] intValue];
         _username = [jsonObj[@"username"] copy];
-        _password = [jsonObj[@"password"] copy];
         _sessions = [[NSMutableArray alloc]
                      initWithArray:jsonObj[@"sessions"]];
         _scores = [[NSMutableDictionary alloc]
@@ -92,7 +90,6 @@
     NSMutableDictionary *jsonObj = [[NSMutableDictionary alloc] init];
     jsonObj[@"userID"] = @(_userID);
     jsonObj[@"username"] = _username;
-    jsonObj[@"password"] = _password;
     jsonObj[@"sessions"] = _sessions;
     jsonObj[@"scores"] = _scores;
     jsonObj[@"activeCharacters"] = _activeCharacters;
@@ -106,16 +103,14 @@
 }
 
 
-+ (UserData *)newUserData:(int)userID {
-    UserData *ud = [[UserData alloc] init];
++ (Userdata *)emptyUserdata:(int)userID {
+    Userdata *ud = [[Userdata alloc] init];
     ud.userID = userID;
-
+    
     if (userID == kURGuestUserID) {
         ud.username = @"Guest";
-        ud.password = @"";
     } else {
         ud.username = @"unknown";
-        ud.password = @"";
     }
     return ud;
 }

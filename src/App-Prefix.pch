@@ -12,7 +12,7 @@
 
 // Singleton storage
 #import "GlobalStorage.h"
-#import "UserData.h"
+#import "Userdata.h"
 
 #endif
 

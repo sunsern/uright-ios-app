@@ -28,7 +28,7 @@
     self = [super init];
     if (self) {
         GlobalStorage *gs = [GlobalStorage sharedInstance];
-        UserData *ud = [gs activeUserData];
+        Userdata *ud = [gs activeUserdata];
         _charset = [ud customCharset];
         if (_charset.charsetID != CUSTOM_CHARSET_ID) {
             _charset.charsetID = CUSTOM_CHARSET_ID;
@@ -107,13 +107,13 @@
     // canvases
     _leftCanvas = [[Canvas alloc] initWithWidth:150 height:(150/1.3)];
     _leftCanvas.x = 10;
-    _leftCanvas.y = 350;
+    _leftCanvas.y = 330;
     _leftCanvas.touchable = NO;
     [self addChild:_leftCanvas];
     
     _rightCanvas = [[Canvas alloc] initWithWidth:150 height:(150/1.3)];
     _rightCanvas.x = gameWidth/2 + 10;
-    _rightCanvas.y = 350;
+    _rightCanvas.y = 330;
     _rightCanvas.touchable = NO;
     [self addChild:_rightCanvas];
     
@@ -139,7 +139,7 @@
         [_charset.characters count] > 0) {
         _label.text = _charset.characters[idx];
         
-        UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
+        Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
         NSArray *prots = [ud prototypesWithLabels:@[_label.text]];
         
         [_leftCanvas clear];
@@ -158,7 +158,7 @@
     [_newLabel resignFirstResponder];
     if (_newLabel.text.length > 0) {
         [_charset.characters addObject:_newLabel.text];
-        UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
+        Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
         [ud setCustomCharset:_charset];
         
         _currentIdx = [_charset.characters count] - 1;
@@ -175,7 +175,7 @@
         } else {
             [_charset.characters removeObjectAtIndex:_currentIdx];
         }
-        UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
+        Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
         [ud setCustomCharset:_charset];
         
         [self loadCharacterAtIndex:_currentIdx];

@@ -20,18 +20,17 @@
 
 @end
 
-@interface UserData : NSObject <URJSONSerializable>
+@interface Userdata : NSObject <URJSONSerializable>
 
 @property (readwrite) int userID;
 @property (nonatomic,copy) NSString *username;
-@property (nonatomic,copy) NSString *password;
 @property (nonatomic,strong) NSMutableArray *sessions;
 @property (nonatomic,strong) NSMutableDictionary *scores;
 @property (nonatomic,strong) NSMutableArray *activeCharacters;
 @property (nonatomic,strong) NSDictionary *protosets;
 @property (nonatomic,strong) Charset *customCharset;
 
-+ (UserData *)newUserData:(int)userID;
++ (Userdata *)emptyUserdata:(int)userID;
 
 - (void)addScore:(float)score;
 

@@ -54,7 +54,7 @@
     }
 }
 
-+ (int)getUserIDFromUsername:(NSString *)username
++ (int)userIDFromUsername:(NSString *)username
                     password:(NSString *)password  {
     
     const char *cStr = [password UTF8String];
@@ -162,6 +162,18 @@
         protosets[ps.label] = ps;
     }
     return protosets;
+}
+
++ (NSDictionary *)announcement {
+    NSString *urlString = [NSString stringWithFormat:@"%@/annoucement", kURBaseURL];
+    NSURL *url = [NSURL URLWithString:urlString];
+    ASIFormDataRequest  *request = [ASIFormDataRequest requestWithURL:url];
+    [request setPostValue:kURMagicKey forKey:@"key"];
+    [request startSynchronous];
+    if ([request error] != nil) {
+        return nil;
+    }
+    return [[self class] JSONObjectFromNSData:[request responseData]];
 }
 
 

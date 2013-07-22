@@ -13,8 +13,8 @@
 
 + (BOOL)isOnline;
 
-+ (int)getUserIDFromUsername:(NSString *)username
-                    password:(NSString *)password;
++ (int)userIDFromUsername:(NSString *)username
+                 password:(NSString *)password;
 
 + (int)createAccountForUsername:(NSString *)username
                        password:(NSString *)password
@@ -26,5 +26,7 @@
 + (NSDictionary *)fetchProtosets:(int)userID;
 
 + (BOOL)uploadSessionData:(SessionData *)data;
+
++ (NSDictionary *)announcement;
 
 @end

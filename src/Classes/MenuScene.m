@@ -5,25 +5,28 @@
 //  Created by Sunsern Cheamanunkul on 7/5/13.
 //
 //
+#import <Parse/Parse.h>
 
 #import "MenuScene.h"
 
 #import "Game.h"
-#import "ServerManager.h"
 #import "Charset.h"
-
-#import "LoginScene.h"
 #import "RaceScene.h"
 #import "EditCustomScene.h"
+#import "ServerManager.h"
+#import "AccountManager.h"
+#import "LoginViewController.h"
+#import "MBProgressHUD.h"
+#import "NoticeScene.h"
 
 #define RACE_MODE_ID 3
 #define EARLY_STOP_MODE_ID 7
 
 @implementation MenuScene {
-    LoginScene *_login;
     SPTextField *_info;
     NSArray *_buttonList;
     BOOL _fetchingProtosets;
+    double _lastAnnoucement;
 }
 
 - (id)init
@@ -38,19 +41,19 @@
         SPImage *background = [SPImage imageWithContentsOfFile:@"background.jpg"];
         [self addChild:background];
         
-        // Banner
-        SPTextField *banner = [SPTextField textFieldWithText:@"uRight3"];
-        banner.width = gameWidth-40;
-        banner.height = 100;
-        banner.pivotX = banner.width / 2;
-        banner.x = gameWidth / 2;
-        banner.y = 10;
-        banner.fontSize = 100;
-        banner.fontName = @"Chalkduster";
-        banner.autoScale = YES;
-        [self addChild:banner];
+        // Logo
+        SPTextField *logo = [SPTextField textFieldWithText:@"uRight3"];
+        logo.width = gameWidth-40;
+        logo.height = 100;
+        logo.pivotX = logo.width / 2;
+        logo.x = gameWidth / 2;
+        logo.y = 10;
+        logo.fontSize = 100;
+        logo.fontName = @"Chalkduster";
+        logo.autoScale = YES;
+        [self addChild:logo];
         
-        // button box
+        // Button box
         SPSprite *buttons = [[SPSprite alloc] init];
         [self addChild:buttons];
         
@@ -101,7 +104,14 @@
                       atObject:self
                        forType:SP_EVENT_TYPE_ADDED_TO_STAGE];
         
+        [[NSNotificationCenter defaultCenter]
+         addObserver:self
+         selector:@selector(logInCompleted:)
+         name:NS_NOTIFICATION_LOGGED_IN
+         object:nil];
+        
         _fetchingProtosets = NO;
+        _lastAnnoucement = 0;
     }
     return self;
 }
@@ -109,11 +119,12 @@
 
 - (void)dealloc {
     [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_ADDED_TO_STAGE];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 
 - (void)updateInfo {
-    UserData *ud = [[GlobalStorage sharedInstance] activeUserData];
+    Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
     
     if (!_fetchingProtosets) {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
@@ -145,6 +156,20 @@
             _fetchingProtosets = NO;
         });
     }
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+        NSDictionary *annoucement = [ServerManager announcement];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            double timestamp = [annoucement[@"timestamp"] doubleValue];
+            if (timestamp > _lastAnnoucement) {
+                NSString *text = annoucement[@"annoucement"];
+                _lastAnnoucement = timestamp;
+                NoticeScene *notice = [[NoticeScene alloc] initWithText:text];
+                [self addChild:notice];
+            }
+        });
+    });
+    
     _info.text = [NSString stringWithFormat:
                   @"[Debug info]\n"
                   "user_id: %d \
@@ -180,18 +205,28 @@
 
 - (void)buttonTriggered:(SPEvent *)event {
     SPButton *button = (SPButton *)event.target;
+    
     if ([button.name isEqualToString:@"Logout"]) {
-        [[GlobalStorage sharedInstance] switchActiveUser:kURGuestUserID onComplete:^{
-            if ([[GlobalStorage sharedInstance] activeUserID] == kURGuestUserID) {
-                [self showLoginScene];
-            }
+        UIView *view = Sparrow.currentController.view;
+        MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:view animated:YES];
+        hud.mode = MBProgressHUDModeIndeterminate;
+        hud.labelText = @"Logging out...";
+        [AccountManager logout:^ {
+            [PFUser logOut];
+            [hud hide:YES];
+            [self showLoginScene];
+            
+            // reset annoucement
+            _lastAnnoucement = 0;
         }];
-    } else if ([button.name isEqualToString:@"Edit Custom"]) {
+    }
+    else if ([button.name isEqualToString:@"Edit Custom"]) {
         EditCustomScene *crs = [[EditCustomScene alloc] init];
         [self addChild:crs];
-    } else if ([button.name isEqualToString:@"English-early-stop"]) {
+    }
+    else if ([button.name isEqualToString:@"English-early-stop"]) {
         GlobalStorage *gs = [GlobalStorage sharedInstance];
-        UserData *ud = [gs activeUserData];
+        Userdata *ud = [gs activeUserdata];
         NSArray *prototypes;
         NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
      
@@ -211,11 +246,10 @@
                                     [self updateInfo];
                                 }];
         [self addChild:race];
-        //[race slideFromRight];
-        
-    } else {
+    }
+    else {
         GlobalStorage *gs = [GlobalStorage sharedInstance];
-        UserData *ud = [gs activeUserData];
+        Userdata *ud = [gs activeUserdata];
         NSArray *prototypes;
         NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
         
@@ -248,41 +282,44 @@
             [allCharacters addObjectsFromArray:[cs characters]];
         }
         
-        // Set active characters
-        [ud setActiveCharacters:allCharacters];
-        prototypes = [ud prototypesWithLabels:allCharacters];
-        
-        RaceScene *race = [[RaceScene alloc] initWithPrototypes:prototypes
-                                               earlyStopEnabled:NO
-                                                         modeID:RACE_MODE_ID];
-        [race addEventListenerForType:SP_EVENT_TYPE_REMOVED_FROM_STAGE
-                                block:^(id event) {
-                                    [self updateInfo];
-                                }];
-        [self addChild:race];
+        if ([allCharacters count] > 0) {
+            // Set active characters
+            [ud setActiveCharacters:allCharacters];
+            prototypes = [ud prototypesWithLabels:allCharacters];
+            
+            RaceScene *race = [[RaceScene alloc] initWithPrototypes:prototypes
+                                                   earlyStopEnabled:NO
+                                                             modeID:RACE_MODE_ID];
+            [race addEventListenerForType:SP_EVENT_TYPE_REMOVED_FROM_STAGE
+                                    block:^(id event) {
+                                        [self updateInfo];
+                                    }];
+            [self addChild:race];
+        }
     }
-    
-    
 }
 
 - (void)addedToStage:(SPEvent *)event {
-    if ([[GlobalStorage sharedInstance] activeUserID] == kURGuestUserID) {
-        [self showLoginScene];
+    if ([PFUser currentUser] == nil ||
+        [[GlobalStorage sharedInstance] activeUserID] == kURGuestUserID) {
+      
+        [PFUser logOut];
+        [Sparrow.juggler delayInvocationByTime:0.1 block:^{
+            [self showLoginScene];
+        }];
+        
     } else {
         [self updateInfo];
     }
 }
 
 - (void)showLoginScene {
-    LoginScene *login = [[LoginScene alloc] init];
-    [login addEventListenerForType:SP_EVENT_TYPE_REMOVED_FROM_STAGE
-                             block:^(id event) {
-                                 [self updateInfo];
-                             }];
-    [self addChild:login];
-    [Sparrow.juggler delayInvocationByTime:0.01f block:^{
-        [login showTextFields];
-    }];
+    PFLogInViewController *login = [[LoginViewController alloc] init];
+    [Sparrow.currentController presentModalViewController:login animated:YES];
+}
+
+- (void)logInCompleted:(NSNotification *)notification {
+    [self updateInfo];
 }
 
 @end

@@ -7,13 +7,13 @@
 
 #import <Foundation/Foundation.h>
 
-@class UserData;
+@class Userdata;
 @class Charset;
 
 @interface GlobalStorage : NSObject
 
 @property int activeUserID;
-@property (nonatomic,strong) UserData *activeUserData;
+@property (nonatomic,strong) Userdata *activeUserdata;
 // Available character sets (Pre-defined by server)
 @property (nonatomic,strong) NSArray *charsets;
 

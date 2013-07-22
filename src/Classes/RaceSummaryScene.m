@@ -25,7 +25,7 @@
         _session = session;
         
         // Window
-        SPQuad *window = [SPQuad quadWithWidth:gameWidth height:gameHeight color:0xdddddd];
+        SPQuad *window = [SPQuad quadWithWidth:gameWidth height:gameHeight color:0xbccbba];
         window.x = (gameWidth - window.width) / 2;
         window.y = (gameHeight - window.height) / 2;
         window.alpha = 1.0;
@@ -71,7 +71,7 @@
         restartButton.pivotX = restartButton.width / 2;
         restartButton.pivotY = restartButton.height / 2;
         restartButton.x = gameWidth/4;
-        restartButton.y = gameHeight - restartButton.height - 50;
+        restartButton.y = session_summary.y + session_summary.height + 20;
         restartButton.scaleX = 1.1;
         restartButton.scaleY = 1.1;
         [self addChild:restartButton];
@@ -84,7 +84,7 @@
         okButton.pivotX = okButton.width / 2;
         okButton.pivotY = okButton.height / 2;
         okButton.x = 3*gameWidth/4;
-        okButton.y = gameHeight - okButton.height - 50;
+        okButton.y = session_summary.y + session_summary.height + 20;
         okButton.scaleX = 1.1;
         okButton.scaleY = 1.1;
         [self addChild:okButton];
@@ -94,12 +94,12 @@
 
         // Review button
         SPButton *reviewButton = [SPButton buttonWithUpState:buttonTexture text:@"Review"];
-        reviewButton.pivotX = reviewButton.width / 2;
-        reviewButton.pivotY = reviewButton.height / 2;
-        reviewButton.x = gameWidth/2;
-        reviewButton.y = gameHeight - okButton.height - 120;
-        reviewButton.scaleX = 1.1;
-        reviewButton.scaleY = 1.1;
+        reviewButton.pivotX = reviewButton.width;
+        reviewButton.pivotY = 0;
+        reviewButton.x = gameWidth;
+        reviewButton.y = 0;
+        reviewButton.scaleX = 0.8;
+        reviewButton.scaleY = 0.8;
         [self addChild:reviewButton];
         [reviewButton addEventListener:@selector(review)
                               atObject:self

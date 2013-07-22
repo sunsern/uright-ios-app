@@ -43,12 +43,8 @@
     [Media initAtlas];      // loads your texture atlas -> see Media.h/Media.m
     [Media initSound];      // loads all your sounds    -> see Media.h/Media.m
     
-    // Initialize the singleton storage
-    //[GlobalStorage clearGlobalData];
-    [GlobalStorage sharedInstance];
-
     // Initialize Facebook session
-    [AccountManager initializeFacebookSession];
+    //[AccountManager initializeFacebookSession];
     
     _mainmenu = [[MenuScene alloc] init];
     [self addChild:_mainmenu];

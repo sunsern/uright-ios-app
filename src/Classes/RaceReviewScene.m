@@ -42,7 +42,7 @@
         int gameHeight = Sparrow.stage.height;
         
         // BG
-        SPQuad *bg = [SPQuad quadWithWidth:gameWidth height:gameHeight color:0xdddddd];
+        SPQuad *bg = [SPQuad quadWithWidth:gameWidth height:gameHeight color:0x799875];
         [self addChild:bg];
         
         _inkCanvas = [[Canvas alloc] initWithWidth:200 height:(200/1.3)];
@@ -142,7 +142,7 @@
     if (index >= 0 && index < [_mistakes count]) {
         RoundData *rd = _mistakes[index];
         GlobalStorage *gs = [GlobalStorage sharedInstance];
-        UserData *ud = [gs activeUserData];
+        Userdata *ud = [gs activeUserdata];
         
         [_inkCanvas clear];
         [_inkCanvas drawInkCharacter:rd.ink];

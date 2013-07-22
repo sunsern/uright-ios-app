@@ -8,7 +8,7 @@
 
 #import "GlobalStorage.h"
 
-#import "UserData.h"
+#import "Userdata.h"
 #import "Charset.h"
 #import "ServerManager.h"
 
@@ -44,7 +44,7 @@ static GlobalStorage *__sharedInstance = nil;
         DEBUG_PRINT(@"[GS] Singleton created.");
         
         [self loadGlobalData];
-        [self loadUserData];
+        [self loadUserdata];
     }
     return self;
 }
@@ -115,34 +115,34 @@ static GlobalStorage *__sharedInstance = nil;
 }
 
 
-- (void)saveUserData {
+- (void)saveUserdata {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setObject:[_activeUserData toJSONObject]
+    [defaults setObject:[_activeUserdata toJSONObject]
                  forKey:[NSString stringWithFormat:@"user-%d-version-%0.1f",
                          _activeUserID, STORAGE_VERSION]];
     DEBUG_PRINT(@"[GS] User-specific data saved.");
 }
 
 
-- (void)loadUserData {
+- (void)loadUserdata {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    id userData = [defaults objectForKey:
+    id userdata = [defaults objectForKey:
                    [NSString stringWithFormat:
                     @"user-%d-version-%0.1f",
                     _activeUserID, STORAGE_VERSION]];
      
-    if (userData == nil) {
+    if (userdata == nil) {
         // No user data found. Create an empty user data.
-        _activeUserData = [UserData newUserData:_activeUserID];
+        _activeUserdata = [Userdata emptyUserdata:_activeUserID];
         
         // Set the first charset to active
         Charset *activeCharset = _charsets[0];
-        _activeUserData.activeCharacters = [[NSMutableArray alloc]
+        _activeUserdata.activeCharacters = [[NSMutableArray alloc]
                                             initWithArray:[activeCharset characters]];
         
         DEBUG_PRINT(@"[GS] Data for %d doesn't exist. Created from template", _activeUserID);
     } else {
-        _activeUserData = [[UserData alloc] initWithJSONObject:userData];
+        _activeUserdata = [[Userdata alloc] initWithJSONObject:userdata];
         DEBUG_PRINT(@"[GS] Load data for user %d",_activeUserID);
     }
     
@@ -150,7 +150,7 @@ static GlobalStorage *__sharedInstance = nil;
     if ([ServerManager isOnline]) {
         NSDictionary *protosets = [ServerManager fetchProtosets:_activeUserID];
         if (protosets) {
-            _activeUserData.protosets = protosets;
+            _activeUserdata.protosets = protosets;
             DEBUG_PRINT(@"[GS] Loaded %d protosets from server",[protosets count]);
         }
     }
@@ -160,11 +160,11 @@ static GlobalStorage *__sharedInstance = nil;
     dispatch_sync(_serialQueue, ^{
         if (_activeUserID != userID) {
             DEBUG_PRINT(@"[GS] Switching user %d -> %d",_activeUserID, userID);
-            if (_activeUserData != kURGuestUserID) {
-                [self saveUserData];
+            if (_activeUserdata != kURGuestUserID) {
+                [self saveUserdata];
             }
             _activeUserID = userID;
-            [self loadUserData];
+            [self loadUserdata];
             [self saveGlobalData];
         }
         dispatch_async(dispatch_get_main_queue(), ^{
