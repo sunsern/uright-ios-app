@@ -404,6 +404,7 @@
 
 - (void)reset {
     [_canvas clear];
+    _earlyStopFound = NO;
     [Sparrow.juggler removeObjectsWithTarget:_bar];
     _bar.width = _canvas.width;
 }

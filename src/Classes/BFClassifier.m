@@ -219,8 +219,12 @@
             float alpha = [state alpha];
             BFPrototype *pData = _prototypes[state.prototypeIdx];
             
-            // Special rule: Jump to the end if penup after threshold has been reached.
-            if (_earlyStopEnabled && point.penup && _thresholdReached) {
+            //////////////////////////////////////////
+            // Early penup: Link penup to the end state
+            // after threshold has been reached.
+            //////////////////////////////////////////
+            if (_earlyStopEnabled && point.penup && _thresholdReached &&
+                [pData.label isEqualToString:_targetLabel]) {
                 [self setCostForStateIdx:[pData length] - 1
                             prototypeIdx:state.prototypeIdx
                                extraCost:alpha
@@ -312,8 +316,8 @@
                 _likelihood[key] = @(exp([_likelihood[key]
                                           floatValue] - sum_like));
             }
-            float p = 1.0 / [_likelihood[_targetLabel] floatValue];
-            if (log2(p) < _targetThreshold) {
+            float p = [_likelihood[_targetLabel] floatValue];
+            if (-log2(p) < _targetThreshold) {
                 [_delegate thresholdReached:point];
                 _thresholdReached = YES;
             }
