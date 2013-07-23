@@ -32,7 +32,11 @@
 - (NSString *)predictionByRanking:(int)rank {
     NSArray *sortedLabels = [_scores
                              keysSortedByValueUsingSelector:@selector(compare:)];
-    return [sortedLabels objectAtIndex:[sortedLabels count] - 1 - rank];
+    if (sortedLabels && [sortedLabels count] > 0) {
+        return [sortedLabels objectAtIndex:[sortedLabels count] - 1 - rank];
+    } else {
+        return nil;
+    }
 }
 
 - (double)scoreByRanking:(int)rank {

@@ -40,6 +40,11 @@ void onUncaughtException(NSException *exception)
     // Enable FB
     [PFFacebookUtils initializeFacebook];
     
+    
+    [PFTwitterUtils initializeWithConsumerKey:@"mZ9gPegAV4CSb3uLXRTUxg"
+                               consumerSecret:@"mOp9ro4wgRVo6ehsxrt4y5zrkBG4AXsVbToDQantSAU"];
+    
+    
     // Initialize the singleton storage
     [GlobalStorage sharedInstance];
         
