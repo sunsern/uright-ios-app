@@ -11,11 +11,14 @@
 
 @interface ServerManager : NSObject
 
+// Checks if there is internet connection.
 + (BOOL)isOnline;
 
-+ (int)userIDFromUsername:(NSString *)username
-                 password:(NSString *)password;
+// Returns userID > 0 if success, otherwise returns 0.
++ (int)loginWithUsername:(NSString *)username
+                password:(NSString *)password;
 
+// Returns the new userID > 0, otherwise returns 0.
 + (int)createAccountForUsername:(NSString *)username
                        password:(NSString *)password
                           email:(NSString *)email

@@ -54,8 +54,8 @@
     }
 }
 
-+ (int)userIDFromUsername:(NSString *)username
-                    password:(NSString *)password  {
++ (int)loginWithUsername:(NSString *)username
+                password:(NSString *)password  {
     
     const char *cStr = [password UTF8String];
     unsigned char digest[CC_MD5_DIGEST_LENGTH];
@@ -110,7 +110,7 @@
         [request setPostValue:@(data.totalScore) forKey:@"total_score"];
         [request setPostValue:activeChars forKey:@"active_characters"];
         [request setPostValue:activePIDs forKey:@"active_protoset_ids"];
-
+        
         [request startSynchronous];
         if ([request error] != nil) {
             return NO;
@@ -177,7 +177,8 @@
 }
 
 
-// Helper methods
+#pragma mark Helper mthods
+
 + (id)JSONObjectFromNSData:(NSData *)data {
     NSError *error;
     return [NSJSONSerialization JSONObjectWithData:data
