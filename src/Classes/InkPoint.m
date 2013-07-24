@@ -31,7 +31,14 @@
 }
 
 - (id)initWithInkPoint:(InkPoint *)ip {
-    return [self initWithX:ip.x y:ip.y t:ip.t penup:ip.penup];
+    InkPoint *np = [self init];
+    np.x = ip.x;
+    np.y = ip.y;
+    np.dx = ip.dx;
+    np.dy = ip.dy;
+    np.t = ip.t;
+    np.penup = ip.penup;
+    return np;
 }
 
 - (id)init {
