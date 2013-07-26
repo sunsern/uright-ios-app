@@ -5,11 +5,14 @@
 //  Created by Sunsern Cheamanunkul on 7/15/13.
 //
 //
-#import <Parse/Parse.h>
+
 #import <FacebookSDK/FacebookSDK.h>
+#import <Parse/Parse.h>
 
 #import "AccountManager.h"
+#import "GlobalStorage.h"
 #import "ServerManager.h"
+#import "UserData.h"
 
 @implementation AccountManager
 

@@ -4,9 +4,9 @@
 //
 //  Created by Sunsern Cheamanunkul on 7/15/13.
 //
-//
-#import <Parse/Parse.h>
+
 #import <Foundation/Foundation.h>
+#import <Parse/Parse.h>
 
 @interface AccountManager : NSObject
 
