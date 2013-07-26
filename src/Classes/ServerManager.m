@@ -7,11 +7,14 @@
 
 #import <CommonCrypto/CommonDigest.h>
 
-#import "ServerManager.h"
 #import "ASIFormDataRequest.h"
 #import "Reachability.h"
-#import "SessionData.h"
+
 #import "Charset.h"
+#import "GlobalStorage.h"
+#import "ServerManager.h"
+#import "SessionData.h"
+#import "UserData.h"
 
 @implementation ServerManager
 
@@ -81,14 +84,6 @@
     } else {
         return UR_GUEST_ID;
     }
-}
-
-
-+ (NSString *)convertToString:(id)jsonObj {
-    NSData *data = [[self class] NSDataFromJSONObject:jsonObj];
-    NSString *str = [[NSString alloc] initWithData:data
-                                          encoding:NSUTF8StringEncoding];
-    return str;
 }
 
 + (BOOL)uploadSessionData:(SessionData *)data {
@@ -193,5 +188,13 @@
                                            options:kNilOptions
                                              error:&error];
 }
+
++ (NSString *)convertToString:(id)jsonObj {
+    NSData *data = [[self class] NSDataFromJSONObject:jsonObj];
+    NSString *str = [[NSString alloc] initWithData:data
+                                          encoding:NSUTF8StringEncoding];
+    return str;
+}
+
 
 @end
