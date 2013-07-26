@@ -12,12 +12,10 @@
 @class SessionData;
 
 @interface Protoset : NSObject <URJSONSerializable>
-
 @property (readwrite) int protosetID;
 @property (nonatomic,strong) NSString *label;
 @property (nonatomic,strong) NSString *type;
 @property (nonatomic,strong) NSArray *prototypes;
-
 @end
 
 @interface Userdata : NSObject <URJSONSerializable>
@@ -26,7 +24,6 @@
 @property (nonatomic,copy) NSString *username;
 @property (nonatomic,strong) NSMutableArray *sessions;
 @property (nonatomic,strong) NSMutableDictionary *scores;
-@property (nonatomic,strong) NSMutableArray *activeCharacters;
 @property (nonatomic,strong) NSDictionary *protosets;
 @property (nonatomic,strong) Charset *customCharset;
 

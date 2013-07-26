@@ -15,7 +15,6 @@
 #define kMaxScoreHistory 10
 #define kDefaultScoreKey @"default"
 
-
 @implementation Protoset
 
 - (id)initWithJSONObject:(id)jsonObj {
@@ -53,11 +52,10 @@
 - (id)init {
     self = [super init];
     if (self) {
-        _userID = kURGuestUserID;
+        _userID = UR_GUEST_ID;
         _username = @"";
         _sessions = [[NSMutableArray alloc] init];
         _scores = [[NSMutableDictionary alloc] init];
-        _activeCharacters = [[NSMutableArray alloc] init];
         _protosets = [[NSDictionary alloc] init];
         _customCharset = [Charset emptyCharset];
     }
@@ -73,8 +71,6 @@
                      initWithArray:jsonObj[@"sessions"]];
         _scores = [[NSMutableDictionary alloc]
                    initWithDictionary:jsonObj[@"scores"]];
-        _activeCharacters = [[NSMutableArray alloc]
-                             initWithArray:jsonObj[@"activeCharacters"]];
         NSMutableDictionary *protosets = [[NSMutableDictionary alloc] init];
         for (id key in jsonObj[@"protosets"]) {
             protosets[key] = [[Protoset alloc] initWithJSONObject:jsonObj[@"protosets"][key]];
@@ -92,7 +88,6 @@
     jsonObj[@"username"] = _username;
     jsonObj[@"sessions"] = _sessions;
     jsonObj[@"scores"] = _scores;
-    jsonObj[@"activeCharacters"] = _activeCharacters;
     NSMutableDictionary *protosets = [[NSMutableDictionary alloc] init];
     for (id key in _protosets) {
         protosets[key] = [_protosets[key] toJSONObject];
@@ -107,7 +102,7 @@
     Userdata *ud = [[Userdata alloc] init];
     ud.userID = userID;
     
-    if (userID == kURGuestUserID) {
+    if (userID == UR_GUEST_ID) {
         ud.username = @"Guest";
     } else {
         ud.username = @"unknown";

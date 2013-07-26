@@ -41,6 +41,9 @@ static GlobalStorage *__sharedInstance = nil;
     if (self) {
         // Create a serial queue for dealing with NSUserDefaults
         _serialQueue = dispatch_queue_create("uRight3.GlobalStorage", NULL);
+        dispatch_set_target_queue(_serialQueue,
+                                  dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0));
+        
         DEBUG_PRINT(@"[GS] Singleton created.");
         
         [self loadGlobalData];
@@ -75,7 +78,7 @@ static GlobalStorage *__sharedInstance = nil;
     // Get last active userID
     id lastUserID = [defaults objectForKey:@"activeUserID"];
     if (lastUserID == nil) {
-        _activeUserID = kURGuestUserID;
+        _activeUserID = UR_GUEST_ID;
     } else {
         _activeUserID = [lastUserID intValue];
     }
@@ -134,12 +137,6 @@ static GlobalStorage *__sharedInstance = nil;
     if (userdata == nil) {
         // No user data found. Create an empty user data.
         _activeUserdata = [Userdata emptyUserdata:_activeUserID];
-        
-        // Set the first charset to active
-        Charset *activeCharset = _charsets[0];
-        _activeUserdata.activeCharacters = [[NSMutableArray alloc]
-                                            initWithArray:[activeCharset characters]];
-        
         DEBUG_PRINT(@"[GS] Data for %d doesn't exist. Created from template", _activeUserID);
     } else {
         _activeUserdata = [[Userdata alloc] initWithJSONObject:userdata];
@@ -160,7 +157,7 @@ static GlobalStorage *__sharedInstance = nil;
     dispatch_sync(_serialQueue, ^{
         if (_activeUserID != userID) {
             DEBUG_PRINT(@"[GS] Switching user %d -> %d",_activeUserID, userID);
-            if (_activeUserdata != kURGuestUserID) {
+            if (_activeUserdata != UR_GUEST_ID) {
                 [self saveUserdata];
             }
             _activeUserID = userID;
@@ -188,7 +185,8 @@ static GlobalStorage *__sharedInstance = nil;
     DEBUG_PRINT(@"[GS] RESET APP DATA");
 }
 
-// Helper method
+#pragma mark Helper methods
+
 + (id)loadJSONFromFile:(NSString *)filename {
     NSString *filePath = [[NSBundle mainBundle]
                           pathForResource:filename ofType:@""];

@@ -47,7 +47,7 @@
 
 - (NSDictionary *)toJSONObject {
     NSMutableDictionary *jsonObj = [[NSMutableDictionary alloc] init];
-    jsonObj[@"version"] = kURAppName;
+    jsonObj[@"version"] = UR_APP_NAME;
     jsonObj[@"userID"] = @(_userID);
     jsonObj[@"modeID"] = @(_modeID);
     jsonObj[@"bps"] = @(_bps);
