@@ -16,9 +16,9 @@
 
 #endif
 
-#define kURAppName @"uRight3"
-#define kURBaseURL @"http://fpga1.ucsd.edu:8000"
-#define kURMagicKey @"iosexp3"
-#define kURGuestUserID (0)
+#define UR_APP_NAME @"uRight3"
+#define UR_BASE_URL @"http://fpga1.ucsd.edu:8000"
+#define UR_MAGIC_KEY @"iosexp3"
+#define UR_GUEST_ID 0
 
 #define DEBUG_PRINT(fmt, ...) NSLog(fmt, ##__VA_ARGS__)

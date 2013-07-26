@@ -491,6 +491,8 @@
 		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
 			isa = PBXGroup;
 			children = (
+				3C81539C179D27330079EB06 /* MBProgressHUD */,
+				3CE1B1BE1790EE170041D1BF /* ASIHTTP */,
 				32CA4F630368D1EE00C91783 /* App-Prefix.pch */,
 				8D1107310486CEB800E47090 /* App-Info.plist */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
@@ -512,20 +514,18 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				3C81539C179D27330079EB06 /* MBProgressHUD */,
-				3CE1B1BE1790EE170041D1BF /* ASIHTTP */,
 				3CE29DD31794006200769A23 /* libsqlite3.dylib */,
 				3C81538F179CF41D0079EB06 /* libz.1.1.3.dylib */,
 				DE5C4E6D138ED109004892CA /* libz.dylib */,
 				3CE29DC91793FF3200769A23 /* FacebookSDKResources.bundle */,
+				3CE29DCA1793FF3200769A23 /* FacebookSDK.framework */,
+				3C81538B179CF3930079EB06 /* Parse.framework */,
 				3C815391179CF43F0079EB06 /* StoreKit.framework */,
 				3C81538D179CF4110079EB06 /* CoreLocation.framework */,
-				3C81538B179CF3930079EB06 /* Parse.framework */,
 				3CE29DD71794007300769A23 /* Social.framework */,
 				3CE29DD51794006C00769A23 /* Security.framework */,
 				3CE29DD11794004C00769A23 /* Accounts.framework */,
 				3CE29DCF1794003F00769A23 /* AdSupport.framework */,
-				3CE29DCA1793FF3200769A23 /* FacebookSDK.framework */,
 				3C89AB99178B576200874DC8 /* SystemConfiguration.framework */,
 				3C89AB97178B575100874DC8 /* MobileCoreServices.framework */,
 				3C89AB95178B572400874DC8 /* CFNetwork.framework */,
@@ -660,7 +660,8 @@
 				3CE1B1D31790EE170041D1BF /* Reachability.h */,
 				3CE1B1D41790EE170041D1BF /* Reachability.m */,
 			);
-			path = ASIHTTP;
+			name = ASIHTTP;
+			path = ../vendor/ASIHTTP;
 			sourceTree = "<group>";
 		};
 		3CE1B1FE1790F0220041D1BF /* UnitTests */ = {
@@ -835,9 +836,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		1D6058900D05DD3D006BFB54 /* iphone */ = {
+		1D6058900D05DD3D006BFB54 /* iPhone */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1D6058960D05DD3E006BFB54 /* Build configuration list for PBXNativeTarget "iphone" */;
+			buildConfigurationList = 1D6058960D05DD3E006BFB54 /* Build configuration list for PBXNativeTarget "iPhone" */;
 			buildPhases = (
 				1D60588D0D05DD3D006BFB54 /* Resources */,
 				1D60588E0D05DD3D006BFB54 /* Sources */,
@@ -848,7 +849,7 @@
 			dependencies = (
 				DE4A3DB810FFB0F500FDA492 /* PBXTargetDependency */,
 			);
-			name = iphone;
+			name = iPhone;
 			productName = AppScaffold;
 			productReference = 1D6058910D05DD3D006BFB54 /* uRight3.app */;
 			productType = "com.apple.product-type.application";
@@ -901,7 +902,7 @@
 			);
 			projectRoot = "";
 			targets = (
-				1D6058900D05DD3D006BFB54 /* iphone */,
+				1D6058900D05DD3D006BFB54 /* iPhone */,
 				3CE1B1F91790F0220041D1BF /* UnitTests */,
 			);
 		};
@@ -1054,9 +1055,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1D60589B0D05DD56006BFB54 /* main.m in Sources */,
-				1D3623260D0F684500981E51 /* AppDelegate.m in Sources */,
-				3CA0963B178B52A6000B8A0E /* JCSuperPriorityQueue.mm in Sources */,
 				3CE1B1D51790EE170041D1BF /* ASIAuthenticationDialog.m in Sources */,
 				3CE1B1D61790EE170041D1BF /* ASIDataCompressor.m in Sources */,
 				3CE1B1D71790EE170041D1BF /* ASIDataDecompressor.m in Sources */,
@@ -1067,6 +1065,9 @@
 				3CE1B1DC1790EE170041D1BF /* ASINetworkQueue.m in Sources */,
 				3CE1B1DD1790EE170041D1BF /* Reachability.m in Sources */,
 				3C81539B179D27290079EB06 /* MBProgressHUD.m in Sources */,
+				1D60589B0D05DD56006BFB54 /* main.m in Sources */,
+				1D3623260D0F684500981E51 /* AppDelegate.m in Sources */,
+				3CA0963B178B52A6000B8A0E /* JCSuperPriorityQueue.mm in Sources */,
 				3CA0964F178B52F0000B8A0E /* InkPoint.m in Sources */,
 				3CA09651178B52F0000B8A0E /* InkCharacter.m in Sources */,
 				3CA09654178B52F0000B8A0E /* ClassificationResult.m in Sources */,
@@ -1108,7 +1109,7 @@
 /* Begin PBXTargetDependency section */
 		3CE1B20F1790F6E50041D1BF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 1D6058900D05DD3D006BFB54 /* iphone */;
+			target = 1D6058900D05DD3D006BFB54 /* iPhone */;
 			targetProxy = 3CE1B20E1790F6E50041D1BF /* PBXContainerItemProxy */;
 		};
 		DE4A3DB810FFB0F500FDA492 /* PBXTargetDependency */ = {
@@ -1282,7 +1283,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1D6058960D05DD3E006BFB54 /* Build configuration list for PBXNativeTarget "iphone" */ = {
+		1D6058960D05DD3E006BFB54 /* Build configuration list for PBXNativeTarget "iPhone" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1D6058940D05DD3E006BFB54 /* Debug */,

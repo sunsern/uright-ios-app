@@ -52,7 +52,7 @@ void onUncaughtException(NSException *exception)
     //
     // _viewController.showStats = YES;
     // _viewController.multitouchEnabled = YES;
-    // _viewController.preferredFramesPerSecond = 60;
+     _viewController.preferredFramesPerSecond = 60;
     
     // Let's disable multitouch
     _viewController.multitouchEnabled = NO;
@@ -63,6 +63,11 @@ void onUncaughtException(NSException *exception)
     [_window makeKeyAndVisible];
     
     return YES;
+}
+
+- (void)applicationWillTerminate:(UIApplication *)application {
+    // Commit changes to disk
+    [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 - (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url {
