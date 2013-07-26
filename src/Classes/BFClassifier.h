@@ -11,9 +11,16 @@
 
 @class InkPoint;
 
+typedef enum {
+    BFClassifierModeBatch = 0,
+    BFClassifierModeOnline = 1,
+    BFClassifierModeEarlyPenup = 2
+} BFClassifierMode;
+
+
 @protocol BFClassifierDelegate
 - (void)thresholdReached:(InkPoint *)point;
-- (void)updateScore:(float)targetProb;
+- (void)updateScore:(float)targetProbability;
 @end
 
 @interface BFClassifier : NSObject
@@ -24,14 +31,12 @@
 @property (nonatomic,copy) NSString *targetLabel;
 @property (nonatomic,weak) id<BFClassifierDelegate> delegate;
 
-- (id)initWithPrototypes:(NSArray *)prototypes earlyStopEnabled:(BOOL)early;
+- (id)initWithPrototypes:(NSArray *)prototypes mode:(BFClassifierMode)mode;
 
 - (void)reset;
 
 - (void)addPoint:(InkPoint *)point;
 
-- (NSDictionary *)finalLikelihood;
-
-- (NSDictionary *)likelihood;
+- (NSDictionary *)posterior;
 
 @end
