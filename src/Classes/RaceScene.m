@@ -17,10 +17,10 @@
 #import "ClassificationResult.h"
 #import "RaceSummaryScene.h"
 #import "ServerManager.h"
+#import "MBProgressHUD.h"
 
 #define RACE_LENGTH 15
 #define WAIT_TIME 1.0f
-#define BEAM_WIDTH 300
 
 @implementation RaceScene {
     int _modeID;
@@ -32,9 +32,10 @@
     SPQuad *_bar;
     
     BFClassifier *_classifier;
+    BFClassifierMode _classifierMode;
+    NSArray *_activeCharacters;
     NSArray *_testArray;
     int _currentIdx;
-    int _numActiveChars;
     float _currentScore;
     float _totalScore;
     float _totalTime;
@@ -45,6 +46,18 @@
     
     SessionData *_session;
     RoundData *_round;
+}
+
+
+- (id)initWithCharacters:(NSArray *)characters classifierMode:(BFClassifierMode)classifierMode modeID:(int)modeID {
+    self = [super init];
+    if (self) {
+        [self setupScene];
+        _activeCharacters = [[NSArray alloc] initWithArray:characters];
+        _classifierMode = classifierMode;
+        _modeID = modeID;
+    }
+    return self;
 }
 
 
@@ -147,15 +160,6 @@
     [self addChild:quitButton];
     [quitButton addEventListener:@selector(quitRace) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
     
-    // restart button
-//    SPButton *restart = [SPButton buttonWithUpState:buttonTexture text:@"Restart"];
-//    restart.x = 0;
-//    restart.y = quit.height;
-//    restart.scaleX = 0.75;
-//    restart.scaleY = 0.75;
-//    [self addChild:restart];
-//    [restart addEventListener:@selector(restartRace) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
-//    
     // Next character bar
     _bar = [[SPQuad alloc] initWithWidth:_canvas.width height:15];
     _bar.pivotX = _bar.width / 2;
@@ -172,22 +176,6 @@
     [self addEventListener:@selector(enterFrame:) atObject:self forType:SP_EVENT_TYPE_ENTER_FRAME];
 }
 
-- (id)initWithPrototypes:(NSArray *)prototypes earlyStopEnabled:(BOOL)early modeID:(int)modeID {
-    self = [super init];
-    if (self) {
-        [self setupScene];
-        // Setting up classifier
-        _classifier = [[BFClassifier alloc] initWithPrototypes:prototypes earlyStopEnabled:early];
-        [_classifier setDelegate:self];
-        [_classifier setBeamCount:BEAM_WIDTH];
-        [_canvas setClassifier:_classifier];
-        
-        Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
-        _numActiveChars = [ud.activeCharacters count];
-        _modeID = modeID;
-    }
-    return self;
-}
 
 - (void)dealloc {
     [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_ENTER_FRAME];
@@ -195,33 +183,81 @@
     [_canvas removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TOUCH];
 }
 
-- (void)enterFrame:(SPEnterFrameEvent *)event {
-    if (_withinRound) {
-        _roundTime += event.passedTime;
-        float bps = _totalScore / (_totalTime + _roundTime);
-        _bpsTf.text = [NSString stringWithFormat:@"%0.2f", bps];
-    } 
-}
-
-- (void)quitRace {
-    [Sparrow.juggler removeAllObjects];
-    [self removeFromParent];
-}
 
 - (void)restartRace {
+    // Check for new prototypes from server
+    MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:Sparrow.currentController.view animated:YES];
+    hud.mode = MBProgressHUDModeIndeterminate;
+    hud.labelText = @"Checking for new prototypes...";
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+        Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
+        NSDictionary *protosets = [ServerManager fetchProtosets:ud.userID];
+        if (protosets) {
+            // Count prototypes
+            NSMutableArray *updatedLabels = [[NSMutableArray alloc] init];
+            for (id key in _activeCharacters) {
+                Protoset *old_ps = ud.protosets[key];
+                Protoset *new_ps = protosets[key];
+                if (old_ps && new_ps && new_ps.protosetID > old_ps.protosetID) {
+                    [updatedLabels addObject:key];
+                }
+                else if (!old_ps) {
+                    [updatedLabels addObject:key];
+                }
+            }
+           
+            // New prototypes found, update and notify user
+            if ([updatedLabels count] > 0) {
+           
+                // Update the protosets
+                [ud setProtosets:protosets];
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    hud.labelText = [NSString stringWithFormat:@"%d prototypes updated.", [updatedLabels count]];
+                    [Sparrow.juggler delayInvocationByTime:1.0 block:^{
+                        [hud hide:YES];
+                        [self raceWillStart];
+                    }];
+                });
+            }
+            else {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [hud hide:YES];
+                    [self raceWillStart];
+                });
+            }
+        }
+        else {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [hud hide:YES];
+                [self raceWillStart];
+            });
+        }
+    });
+}
+
+
+- (void)raceWillStart {
     Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
+   
+    // Setting up classifier
+    NSArray *prototypes = [ud prototypesWithLabels:_activeCharacters];
+    _classifier = [[BFClassifier alloc] initWithPrototypes:prototypes
+                                                      mode:_classifierMode];
+    [_classifier setDelegate:self];
+    [_canvas setClassifier:_classifier];
     
     // Create a new session
     _session = [[SessionData alloc] init];
     _session.userID = ud.userID;
     _session.modeID = _modeID;
     
-    // Test string
-    NSArray *labelArray = ud.activeCharacters;
-    _testArray = [self shuffleArray:labelArray maxLength:RACE_LENGTH];
+    // Create test array
+    _testArray = [self shuffleArray:_activeCharacters maxLength:RACE_LENGTH];
     
-    _session.activeCharacters = ud.activeCharacters;
-    _session.activeProtosetIDs = [ud protosetIDsWithLabels:labelArray];
+    _session.activeCharacters = _activeCharacters;
+    _session.activeProtosetIDs = [ud protosetIDsWithLabels:_activeCharacters];
     
     // Reset stats
     _currentIdx = 0;
@@ -271,6 +307,7 @@
     }];
 }
 
+
 - (void)startRound {
     _roundTime = 0.0;
     _withinRound = YES;
@@ -304,6 +341,7 @@
     _canvas.touchable = YES;
 }
 
+
 - (void)endRound {
     _canvas.touchable = NO;
     _withinRound = NO;
@@ -318,7 +356,7 @@
     _round.ink = _canvas.currentInkCharacter;
     _round.label = _targetLabel.text;
     _round.result = [[ClassificationResult alloc]
-                     initWithDictionary:[_classifier finalLikelihood]];
+                     initWithDictionary:[_classifier posterior]];
     
     [_session addRound:_round];
     
@@ -333,7 +371,7 @@
     current_score.x = 100;
     current_score.y = 140;
     current_score.fontSize = 30;
-    float maxscore = log2f(_numActiveChars);
+    float maxscore = log2f([_activeCharacters count]);
     if (_currentScore >  maxscore - 1.0) {
         current_score.color = 0x149005;
     } else if (_currentScore > maxscore / 2) {
@@ -358,6 +396,7 @@
         [self raceCompleted];
     }
 }
+
 
 - (void)raceCompleted {
     _targetLabel.text = @"";
@@ -402,6 +441,7 @@
     }];
 }
 
+
 - (void)reset {
     [_canvas clear];
     _earlyStopFound = NO;
@@ -410,19 +450,33 @@
 }
 
 
-- (void)thresholdReached:(InkPoint *)point {
-    if (!_earlyStopFound) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [_canvas drawMarkerAt:point];
-            _earlyStopFound = YES;
-            [Media playSound:@"briefcase-lock-2.caf"];
-        });
+- (void)enterFrame:(SPEnterFrameEvent *)event {
+    if (_withinRound) {
+        _roundTime += event.passedTime;
+        float bps = _totalScore / (_totalTime + _roundTime);
+        _bpsTf.text = [NSString stringWithFormat:@"%0.2f", bps];
     }
 }
 
+
+- (void)quitRace {
+    [Sparrow.juggler removeAllObjects];
+    [self removeFromParent];
+}
+
+
+- (void)thresholdReached:(InkPoint *)point {
+    if (!_earlyStopFound) {
+        [_canvas drawMarkerAt:point];
+        _earlyStopFound = YES;
+        [Media playSound:@"briefcase-lock-2.caf"];
+    }
+}
+
+
 - (void)updateScore:(float)targetProb {
     float p = 1.0 / targetProb;
-    _currentScore = MAX(log2(_numActiveChars) - log2(p), 0);
+    _currentScore = MAX(log2f([_activeCharacters count]) - log2f(p), 0);
 }
 
 
@@ -455,7 +509,5 @@
     }
     return outArray;
 }
-
-
 
 @end

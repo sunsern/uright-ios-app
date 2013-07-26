@@ -18,6 +18,7 @@
 #import "LoginViewController.h"
 #import "MBProgressHUD.h"
 #import "NoticeScene.h"
+#import "BFClassifier.h"
 
 #define RACE_MODE_ID 3
 #define EARLY_STOP_MODE_ID 7
@@ -25,7 +26,6 @@
 @implementation MenuScene {
     SPTextField *_info;
     NSArray *_buttonList;
-    BOOL _fetchingProtosets;
     double _lastAnnoucement;
 }
 
@@ -110,7 +110,6 @@
          name:NS_NOTIFICATION_LOGGED_IN
          object:nil];
         
-        _fetchingProtosets = NO;
         _lastAnnoucement = 0;
     }
     return self;
@@ -125,37 +124,6 @@
 
 - (void)updateInfo {
     Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
-    
-    if (!_fetchingProtosets) {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-            _fetchingProtosets = YES;
-            NSDictionary *protosets = [ServerManager fetchProtosets:ud.userID];
-            if (protosets) {
-                NSMutableArray *updatedLabels = [[NSMutableArray alloc] init];
-                for (id key in ud.protosets) {
-                    Protoset *old_ps = ud.protosets[key];
-                    Protoset *new_ps = protosets[key];
-                    if (new_ps.protosetID > old_ps.protosetID) {
-                        [updatedLabels addObject:key];
-                    }
-                }
-                for (id key in protosets) {
-                    if (ud.protosets[key] == nil) {
-                        [updatedLabels addObject:key];
-                    }
-                }
-                    
-                // Update and notify user
-                if ([updatedLabels count] > 0) {
-                    [ud setProtosets:protosets];
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [self protosetUpdated:updatedLabels];
-                    });
-                }
-            }
-            _fetchingProtosets = NO;
-        });
-    }
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
         NSDictionary *annoucement = [ServerManager announcement];
@@ -184,23 +152,7 @@
 }
 
 
-- (void)protosetUpdated:(NSArray *)labels {
-    NSMutableString *list = [[NSMutableString alloc] init];
-    [list appendFormat:@"[%@",labels[0]];
-    for (int i=1; i < [labels count]; i++) {
-        [list appendFormat:@", %@",labels[i]];
-    }
-    [list appendFormat:@"]"];
-    NSString *mesg = [NSString
-                      stringWithFormat:@"New prototypes for %@ were added to your collection", list];
-    
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"New prototypes"
-                                                    message:mesg
-                                                   delegate:self
-                                          cancelButtonTitle:@"OK"
-                                          otherButtonTitles:nil];
-    [alert show];
-}
+
 
 
 - (void)buttonTriggered:(SPEvent *)event {
@@ -225,22 +177,16 @@
         [self addChild:crs];
     }
     else if ([button.name isEqualToString:@"English-early-stop"]) {
-        GlobalStorage *gs = [GlobalStorage sharedInstance];
-        Userdata *ud = [gs activeUserdata];
-        NSArray *prototypes;
         NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
      
         // English
-        Charset *cs = [gs charsetByID:1];
+        Charset *cs = [[GlobalStorage sharedInstance] charsetByID:1];
         [allCharacters addObjectsFromArray:[cs characters]];
         
-        // Set active characters
-        [ud setActiveCharacters:allCharacters];
-        prototypes = [ud prototypesWithLabels:allCharacters];
-        
-        RaceScene *race = [[RaceScene alloc] initWithPrototypes:prototypes
-                                               earlyStopEnabled:YES
+        RaceScene *race = [[RaceScene alloc] initWithCharacters:allCharacters
+                                                 classifierMode:BFClassifierModeEarlyPenup
                                                          modeID:EARLY_STOP_MODE_ID];
+        
         [race addEventListenerForType:SP_EVENT_TYPE_REMOVED_FROM_STAGE
                                 block:^(id event) {
                                     [self updateInfo];
@@ -249,8 +195,6 @@
     }
     else {
         GlobalStorage *gs = [GlobalStorage sharedInstance];
-        Userdata *ud = [gs activeUserdata];
-        NSArray *prototypes;
         NSMutableArray *allCharacters = [[NSMutableArray alloc] init];
         
         if ([button.name isEqualToString:@"English"]) {
@@ -278,18 +222,16 @@
             [allCharacters addObjectsFromArray:[cs_upper characters]];
             [allCharacters addObjectsFromArray:[cs_punc characters]];
         } else if ([button.name isEqualToString:@"Custom"]) {
+            Userdata *ud = [gs activeUserdata];
             Charset *cs = ud.customCharset;
             [allCharacters addObjectsFromArray:[cs characters]];
         }
         
         if ([allCharacters count] > 0) {
-            // Set active characters
-            [ud setActiveCharacters:allCharacters];
-            prototypes = [ud prototypesWithLabels:allCharacters];
-            
-            RaceScene *race = [[RaceScene alloc] initWithPrototypes:prototypes
-                                                   earlyStopEnabled:NO
+            RaceScene *race = [[RaceScene alloc] initWithCharacters:allCharacters
+                                                     classifierMode:BFClassifierModeBatch
                                                              modeID:RACE_MODE_ID];
+            
             [race addEventListenerForType:SP_EVENT_TYPE_REMOVED_FROM_STAGE
                                     block:^(id event) {
                                         [self updateInfo];
@@ -301,10 +243,10 @@
 
 - (void)addedToStage:(SPEvent *)event {
     if ([PFUser currentUser] == nil ||
-        [[GlobalStorage sharedInstance] activeUserID] == kURGuestUserID) {
+        [[GlobalStorage sharedInstance] activeUserID] == UR_GUEST_ID) {
       
         [PFUser logOut];
-        [Sparrow.juggler delayInvocationByTime:0.1 block:^{
+        [Sparrow.juggler delayInvocationByTime:0.05 block:^{
             [self showLoginScene];
         }];
         
