@@ -30,7 +30,7 @@
                  int userID = [ServerManager loginWithUsername:username
                                                       password:password];
                  
-                 if (userID != kURGuestUserID) {
+                 if (userID != UR_GUEST_ID) {
                      // Success!
                      [[GlobalStorage sharedInstance] switchActiveUser:userID onComplete:^{
                          Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
@@ -43,7 +43,7 @@
                                                                     password:password
                                                                        email:fbuser[@"email"]
                                                                     fullname:fbuser.name];
-                     if (newUserID != kURGuestUserID) {
+                     if (newUserID != UR_GUEST_ID) {
                          // Success!
                          [[GlobalStorage sharedInstance]
                           switchActiveUser:newUserID
@@ -75,7 +75,7 @@
             int userID = [ServerManager loginWithUsername:username
                                                  password:password];
             
-            if (userID != kURGuestUserID) {
+            if (userID != UR_GUEST_ID) {
                 // Success!
                 [[GlobalStorage sharedInstance] switchActiveUser:userID onComplete:^{
                     Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
@@ -90,7 +90,7 @@
                                                                password:password
                                                                   email:email
                                                                fullname:@""];
-                if (newUserID != kURGuestUserID) {
+                if (newUserID != UR_GUEST_ID) {
                     // Success!
                     [[GlobalStorage sharedInstance] switchActiveUser:newUserID onComplete:^{
                         Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
@@ -112,7 +112,7 @@
 
 + (void)logout:(void(^)(void))completeBlock {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [[GlobalStorage sharedInstance] switchActiveUser:kURGuestUserID onComplete:^{
+        [[GlobalStorage sharedInstance] switchActiveUser:UR_GUEST_ID onComplete:^{
             dispatch_async(dispatch_get_main_queue(), ^{
                 completeBlock();
             });

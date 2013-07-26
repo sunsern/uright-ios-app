@@ -34,23 +34,23 @@
     for(int i = 0; i < CC_MD5_DIGEST_LENGTH; i++)
         [hashed appendFormat:@"%02x", digest[i]];
     
-    NSString *urlString = [NSString stringWithFormat:@"%@/newuser", kURBaseURL];
+    NSString *urlString = [NSString stringWithFormat:@"%@/newuser", UR_BASE_URL];
     NSURL *url = [NSURL URLWithString:urlString];
     ASIFormDataRequest *request = [ASIFormDataRequest requestWithURL:url];
     [request setPostValue:username forKey:@"username"];
     [request setPostValue:hashed forKey:@"password"];
     [request setPostValue:email forKey:@"email"];
     [request setPostValue:fullname forKey:@"fullname"];
-    [request setPostValue:kURMagicKey forKey:@"key"];
+    [request setPostValue:UR_MAGIC_KEY forKey:@"key"];
     [request startSynchronous];
     if ([request error] != nil) {
-        return kURGuestUserID;
+        return UR_GUEST_ID;
     }
     NSDictionary *response = [[self class] JSONObjectFromNSData:[request responseData]];
     if (response) {
         return [response[@"user_id"] intValue];
     } else {
-        return kURGuestUserID;
+        return UR_GUEST_ID;
     }
 }
 
@@ -65,21 +65,21 @@
     for(int i = 0; i < CC_MD5_DIGEST_LENGTH; i++)
         [hashed appendFormat:@"%02x", digest[i]];
     
-    NSString *urlString = [NSString stringWithFormat:@"%@/login", kURBaseURL];
+    NSString *urlString = [NSString stringWithFormat:@"%@/login", UR_BASE_URL];
     NSURL *url = [NSURL URLWithString:urlString];
     ASIFormDataRequest *request = [ASIFormDataRequest requestWithURL:url];
     [request setPostValue:username forKey:@"username"];
     [request setPostValue:hashed forKey:@"password"];
-    [request setPostValue:kURMagicKey forKey:@"key"];
+    [request setPostValue:UR_MAGIC_KEY forKey:@"key"];
     [request startSynchronous];
     if ([request error] != nil) {
-        return kURGuestUserID;
+        return UR_GUEST_ID;
     }
     NSDictionary *response = [[self class] JSONObjectFromNSData:[request responseData]];
     if (response && [response[@"login_result"] isEqualToString:@"OK"]) {
         return [response[@"user_id"] intValue];
     } else {
-        return kURGuestUserID;
+        return UR_GUEST_ID;
     }
 }
 
@@ -92,8 +92,8 @@
 }
 
 + (BOOL)uploadSessionData:(SessionData *)data {
-    if ([data.rounds count] > 0 && data.userID != kURGuestUserID) {
-        NSString *urlString = [NSString stringWithFormat:@"%@/upload", kURBaseURL];
+    if ([data.rounds count] > 0 && data.userID != UR_GUEST_ID) {
+        NSString *urlString = [NSString stringWithFormat:@"%@/upload", UR_BASE_URL];
         NSURL *url = [NSURL URLWithString:urlString];
         ASIFormDataRequest  *request = [ASIFormDataRequest requestWithURL:url];
         
@@ -101,7 +101,7 @@
         NSString *activePIDs = [[self class] convertToString:data.activeProtosetIDs];
         NSString *jsonStr = [[self class] convertToString:[data toJSONObject]];
         
-        [request setPostValue:kURMagicKey forKey:@"key"];
+        [request setPostValue:UR_MAGIC_KEY forKey:@"key"];
         [request setPostValue:jsonStr forKey:@"session_json"];
         [request setPostValue:@(data.userID) forKey:@"user_id"];
         [request setPostValue:@(data.modeID) forKey:@"mode_id"];
@@ -125,10 +125,10 @@
 
 
 + (NSArray *)fetchCharsets {
-    NSString *urlString = [NSString stringWithFormat:@"%@/charsets", kURBaseURL];
+    NSString *urlString = [NSString stringWithFormat:@"%@/charsets", UR_BASE_URL];
     NSURL *url = [NSURL URLWithString:urlString];
     ASIFormDataRequest  *request = [ASIFormDataRequest requestWithURL:url];
-    [request setPostValue:kURMagicKey forKey:@"key"];
+    [request setPostValue:UR_MAGIC_KEY forKey:@"key"];
     [request startSynchronous];
     if ([request error] != nil) {
         return nil;
@@ -144,10 +144,10 @@
 
 
 + (NSDictionary *)fetchProtosets:(int)userID {
-    NSString *urlString = [NSString stringWithFormat:@"%@/protosets", kURBaseURL];
+    NSString *urlString = [NSString stringWithFormat:@"%@/protosets", UR_BASE_URL];
     NSURL *url = [NSURL URLWithString:urlString];
     ASIFormDataRequest  *request = [ASIFormDataRequest requestWithURL:url];
-    [request setPostValue:kURMagicKey forKey:@"key"];
+    [request setPostValue:UR_MAGIC_KEY forKey:@"key"];
     [request setPostValue:@(userID) forKey:@"user_id"];
     [request startSynchronous];
     if ([request error] != nil) {
@@ -165,10 +165,10 @@
 }
 
 + (NSDictionary *)announcement {
-    NSString *urlString = [NSString stringWithFormat:@"%@/annoucement", kURBaseURL];
+    NSString *urlString = [NSString stringWithFormat:@"%@/annoucement", UR_BASE_URL];
     NSURL *url = [NSURL URLWithString:urlString];
     ASIFormDataRequest  *request = [ASIFormDataRequest requestWithURL:url];
-    [request setPostValue:kURMagicKey forKey:@"key"];
+    [request setPostValue:UR_MAGIC_KEY forKey:@"key"];
     [request startSynchronous];
     if ([request error] != nil) {
         return nil;
