@@ -30,6 +30,7 @@
         self.delegate = self;
         self.signUpController.delegate = self;
         
+        // Logo - loginView
         UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 240, 100)];
         label.text = @"uRight3";
         label.font = [UIFont fontWithName:@"Chalkduster" size:50];
@@ -38,6 +39,16 @@
         label.backgroundColor = [UIColor clearColor];
         label.adjustsFontSizeToFitWidth = YES;
         self.logInView.logo = label;
+        
+        // Logo - signupView
+        UILabel *label2 = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 240, 100)];
+        label2.text = @"uRight3";
+        label2.font = [UIFont fontWithName:@"Chalkduster" size:50];
+        label2.textAlignment = UITextAlignmentCenter;
+        label2.textColor = [UIColor whiteColor];
+        label2.backgroundColor = [UIColor clearColor];
+        label2.adjustsFontSizeToFitWidth = YES;
+        self.signUpController.signUpView.logo = label2;
     }
     return self;
 }
