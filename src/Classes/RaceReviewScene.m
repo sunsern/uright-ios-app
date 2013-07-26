@@ -7,10 +7,13 @@
 //
 
 #import "RaceReviewScene.h"
+
 #import "Canvas.h"
-#import "SessionData.h"
-#import "RoundData.h"
 #import "ClassificationResult.h"
+#import "GlobalStorage.h"
+#import "RoundData.h"
+#import "SessionData.h"
+#import "UserData.h"
 
 @implementation RaceReviewScene {
     Canvas *_inkCanvas;

@@ -7,6 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
+
+#import "GlobalStorage.h"
 #import "URJSONSerializable.h"
 
 @class SessionData;

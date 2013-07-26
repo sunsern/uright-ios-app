@@ -10,10 +10,6 @@
 #import "Sparrow.h"
 #import "Media.h"
 
-// Singleton storage
-#import "GlobalStorage.h"
-#import "Userdata.h"
-
 #endif
 
 #define UR_APP_NAME @"uRight3"

@@ -8,6 +8,8 @@
 
 #import "SwipeScene.h"
 
+@class SessionData;
+
 @interface RaceReviewScene : SwipeScene
 
 - (id)initWithSessionData:(SessionData *)session;

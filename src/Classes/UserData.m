@@ -9,8 +9,8 @@
 #import "UserData.h"
 
 #import "BFPrototype.h"
-#import "SessionData.h"
 #import "Charset.h"
+#import "SessionData.h"
 
 #define kMaxScoreHistory 10
 #define kDefaultScoreKey @"default"

@@ -14,7 +14,6 @@
 
 @property int activeUserID;
 @property (nonatomic,strong) Userdata *activeUserdata;
-// Available character sets (Pre-defined by server)
 @property (nonatomic,strong) NSArray *charsets;
 
 + (id)sharedInstance;

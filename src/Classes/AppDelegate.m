@@ -6,6 +6,7 @@
 
 #import "AppDelegate.h"
 #import "Game.h"
+#import "GlobalStorage.h"
 
 // --- c functions ---
 

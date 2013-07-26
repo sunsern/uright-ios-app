@@ -9,16 +9,16 @@
 
 #import "MenuScene.h"
 
-#import "Game.h"
-#import "Charset.h"
-#import "RaceScene.h"
-#import "EditCustomScene.h"
-#import "ServerManager.h"
 #import "AccountManager.h"
+#import "Charset.h"
+#import "EditCustomScene.h"
+#import "GlobalStorage.h"
 #import "LoginViewController.h"
 #import "MBProgressHUD.h"
 #import "NoticeScene.h"
-#import "BFClassifier.h"
+#import "RaceScene.h"
+#import "ServerManager.h"
+#import "UserData.h"
 
 #define RACE_MODE_ID 3
 #define EARLY_STOP_MODE_ID 7

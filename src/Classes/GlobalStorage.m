@@ -8,16 +8,12 @@
 
 #import "GlobalStorage.h"
 
-#import "Userdata.h"
 #import "Charset.h"
+#import "Userdata.h"
 #import "ServerManager.h"
 
-// Hack inject
-#import "BFClassifier.h"
-#import "BFPrototype.h"
-
 #define STORAGE_VERSION 3.0
-#define SETTINGS_FILE @"settings.json"
+#define CHARSETS_FILE @"charsets.json"
 
 static GlobalStorage *__sharedInstance = nil;
 
@@ -98,7 +94,7 @@ static GlobalStorage *__sharedInstance = nil;
         NSArray *charsetsJSON = [defaults objectForKey:@"charsets"];
         if (charsetsJSON == nil) {
             // Not found, load charset data from local file
-            NSArray *jsonObj = [[self class] loadJSONFromFile:SETTINGS_FILE];
+            NSArray *jsonObj = [[self class] loadJSONFromFile:CHARSETS_FILE];
             NSMutableArray *charsets = [[NSMutableArray alloc] init];
             for (id eachCharset in jsonObj) {
                 [charsets addObject:[[Charset alloc] initWithJSONObject:eachCharset]];

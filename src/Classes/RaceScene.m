@@ -18,6 +18,8 @@
 #import "RaceSummaryScene.h"
 #import "ServerManager.h"
 #import "MBProgressHUD.h"
+#import "GlobalStorage.h"
+#import "UserData.h"
 
 #define RACE_LENGTH 15
 #define WAIT_TIME 1.0f

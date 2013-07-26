@@ -7,8 +7,11 @@
 //
 
 #import "EditCustomScene.h"
+
 #import "Canvas.h"
 #import "Charset.h"
+#import "GlobalStorage.h"
+#import "UserData.h"
 
 #define CUSTOM_CHARSET_ID 0
 #define INIT_CHARSET_ID 1
@@ -188,7 +191,6 @@
 }
 
 
-
 - (void)loadNextCharacter {
     if (_currentIdx < (int)[_charset.characters count] - 1) {
         SPTween *slide_out = [SPTween tweenWithTarget:_label time:0.1];
@@ -208,6 +210,7 @@
         }];
     }
 }
+
 
 - (void)loadPreviousCharacter {
     if (_currentIdx > 0) {
