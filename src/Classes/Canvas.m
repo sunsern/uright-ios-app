@@ -19,7 +19,7 @@
 #define kPrototypeScale 0.5
 #define kBaseLineRatio 0.75f
 #define kTopLineRatio 0.25f
-#define kNumSteps 20
+#define kNumSteps 15
 
 #define ADJUST_X(x) (((x - (self.width / 2.0)) / self.height) * 3.00)
 #define UNADJUST_X(x) (((x / 3.00) * self.height) + (self.width / 2))
@@ -35,7 +35,6 @@
     SPRenderTexture *_renderTexture;
     CGPoint _lastTouch;
     CGPoint _newTouch;
-    BOOL _drawing;
     BOOL _clearing;
 }
 
@@ -60,16 +59,12 @@
         _renderTexture = [[SPRenderTexture alloc]
                           initWithWidth:width height:height];
         _canvas = [[SPImage alloc] initWithTexture:_renderTexture];
-        [_canvas addEventListener:@selector(onTouch:)
-                         atObject:self
-                          forType:SP_EVENT_TYPE_TOUCH];
-        [_canvas addEventListener:@selector(updateCanvas:)
-                         atObject:self
-                          forType:SP_EVENT_TYPE_ENTER_FRAME];
         [self addChild:_canvas];
         
+        [_canvas addEventListener:@selector(onTouch:) atObject:self
+                          forType:SP_EVENT_TYPE_TOUCH];
+        
         _clearing = NO;
-        _drawing = NO;
         _firstTouchTime = 0.0;
         _baseline = ADJUST_Y(height * kBaseLineRatio);
         _topline = ADJUST_Y(height * kTopLineRatio);
@@ -82,10 +77,7 @@
 
 
 - (void)dealloc {
-    [_canvas removeEventListenersAtObject:self
-                                  forType:SP_EVENT_TYPE_TOUCH];
-    [_canvas removeEventListenersAtObject:self
-                                  forType:SP_EVENT_TYPE_ENTER_FRAME];
+    [_canvas removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TOUCH];
 }
 
 
@@ -95,7 +87,6 @@
         // The reset is synced so it can take a while.
         [_classifier reset];
         [_renderTexture clearWithColor:0x000000 alpha:0.0f];
-        _drawing = NO;
         _firstTouchTime = 0.0;
         _currentInkCharacter = [[InkCharacter alloc] initWithBaseline:_baseline
                                                               topline:_topline];
@@ -103,45 +94,36 @@
     }
 }
 
-
-// Do the drawing
-- (void)updateCanvas:(SPEnterFrameEvent *)event {
-    if (_drawing) {
-        // group the draw calls together for speed
-        [_renderTexture drawBundled:^{
-            float dx = _newTouch.x - _lastTouch.x;
-            float dy = _newTouch.y - _lastTouch.y;
-            float incX = dx / kNumSteps;
-            float incY = dy / kNumSteps;
-            _brush.x = _lastTouch.x;
-			_brush.y = _lastTouch.y;
-            // loop through so that if our touches are
-            // far apart we still create a line
-            for (int i=0; i<kNumSteps; i++) {
-				[_renderTexture drawObject:_brush];
-				_brush.x += incX;
-                _brush.y += incY;
-            }
-        }];
-        _lastTouch = CGPointMake(_newTouch.x, _newTouch.y);
-        _drawing = NO;
-    }
+- (void)drawLine {
+    [_renderTexture drawBundled:^{
+        float dx = _newTouch.x - _lastTouch.x;
+        float dy = _newTouch.y - _lastTouch.y;
+        float incX = dx / kNumSteps;
+        float incY = dy / kNumSteps;
+        _brush.x = _lastTouch.x;
+        _brush.y = _lastTouch.y;
+        // loop through so that if our touches are
+        // far apart we still create a line
+        for (int i=0; i<kNumSteps; i++) {
+            [_renderTexture drawObject:_brush];
+            _brush.x += incX;
+            _brush.y += incY;
+        }
+        _lastTouch = CGPointMake(_brush.x, _brush.y);
+    }];
 }
 
 - (void)onTouch:(SPTouchEvent*)event {
-    SPTouch *touchStart = [[event touchesWithTarget:_canvas
-                                           andPhase:SPTouchPhaseBegan]
-                           anyObject];
-	SPPoint *touchPosition;
-    double touchTime = 0.0;
+    SPTouch *touch = [[event touchesWithTarget:_canvas] anyObject];
+	SPPoint *touchPosition = [touch locationInSpace:_canvas];
+    double touchTime = [NSDate timeIntervalSinceReferenceDate];
     
-    if (touchStart) {
-        touchPosition = [touchStart locationInSpace:_canvas];
-		_lastTouch = CGPointMake(touchPosition.x, touchPosition.y);
+    if (touch.phase == SPTouchPhaseBegan) {
+        _lastTouch = CGPointMake(touchPosition.x, touchPosition.y);
 		_newTouch = CGPointMake(touchPosition.x, touchPosition.y);
-        _drawing = YES;
         
-        touchTime = [NSDate timeIntervalSinceReferenceDate];
+        [self drawLine];
+        
         if (_firstTouchTime == 0.0) {
             _firstTouchTime = touchTime;
         }
@@ -152,42 +134,32 @@
         [_currentInkCharacter addPoint:adj_p];
         [_classifier addPoint:adj_p];
     }
-    
-    SPTouch *touchMove = [[event touchesWithTarget:_canvas
-                                          andPhase:SPTouchPhaseMoved]
-                          anyObject];
-    if (touchMove) {
-        touchPosition = [touchMove locationInSpace:_canvas];
+    else if (touch.phase == SPTouchPhaseMoved) {
         _newTouch = CGPointMake(touchPosition.x, touchPosition.y);
-        _drawing = YES;
         
-        touchTime = [NSDate timeIntervalSinceReferenceDate];
+        [self drawLine];
         
         InkPoint *adj_p = [[InkPoint alloc] initWithX:ADJUST_X(_newTouch.x)
                                                     y:ADJUST_Y(_newTouch.y)
                                                     t:touchTime];
-    
         [_currentInkCharacter addPoint:adj_p];
         [_classifier addPoint:adj_p];
     }
-    
-    SPTouch *touchEnd = [[event touchesWithTarget:_canvas
-                                         andPhase:SPTouchPhaseEnded]
-                         anyObject];
-    if (touchEnd) {
-        touchPosition = [touchEnd locationInSpace:_canvas];
+    else if (touch.phase == SPTouchPhaseEnded) {
         _lastTouch = CGPointMake(touchPosition.x, touchPosition.y);
         _newTouch = CGPointMake(touchPosition.x, touchPosition.y);
-        _drawing = NO;
         
-        _lastTouchTime = [NSDate timeIntervalSinceReferenceDate];
+        _lastTouchTime = touchTime;
         
         InkPoint *adj_p = [[InkPoint alloc] initWithX:ADJUST_X(_newTouch.x)
                                                     y:ADJUST_Y(_newTouch.y)
-                                                    t:_lastTouchTime
+                                                    t:touchTime
                                                 penup:YES];
         [_currentInkCharacter addPoint:adj_p];
         [_classifier addPoint:adj_p];
+    }
+    else {
+        DEBUG_PRINT(@"Unhandled touch event!");
     }
 }
 
