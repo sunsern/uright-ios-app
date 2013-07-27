@@ -138,6 +138,25 @@
 }
 
 
++ (NSDictionary *)fetchUserStats:(int)userID {
+    NSString *urlString = [NSString stringWithFormat:@"%@/userstats", UR_BASE_URL];
+    NSURL *url = [NSURL URLWithString:urlString];
+    ASIFormDataRequest  *request = [ASIFormDataRequest requestWithURL:url];
+    [request setPostValue:UR_MAGIC_KEY forKey:@"key"];
+    [request setPostValue:@(userID) forKey:@"user_id"];
+    [request startSynchronous];
+    if ([request error] != nil) {
+        return nil;
+    }
+    NSDictionary *result = [[self class]
+                            JSONObjectFromNSData:[request responseData]];
+    if ([result[@"Error"] intValue] > 0) {
+        return nil;
+    }
+    return result;
+}
+
+
 + (NSDictionary *)fetchProtosets:(int)userID {
     NSString *urlString = [NSString stringWithFormat:@"%@/protosets", UR_BASE_URL];
     NSURL *url = [NSURL URLWithString:urlString];

@@ -17,6 +17,7 @@
 #import "MBProgressHUD.h"
 #import "NoticeScene.h"
 #import "RaceScene.h"
+#import "ScoreViewController.h"
 #import "ServerManager.h"
 #import "UserData.h"
 
@@ -63,7 +64,7 @@
                         @"Thai", @"Hebrew",
                         @"Japanese", @"Full",
                         @"English-early-stop", @"Custom",
-                        @"Edit Custom", @"Logout"];
+                        @"Edit Custom", @"Logout", @"Score"];
         for (int i=0; i < [_buttonList count]; i++) {
             SPButton *button = [SPButton buttonWithUpState:buttonTexture text:_buttonList[i]];
             button.pivotX = button.width / 2;
@@ -110,6 +111,12 @@
          name:NS_NOTIFICATION_LOGGED_IN
          object:nil];
         
+        [[NSNotificationCenter defaultCenter]
+         addObserver:self
+         selector:@selector(updateInfo)
+         name:UIApplicationWillEnterForegroundNotification
+         object:nil];
+        
         _lastAnnoucement = 0;
     }
     return self;
@@ -121,9 +128,28 @@
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
+- (void)updateInfoText {
+    Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
+    
+    _info.text = [NSString stringWithFormat:
+                  @"[Debug info]\n"
+                  "user_id: %d \
+                  username: %@\n"
+                  "n_protosets: %d \
+                  best_score: %0.2f\n"
+                  "experience: %0.2f \
+                  level: %d\n"
+                  "version: %@\n",
+                  ud.userID, ud.username, [ud.protosets count], ud.bestBps,
+                  ud.experience, ud.level,
+                  [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"]];
+}
+
 
 - (void)updateInfo {
     Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
+    
+    [self updateInfoText];
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
         NSDictionary *annoucement = [ServerManager announcement];
@@ -138,21 +164,21 @@
         });
     });
     
-    _info.text = [NSString stringWithFormat:
-                  @"[Debug info]\n"
-                  "user_id: %d \
-                  username: %@\n"
-                  "n_protosets: %d \
-                  best_score: %f\n"
-                  "version: %@ \
-                  build: %@\n",
-                  ud.userID, ud.username, [ud.protosets count], [ud bestScore],
-                  [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"],
-                  [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"]];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+        NSDictionary *userStats = [ServerManager fetchUserStats:ud.userID];
+        if (userStats) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                ud.level = [userStats[@"level"] intValue];
+                ud.experience = [userStats[@"experience"] floatValue];
+                ud.nextLevelExp = [userStats[@"next_level_exp"] floatValue];
+                ud.bestBps = [userStats[@"best_bps"] floatValue];
+                ud.scores = [[NSArray alloc] initWithArray:userStats[@"recent_bps"]];
+                [self updateInfoText];
+            });
+        }
+    });
+   
 }
-
-
-
 
 
 - (void)buttonTriggered:(SPEvent *)event {
@@ -171,6 +197,10 @@
             // reset annoucement
             _lastAnnoucement = 0;
         }];
+    }
+    else if ([button.name isEqualToString:@"Score"]) {
+        ScoreViewController *scoreVC = [[ScoreViewController alloc] init];
+        [Sparrow.currentController presentModalViewController:scoreVC animated:YES];
     }
     else if ([button.name isEqualToString:@"Edit Custom"]) {
         EditCustomScene *crs = [[EditCustomScene alloc] init];

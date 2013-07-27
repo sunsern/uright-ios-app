@@ -12,9 +12,6 @@
 #import "Charset.h"
 #import "SessionData.h"
 
-#define kMaxScoreHistory 10
-#define kDefaultScoreKey @"default"
-
 @implementation Protoset
 
 - (id)initWithJSONObject:(id)jsonObj {
@@ -53,9 +50,13 @@
     self = [super init];
     if (self) {
         _userID = UR_GUEST_ID;
+        _level = 0;
+        _experience = 0.0;
+        _nextLevelExp = 0.0;
+        _bestBps = 0.0;
+        _scores = [[NSArray alloc] init];
         _username = @"";
         _sessions = [[NSMutableArray alloc] init];
-        _scores = [[NSMutableDictionary alloc] init];
         _protosets = [[NSDictionary alloc] init];
         _customCharset = [Charset emptyCharset];
     }
@@ -66,11 +67,16 @@
     self = [super init];
     if (self) {
         _userID = [jsonObj[@"userID"] intValue];
+        _level = [jsonObj[@"level"] intValue];
+        _experience = [jsonObj[@"experience"] floatValue];
+        _nextLevelExp = [jsonObj[@"nextLevelExp"] floatValue];
+        _bestBps = [jsonObj[@"bestBps"] floatValue];
         _username = [jsonObj[@"username"] copy];
+        if (jsonObj[@"scores"]) {
+            _scores = [[NSArray alloc] initWithArray:jsonObj[@"scores"]];
+        }
         _sessions = [[NSMutableArray alloc]
                      initWithArray:jsonObj[@"sessions"]];
-        _scores = [[NSMutableDictionary alloc]
-                   initWithDictionary:jsonObj[@"scores"]];
         NSMutableDictionary *protosets = [[NSMutableDictionary alloc] init];
         for (id key in jsonObj[@"protosets"]) {
             protosets[key] = [[Protoset alloc] initWithJSONObject:jsonObj[@"protosets"][key]];
@@ -85,9 +91,13 @@
 - (NSDictionary *)toJSONObject {
     NSMutableDictionary *jsonObj = [[NSMutableDictionary alloc] init];
     jsonObj[@"userID"] = @(_userID);
+    jsonObj[@"level"] = @(_level);
+    jsonObj[@"experience"] = @(_experience);
+    jsonObj[@"nextLevelExp"] = @(_nextLevelExp);
+    jsonObj[@"bextBps"] = @(_bestBps);
+    jsonObj[@"scores"] = _scores;
     jsonObj[@"username"] = _username;
     jsonObj[@"sessions"] = _sessions;
-    jsonObj[@"scores"] = _scores;
     NSMutableDictionary *protosets = [[NSMutableDictionary alloc] init];
     for (id key in _protosets) {
         protosets[key] = [_protosets[key] toJSONObject];
@@ -110,50 +120,6 @@
     return ud;
 }
 
-
-- (void)addScore:(float)score {
-    NSDictionary *scoreStruct = _scores[kDefaultScoreKey];
-    if (scoreStruct != nil) {
-        float max_score = [scoreStruct[@"maxscore"] floatValue];
-        float avg_score = [scoreStruct[@"avgscore"] floatValue];
-        int num_sessions = [scoreStruct[@"numsessions"] intValue];
-        NSMutableArray *scoreArray = [[NSMutableArray alloc] initWithArray:
-                                      scoreStruct[@"scores"]];
-        if (score > max_score) {
-            max_score = score;
-        }
-        avg_score = (avg_score * num_sessions + score) / (num_sessions + 1);
-        num_sessions++;
-        while ([scoreArray count] >= kMaxScoreHistory) {
-            [scoreArray removeObjectAtIndex:0];
-        }
-        [scoreArray addObject:[NSNumber numberWithFloat:score]];
-        NSDictionary *newScoreStruct = @{@"maxscore":@(max_score),
-                                         @"avgscore":@(avg_score),
-                                         @"numsessions":@(num_sessions),
-                                         @"scores":scoreArray};
-        _scores[kDefaultScoreKey] = newScoreStruct;
-    } else {
-        NSDictionary *newScoreStruct = @{@"maxscore":@(score),
-                                         @"avgscore":@(score),
-                                         @"numsessions":@(1),
-                                         @"scores":@[@(score)]};
-        _scores[kDefaultScoreKey] = newScoreStruct;
-    }
-}
-
-- (NSArray *)scoreArray {
-    return _scores[kDefaultScoreKey][@"scores"];
-}
-
-- (float)bestScore {
-    NSDictionary *scoreStruct = _scores[kDefaultScoreKey];
-    if (scoreStruct == nil) {
-        return 0.0;
-    } else {
-        return [scoreStruct[@"maxscore"] floatValue];
-    }
-}
 
 - (void)addSessionJSON:(id)sessionJSON {
     [_sessions addObject:sessionJSON];

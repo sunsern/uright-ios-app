@@ -410,7 +410,6 @@
     _session.bps = _totalScore / _totalTime;
     
     Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
-    [ud addScore:_session.bps];
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
         bool sentOK = [ServerManager uploadSessionData:_session];

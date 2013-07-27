@@ -80,6 +80,7 @@
             [[NSNotificationCenter defaultCenter] postNotificationName:NS_NOTIFICATION_LOGGED_IN
                                                                 object:self];
         } else {
+            [hud hide:YES];
             UIAlertView *alert = [[UIAlertView alloc]
                                   initWithTitle:@"Server Error"
                                   message:@"Please try again later."

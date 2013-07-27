@@ -32,6 +32,8 @@
 
 + (NSArray *)fetchCharsets;
 
++ (NSDictionary *)fetchUserStats:(int)userID;
+
 + (NSDictionary *)fetchProtosets:(int)userID;
 
 + (NSDictionary *)announcement;

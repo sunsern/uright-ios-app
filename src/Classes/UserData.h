@@ -23,19 +23,17 @@
 @interface Userdata : NSObject <URJSONSerializable>
 
 @property (readwrite) int userID;
+@property (readwrite) int level;
+@property (readwrite) float experience;
+@property (readwrite) float nextLevelExp;
+@property (readwrite) float bestBps;
 @property (nonatomic,copy) NSString *username;
+@property (nonatomic,strong) NSArray *scores;
 @property (nonatomic,strong) NSMutableArray *sessions;
-@property (nonatomic,strong) NSMutableDictionary *scores;
 @property (nonatomic,strong) NSDictionary *protosets;
 @property (nonatomic,strong) Charset *customCharset;
 
 + (Userdata *)emptyUserdata:(int)userID;
-
-- (void)addScore:(float)score;
-
-- (NSArray *)scoreArray;
-
-- (float)bestScore;
 
 - (void)addSessionJSON:(id)sessionJSON;
 
