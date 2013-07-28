@@ -11,7 +11,7 @@
 #import "Canvas.h"
 #import "Charset.h"
 #import "GlobalStorage.h"
-#import "UserData.h"
+#import "Userdata.h"
 
 #define CUSTOM_CHARSET_ID 0
 #define INIT_CHARSET_ID 1
@@ -57,20 +57,19 @@
     [self addChild:background];
 
     // buttons
-    SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
-    SPButton *backButton = [SPButton buttonWithUpState:buttonTexture text:@"Back"];
+    SPTexture *backTexture = [SPTexture textureWithContentsOfFile:@"close.png"];
+    SPButton *backButton = [SPButton buttonWithUpState:backTexture];
     backButton.x = 0;
     backButton.y = 0;
-    backButton.scaleX = 1.0;
-    backButton.scaleY = 1.0;
-    backButton.name = @"quit";
+    backButton.scaleX = 1.3;
+    backButton.scaleY = 1.3;
     [self addChild:backButton];
     [backButton addEventListener:@selector(back) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
- 
+    
+    SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
     SPButton *removeButton = [SPButton buttonWithUpState:buttonTexture text:@"Remove character"];
     removeButton.x = gameWidth - removeButton.width;
     removeButton.y = 0;
-    removeButton.name = @"remove";
     removeButton.scaleX = 1.0;
     removeButton.scaleY = 1.0;
     [self addChild:removeButton];

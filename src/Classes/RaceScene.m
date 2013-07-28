@@ -19,7 +19,7 @@
 #import "ServerManager.h"
 #import "MBProgressHUD.h"
 #import "GlobalStorage.h"
-#import "UserData.h"
+#import "Userdata.h"
 
 #define RACE_LENGTH 15
 #define WAIT_TIME 1.0f
@@ -29,7 +29,7 @@
     
     // UI
     SPTextField *_targetLabel;
-    SPTextField *_bpsTf;
+    SPTextField *_bpsTextField;
     Canvas *_canvas;
     SPQuad *_bar;
     
@@ -43,7 +43,6 @@
     float _totalTime;
     double _roundTime;
     BOOL _earlyStopFound;
-    BOOL _withinRound;
     CGPoint _targetLabelCenter;
     
     SessionData *_session;
@@ -66,7 +65,12 @@
 - (void)setupScene {
     int gameWidth = Sparrow.stage.width;
     int gameHeight = Sparrow.stage.height;
-
+    int y_offset = 0;
+    
+    if (gameHeight > 480) {
+        y_offset = 40;
+    }
+    
     // Background
     SPImage *background = [SPImage imageWithContentsOfFile:@"background.jpg" ];
     background.touchable = NO;
@@ -75,21 +79,16 @@
     // Canvas background
     SPQuad *canvasBg = [SPQuad quadWithWidth:300 height:220 color:0x555555];
     canvasBg.x = (gameWidth - canvasBg.width)/2;
-    if (gameHeight > 480) {
-        canvasBg.y = 250;
-    } else {
-        canvasBg.y = 210;
-    }
+    canvasBg.y = y_offset + 210;
     canvasBg.alpha = 0.9;
     canvasBg.touchable = NO;
     [self addChild:canvasBg];
     
-    // Target character bg
-    // Canvas background
+    // Target character BG
     SPQuad *tcBg = [SPQuad quadWithWidth:100 height:100 color:0x333333];
     tcBg.x = canvasBg.x;
     tcBg.y = canvasBg.y - tcBg.height - 40;
-    tcBg.alpha = 0.9;
+    tcBg.alpha = 0.8;
     _targetLabelCenter = CGPointMake(tcBg.x + tcBg.width/2,
                                      tcBg.y + tcBg.height/2);
     tcBg.touchable = NO;
@@ -100,10 +99,17 @@
     _canvas.x = (gameWidth - _canvas.width)/2;
     _canvas.y = canvasBg.y;
     [self addChild:_canvas];
-    [_canvas addEventListener:@selector(onTouch:)
-                     atObject:self
+    [_canvas addEventListener:@selector(onTouch:) atObject:self
                       forType:SP_EVENT_TYPE_TOUCH];
 
+    
+    // Next character bar
+    _bar = [[SPQuad alloc] initWithWidth:_canvas.width height:15];
+    _bar.pivotX = _bar.width / 2;
+    _bar.x = gameWidth / 2;
+    _bar.y = _canvas.y - _bar.height;
+    _bar.color = 0x59aa53;
+    [self addChild:_bar];
     
     // Target character
     _targetLabel = [SPTextField textFieldWithWidth:100 height:100 text:@""];
@@ -112,7 +118,7 @@
     _targetLabel.pivotX = _targetLabel.width / 2;
     _targetLabel.pivotY = _targetLabel.height / 2;
     _targetLabel.fontSize = 72;
-    _targetLabel.color = 0xddc92a;
+    _targetLabel.color = 0xdfd371;
     _targetLabel.fontName = @"AppleColorEmoji";
     //_targetLabel.border = YES;
     _targetLabel.autoScale = YES;
@@ -120,56 +126,46 @@
     [self addChild:_targetLabel];
 
     // Erase button
-    SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
-    SPButton *resetButton = [SPButton buttonWithUpState:buttonTexture text:@"Erase"];
+    SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"erase-button.png"];
+    SPButton *resetButton = [SPButton buttonWithUpState:buttonTexture];
     resetButton.pivotX = resetButton.width / 2;
     resetButton.pivotY = resetButton.height / 2;
     resetButton.x = gameWidth / 2;
-    resetButton.y = MIN(_canvas.y + _canvas.height + resetButton.height,
-                        gameHeight - resetButton.height/2);
+    resetButton.y = _canvas.y + _canvas.height + resetButton.height/2;
+    resetButton.scaleX = 0.9;
+    resetButton.scaleY = 0.9;
     [self addChild:resetButton];
-    [resetButton addEventListener:@selector(reset)
-                         atObject:self
+    [resetButton addEventListener:@selector(reset) atObject:self
                           forType:SP_EVENT_TYPE_TRIGGERED];
    
-    
     // BPS meter
-    _bpsTf = [SPTextField textFieldWithWidth:100 height:50 text:@""];
-    _bpsTf.x = gameWidth - _bpsTf.width;
-    _bpsTf.y = 0;
-    _bpsTf.fontSize = 60;
-    _bpsTf.fontName = @"GillSans-Bold";
-    _bpsTf.autoScale = YES;
-    //_bpsTf.border = YES;
-    [self addChild:_bpsTf];
+    _bpsTextField = [SPTextField textFieldWithWidth:100 height:50 text:@""];
+    _bpsTextField.x = gameWidth/2 + 20;
+    _bpsTextField.y = y_offset + 5;
+    _bpsTextField.fontSize = 40;
+    _bpsTextField.fontName = @"ArialRoundedMTBold";
+    _bpsTextField.border = YES;
+    //_bpsTf.autoScale = YES;
+    [self addChild:_bpsTextField];
     
-    SPTextField *bpsLabel = [SPTextField textFieldWithWidth:70
-                                                     height:50 text:@"BPS:"];
-    bpsLabel.x = gameWidth - _bpsTf.width - bpsLabel.width;
-    bpsLabel.y = 0;
-    bpsLabel.fontSize = 25;
-    bpsLabel.fontName = @"GillSans-Bold";
+    SPTextField *bpsLabel = [SPTextField textFieldWithWidth:150
+                                                     height:50 text:@"Current BPS:"];
+    bpsLabel.x = gameWidth/2 - bpsLabel.width;
+    bpsLabel.y = y_offset + 5;
+    bpsLabel.fontSize = 20;
+    bpsLabel.hAlign = SPHAlignRight;
     //bpsLabel.border = YES;
     [self addChild:bpsLabel];
     
     // quit button
-    //SPTexture *blueButton = [SPTexture textureWithContentsOfFile:@"blueButton.png"];
-    SPButton *quitButton = [SPButton buttonWithUpState:buttonTexture text:@"Quit"];
+    SPTexture *closeTexture = [SPTexture textureWithContentsOfFile:@"close.png"];
+    SPButton *quitButton = [SPButton buttonWithUpState:closeTexture];
     quitButton.x = 0;
     quitButton.y = 0;
-    //quit.scaleX = 0.75;
-    //quit.scaleY = 0.75;
+    quitButton.scaleX = 1.3;
+    quitButton.scaleY = 1.3;
     [self addChild:quitButton];
     [quitButton addEventListener:@selector(quitRace) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
-    
-    // Next character bar
-    _bar = [[SPQuad alloc] initWithWidth:_canvas.width height:15];
-    _bar.pivotX = _bar.width / 2;
-    _bar.x = gameWidth / 2;
-    _bar.y = _canvas.y - _bar.height;
-    _bar.color = 0x599653;
-    //_bar.visible = NO;
-    [self addChild:_bar];
     
     // Auto start
     [self addEventListener:@selector(restartRace) atObject:self forType:SP_EVENT_TYPE_ADDED_TO_STAGE];
@@ -190,7 +186,7 @@
     // Check for new prototypes from server
     MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:Sparrow.currentController.view animated:YES];
     hud.mode = MBProgressHUDModeIndeterminate;
-    hud.labelText = @"Checking for new prototypes...";
+    hud.labelText = @"Checking prototypes...";
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
         Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
@@ -217,7 +213,7 @@
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
                     hud.labelText = [NSString stringWithFormat:@"%d prototypes updated.", [updatedLabels count]];
-                    [Sparrow.juggler delayInvocationByTime:1.0 block:^{
+                    [Sparrow.juggler delayInvocationByTime:1.25 block:^{
                         [hud hide:YES];
                         [self raceWillStart];
                     }];
@@ -265,7 +261,9 @@
     _currentIdx = 0;
     _totalScore = 0;
     _totalTime = 0;
-    _withinRound = NO;
+    
+    // BPS meter
+    _bpsTextField.text = @"0.00";
     
     [_canvas clear];
     _canvas.touchable = NO;
@@ -276,35 +274,36 @@
 
 
 - (void)countDown {
-    SPTextField *banner = [[SPTextField alloc] initWithWidth:120 height:120];
-    banner.hAlign = SPHAlignCenter;
-    banner.vAlign = SPVAlignCenter;
-    banner.pivotX = banner.width/2;
-    banner.pivotY = banner.height/2;
-    banner.x = _canvas.x + _canvas.width/2;
-    banner.y = _canvas.y + _canvas.height/2;
-    banner.color = 0x00ff00;
-    banner.fontSize = 120;
+    SPTextField *countdown = [[SPTextField alloc] initWithWidth:120 height:120];
+    countdown.hAlign = SPHAlignCenter;
+    countdown.vAlign = SPVAlignCenter;
+    countdown.pivotX = countdown.width/2;
+    countdown.pivotY = countdown.height/2;
+    countdown.x = _canvas.x + _canvas.width/2;
+    countdown.y = _canvas.y + _canvas.height/2;
+    countdown.color = 0xffffff;
+    countdown.fontName = @"Chalkduster";
+    countdown.fontSize = 120;
     //banner.border = YES;
-    [self addChild:banner];
+    [self addChild:countdown];
     
     [[Sparrow juggler] delayInvocationByTime:0.25f block:^{
-        banner.text = @"3";
+        countdown.text = @"3";
         [Media playSound:@"sound.caf"];
     }];
     
     [[Sparrow juggler] delayInvocationByTime:1.25f block:^{
-        banner.text = @"2";
+        countdown.text = @"2";
         [Media playSound:@"sound.caf"];
     }];
     
     [[Sparrow juggler] delayInvocationByTime:2.25f block:^{
-        banner.text = @"1";
+        countdown.text = @"1";
         [Media playSound:@"sound.caf"];
     }];
     
     [[Sparrow juggler] delayInvocationByTime:3.25f block:^{
-        [self removeChild:banner];
+        [self removeChild:countdown];
         [self startRound];
     }];
 }
@@ -312,13 +311,15 @@
 
 - (void)startRound {
     _roundTime = 0.0;
-    _withinRound = YES;
+    
     _earlyStopFound = NO;
     
     _round = [[RoundData alloc] init];
     _round.startTime = [NSDate timeIntervalSinceReferenceDate];
     
     NSString *currentLabel = _testArray[_currentIdx];
+    
+    _bar.width = _canvas.width;
     
     _targetLabel.text = currentLabel;
     _targetLabel.x = _canvas.x + _canvas.width/2;
@@ -346,9 +347,6 @@
 
 - (void)endRound {
     _canvas.touchable = NO;
-    _withinRound = NO;
-    
-    _bpsTf.text = @"";
     
     [Media playSound:@"DING.caf"];
     
@@ -366,28 +364,27 @@
     _totalScore += _currentScore;
     _totalTime += delta_time;
     
-    SPTextField *current_score = [SPTextField
-                                  textFieldWithText:[NSString
-                                                     stringWithFormat:@"Score +%0.2f",_currentScore]];
-    current_score.width = 250;
-    current_score.x = 100;
-    current_score.y = 140;
-    current_score.fontSize = 30;
+    SPTextField *popupScore = [SPTextField textFieldWithText:[NSString
+                                                              stringWithFormat:@"+%0.2f bits",_currentScore]];
+    popupScore.width = 250;
+    popupScore.x = 100;
+    popupScore.y = 140;
+    popupScore.fontSize = 30;
     float maxscore = log2f([_activeCharacters count]);
     if (_currentScore >  maxscore - 1.0) {
-        current_score.color = 0x149005;
+        popupScore.color = 0x149005;
     } else if (_currentScore > maxscore / 2) {
-        current_score.color = 0xf08b19;
+        popupScore.color = 0xf08b19;
     } else {
-        current_score.color = 0xff0000;
+        popupScore.color = 0xff0000;
     }
-    current_score.alpha = 1.0;
-    [self addChild:current_score];
-    SPTween *tween = [SPTween tweenWithTarget:current_score
-                                         time:1.5f];
-    tween.delay = 0.01;
-    tween.onComplete = ^{ [self removeChild:current_score]; };
-    [tween animateProperty:@"y" targetValue:30];
+    popupScore.alpha = 1.0;
+    [self addChild:popupScore];
+    SPTween *tween = [SPTween tweenWithTarget:popupScore
+                                         time:1.4f];
+    tween.delay = 0.1;
+    tween.onComplete = ^{ [self removeChild:popupScore]; };
+    [tween animateProperty:@"y" targetValue:50];
     [tween animateProperty:@"alpha" targetValue:0.0];
     [[Sparrow juggler] addObject:tween];
 
@@ -401,13 +398,18 @@
 
 
 - (void)raceCompleted {
-    _targetLabel.text = @"";
     _canvas.touchable = NO;
     [_canvas clear];
+
+    _bpsTextField.text = @"";
+    _targetLabel.text = @"";
     
     _session.totalScore = _totalScore;
     _session.totalTime = _totalTime;
     _session.bps = _totalScore / _totalTime;
+    
+    _totalScore = 0;
+    _totalTime = 0;
     
     Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
     
@@ -452,10 +454,15 @@
 
 
 - (void)enterFrame:(SPEnterFrameEvent *)event {
-    if (_withinRound) {
+    static double ticks;
+    static double milliseconds;
+    ticks += event.passedTime;
+    // Update every 0.1 second
+    if (floor(ticks*100) > milliseconds) {
+        milliseconds += 10;
         _roundTime += event.passedTime;
         float bps = _totalScore / (_totalTime + _roundTime);
-        _bpsTf.text = [NSString stringWithFormat:@"%0.2f", bps];
+        _bpsTextField.text = [NSString stringWithFormat:@"%0.2f", bps];
     }
 }
 
@@ -485,7 +492,7 @@
     [Sparrow.juggler removeObjectsWithTarget:_bar];
     _bar.width = _canvas.width;
     SPTouch *touchEnd = [[event touchesWithTarget:self andPhase:SPTouchPhaseEnded] anyObject];
-    if(touchEnd){
+    if (touchEnd){
         SPTween *shinking = [[SPTween alloc] initWithTarget:_bar time:WAIT_TIME];
         [shinking animateProperty:@"width" targetValue:0];
         shinking.onComplete = ^{ [self endRound]; };

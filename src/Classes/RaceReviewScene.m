@@ -13,7 +13,7 @@
 #import "GlobalStorage.h"
 #import "RoundData.h"
 #import "SessionData.h"
-#import "UserData.h"
+#import "Userdata.h"
 
 @implementation RaceReviewScene {
     Canvas *_inkCanvas;
@@ -108,10 +108,12 @@
         [self addChild:_closestLabelTextField];
         
         // Back button
-        SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
-        SPButton *backButton = [SPButton buttonWithUpState:buttonTexture text:@"Back"];
+        SPTexture *backTexture = [SPTexture textureWithContentsOfFile:@"close.png"];
+        SPButton *backButton = [SPButton buttonWithUpState:backTexture];
         backButton.x = 0;
         backButton.y = 0;
+        backButton.scaleX = 1.3;
+        backButton.scaleY = 1.3;
         [self addChild:backButton];
         [backButton addEventListener:@selector(back)
                                atObject:self

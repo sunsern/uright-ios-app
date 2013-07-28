@@ -19,15 +19,17 @@
 #import "RaceScene.h"
 #import "ScoreViewController.h"
 #import "ServerManager.h"
-#import "UserData.h"
+#import "Userdata.h"
+#import "InfoPanel.h"
 
 #define RACE_MODE_ID 3
 #define EARLY_STOP_MODE_ID 7
 
 @implementation MenuScene {
-    SPTextField *_info;
-    NSArray *_buttonList;
     double _lastAnnoucement;
+    InfoPanel *_infoPanel;
+    SPSprite *_page1;
+    SPSprite *_page2;
 }
 
 - (id)init
@@ -36,37 +38,58 @@
     if (self) {
         int gameWidth = Sparrow.stage.width;
         int gameHeight = Sparrow.stage.height;
+        int y_offset = 0;
+        if (gameHeight > 480) {
+            y_offset = 40;
+        }
         
         // Background
-        //SPQuad *background = [SPQuad quadWithWidth:gameWidth height:gameHeight color:0xffffff];
         SPImage *background = [SPImage imageWithContentsOfFile:@"background.jpg"];
         [self addChild:background];
         
         // Logo
-        SPTextField *logo = [SPTextField textFieldWithText:@"uRight3"];
+        SPTextField *logo = [SPTextField textFieldWithText:@"uRight"];
         logo.width = gameWidth-40;
         logo.height = 100;
         logo.pivotX = logo.width / 2;
         logo.x = gameWidth / 2;
         logo.y = 10;
-        logo.fontSize = 100;
+        logo.fontSize = 80;
         logo.fontName = @"Chalkduster";
         logo.autoScale = YES;
         [self addChild:logo];
         
-        // Button box
-        SPSprite *buttons = [[SPSprite alloc] init];
-        [self addChild:buttons];
+        // Page 1
+        _page1 = [[SPSprite alloc] init];
+        SPTexture *bigButtonTexture = [SPTexture textureWithContentsOfFile:@"blank-without-border.png"];
+        NSArray *buttonPage1 = @[@"English", @"Digits", @"More..."];
+        for (int i=0; i < [buttonPage1 count]; i++) {
+            SPButton *button = [SPButton buttonWithUpState:bigButtonTexture text:buttonPage1[i]];
+            button.pivotX = button.width / 2;
+            button.pivotY = button.height / 2;
+            button.x = gameWidth / 2;
+            button.y = i * (button.height + 10);
+            button.name = button.text;
+            button.fontName = @"Chalkduster";
+            button.fontSize = 20;
+            button.scaleX = 1.0;
+            [button addEventListener:@selector(buttonTriggered:)
+                            atObject:self
+                             forType:SP_EVENT_TYPE_TRIGGERED];
+            [_page1 addChild:button];
+        }
+        _page1.y = logo.y + logo.height + y_offset + 60;
+        [self addChild:_page1];
         
         // Create buttons
+        _page2 = [[SPSprite alloc] init];
         SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
-        _buttonList = @[@"English", @"Digits",
-                        @"Thai", @"Hebrew",
-                        @"Japanese", @"Full",
-                        @"English-early-stop", @"Custom",
-                        @"Edit Custom", @"Logout", @"Score"];
-        for (int i=0; i < [_buttonList count]; i++) {
-            SPButton *button = [SPButton buttonWithUpState:buttonTexture text:_buttonList[i]];
+        NSArray *buttonPage2 = @[@"Thai", @"Hebrew",
+                                 @"Japanese", @"Full",
+                                 @"English-early-stop", @"Custom",
+                                 @"Edit Custom", @"Back"];
+        for (int i=0; i < [buttonPage2 count]; i++) {
+            SPButton *button = [SPButton buttonWithUpState:buttonTexture text:buttonPage2[i]];
             button.pivotX = button.width / 2;
             button.pivotY = button.height / 2;
             if (i % 2 == 0) {
@@ -76,34 +99,67 @@
                 button.x = 3 * gameWidth / 4;
                 button.y = (i/2) * (button.height + 10);
             }
+            button.fontName = @"Chalkduster";
+            button.fontSize = 12;
             button.name = button.text;
-            button.scaleX = 1.1;
-            button.scaleY = 1.1;
+            button.scaleX = 1.2;
+            button.scaleY = 1.2;
+            if (![button.text isEqualToString:@"Back"]) {
+                button.enabled = NO;
+            }
             [button addEventListener:@selector(buttonTriggered:)
                             atObject:self
                              forType:SP_EVENT_TYPE_TRIGGERED];
-            [buttons addChild:button];
+            [_page2 addChild:button];
         }
-        // Center verti
-        buttons.y = 20 + (gameHeight - buttons.height) / 2;
+        _page2.y = logo.y + logo.height + y_offset + 60;
+        _page2.visible = NO;
+        [self addChild:_page2];
+        
         
         // Info panel
-        SPQuad *infobg = [SPQuad quadWithWidth:gameWidth height:80];
+        SPQuad *infobg = [SPQuad quadWithWidth:gameWidth height:60];
         infobg.y = gameHeight - infobg.height;
         infobg.color = 0x000000;
         infobg.alpha = 0.5;
         [self addChild:infobg];
         
-        _info = [SPTextField textFieldWithWidth:gameWidth height:infobg.height text:@""];
-        _info.y = gameHeight - _info.height;
-        _info.fontName = @"Symbol";
-        _info.color = 0xffffff;
-        _info.autoScale = YES;
-        [self addChild:_info];
-        
+        _infoPanel = [[InfoPanel alloc] initWithWidth:gameWidth - 95 height:infobg.height];
+        _infoPanel.x = 42;
+        _infoPanel.y = infobg.y;
+        [self addChild:_infoPanel];
+    
         [self addEventListener:@selector(addedToStage:)
                       atObject:self
                        forType:SP_EVENT_TYPE_ADDED_TO_STAGE];
+        
+        
+        // score button
+        SPTexture *scoreTexture = [SPTexture textureWithContentsOfFile:@"graph.png"];
+        SPButton *scoreButton = [SPButton buttonWithUpState:scoreTexture];
+        scoreButton.pivotX = scoreButton.width;
+        scoreButton.pivotY = 0;
+        scoreButton.x = gameWidth - 8;
+        scoreButton.y = infobg.y + (infobg.height - scoreButton.height) / 2;
+        scoreButton.scaleX = 1.0;
+        scoreButton.scaleY = 1.0;
+        [self addChild:scoreButton];
+        [scoreButton addEventListener:@selector(score) atObject:self
+                              forType:SP_EVENT_TYPE_TRIGGERED];
+        
+        
+        // Log out button
+        SPTexture *logoutTexture = [SPTexture textureWithContentsOfFile:@"switch-user.png"];
+        SPButton *logoutButton = [SPButton buttonWithUpState:logoutTexture];
+        logoutButton.x = 0;
+        logoutButton.y = infobg.y + 5;
+        logoutButton.scaleX = 0.75;
+        logoutButton.scaleY = 0.75;
+        [self addChild:logoutButton];
+        [logoutButton addEventListener:@selector(logout) atObject:self
+                               forType:SP_EVENT_TYPE_TRIGGERED];
+        
+
         
         [[NSNotificationCenter defaultCenter]
          addObserver:self
@@ -128,28 +184,11 @@
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
-- (void)updateInfoText {
-    Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
-    
-    _info.text = [NSString stringWithFormat:
-                  @"[Debug info]\n"
-                  "user_id: %d \
-                  username: %@\n"
-                  "n_protosets: %d \
-                  best_score: %0.2f\n"
-                  "experience: %0.2f \
-                  level: %d\n"
-                  "version: %@\n",
-                  ud.userID, ud.username, [ud.protosets count], ud.bestBps,
-                  ud.experience, ud.level,
-                  [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"]];
-}
-
 
 - (void)updateInfo {
     Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
     
-    [self updateInfoText];
+    [_infoPanel updatePanel];
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
         NSDictionary *annoucement = [ServerManager announcement];
@@ -173,7 +212,7 @@
                 ud.nextLevelExp = [userStats[@"next_level_exp"] floatValue];
                 ud.bestBps = [userStats[@"best_bps"] floatValue];
                 ud.scores = [[NSArray alloc] initWithArray:userStats[@"recent_bps"]];
-                [self updateInfoText];
+                [_infoPanel updatePanel];
             });
         }
     });
@@ -181,26 +220,38 @@
 }
 
 
+- (void)logout {
+    UIView *view = Sparrow.currentController.view;
+    MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:view animated:YES];
+    hud.mode = MBProgressHUDModeIndeterminate;
+    hud.labelText = @"Logging out...";
+    [AccountManager logout:^ {
+        [PFUser logOut];
+        [hud hide:YES];
+        [self showLoginScene];
+        
+        // reset annoucement
+        _lastAnnoucement = 0;
+    }];
+}
+
+
+- (void)score {
+    ScoreViewController *scoreVC = [[ScoreViewController alloc] init];
+    [Sparrow.currentController presentModalViewController:scoreVC animated:YES];
+}
+
+
 - (void)buttonTriggered:(SPEvent *)event {
     SPButton *button = (SPButton *)event.target;
     
-    if ([button.name isEqualToString:@"Logout"]) {
-        UIView *view = Sparrow.currentController.view;
-        MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:view animated:YES];
-        hud.mode = MBProgressHUDModeIndeterminate;
-        hud.labelText = @"Logging out...";
-        [AccountManager logout:^ {
-            [PFUser logOut];
-            [hud hide:YES];
-            [self showLoginScene];
-            
-            // reset annoucement
-            _lastAnnoucement = 0;
-        }];
+    if ([button.name isEqualToString:@"More..."]) {
+        _page2.visible = YES;
+        _page1.visible = NO;
     }
-    else if ([button.name isEqualToString:@"Score"]) {
-        ScoreViewController *scoreVC = [[ScoreViewController alloc] init];
-        [Sparrow.currentController presentModalViewController:scoreVC animated:YES];
+    else if ([button.name isEqualToString:@"Back"]) {
+        _page2.visible = NO;
+        _page1.visible = YES;
     }
     else if ([button.name isEqualToString:@"Edit Custom"]) {
         EditCustomScene *crs = [[EditCustomScene alloc] init];
