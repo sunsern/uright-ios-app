@@ -32,6 +32,7 @@
     SPSprite *_mainRaces;
     SPSprite *_advancedRaces;
     NSArray *_advancedRaceLabels;
+    BOOL _justLoggedIn;
 }
 
 - (id)init
@@ -42,7 +43,7 @@
         int gameHeight = Sparrow.stage.height;
         int y_offset = 0;
         if (gameHeight > 480) {
-            y_offset = 40;
+            y_offset = 20;
         }
         
         // Background
@@ -52,10 +53,10 @@
         // Logo
         SPTextField *logo = [SPTextField textFieldWithText:@"uRight"];
         logo.width = gameWidth-40;
-        logo.height = 100;
+        logo.height = 120;
         logo.pivotX = logo.width / 2;
         logo.x = gameWidth / 2;
-        logo.y = 10;
+        logo.y = y_offset + 15;
         logo.fontSize = 80;
         logo.fontName = @"Chalkduster";
         logo.autoScale = YES;
@@ -80,7 +81,7 @@
                              forType:SP_EVENT_TYPE_TRIGGERED];
             [_mainRaces addChild:button];
         }
-        _mainRaces.y = logo.y + logo.height + y_offset + 60;
+        _mainRaces.y = logo.y + logo.height + 50;
         [self addChild:_mainRaces];
         
         // Advanced races
@@ -127,7 +128,7 @@
             [_advancedRaces addChild:button];
         }
         
-        _advancedRaces.y = logo.y + logo.height + y_offset + 60;
+        _advancedRaces.y = logo.y + logo.height + 60;
         _advancedRaces.visible = NO;
         [self addChild:_advancedRaces];
         
@@ -175,6 +176,18 @@
                                forType:SP_EVENT_TYPE_TRIGGERED];
         
 
+        // Help button
+        SPTexture *helpTexture = [SPTexture textureWithContentsOfFile:@"help_black.png"];
+        SPButton *helpButton = [SPButton buttonWithUpState:helpTexture];
+        helpButton.pivotX = helpButton.width;
+        helpButton.x = gameWidth;
+        helpButton.y = 0;
+        helpButton.scaleX = 0.50;
+        helpButton.scaleY = 0.50;
+        [self addChild:helpButton];
+        [helpButton addEventListener:@selector(showHelp) atObject:self
+                               forType:SP_EVENT_TYPE_TRIGGERED];
+        
         
         [[NSNotificationCenter defaultCenter]
          addObserver:self
@@ -189,6 +202,7 @@
          object:nil];
         
         _lastAnnoucement = 0;
+        _justLoggedIn = NO;
     }
     return self;
 }
@@ -200,6 +214,23 @@
 }
 
 
+
+- (void)showHelp {
+    _mainRaces.visible = YES;
+    _advancedRaces.visible = NO;
+    
+    if (Sparrow.stage.height > 480) {
+        InstructionScene *instruction = [[InstructionScene alloc]
+                                         initWithImageName:@"menu-instruction-568.png"];
+        [self addChild:instruction];
+    }
+    else {
+        InstructionScene *instruction = [[InstructionScene alloc]
+                                         initWithImageName:@"menu-instruction.png"];
+        [self addChild:instruction];
+    }
+}
+
 - (void)updateInfo {
     Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
 
@@ -208,17 +239,8 @@
     [self lockRaces];
     
     // User instruction
-    if (ud.experience == 0.0) {
-        if (Sparrow.stage.height > 480) {
-            InstructionScene *instruction = [[InstructionScene alloc]
-                                             initWithImageName:@"menu-instruction-568.png"];
-            [self addChild:instruction];
-        }
-        else {
-            InstructionScene *instruction = [[InstructionScene alloc]
-                                             initWithImageName:@"menu-instruction.png"];
-            [self addChild:instruction];
-        }
+    if (ud.experience == 0.0 && _justLoggedIn) {
+        [self showHelp];
     }
     else {
         
@@ -278,6 +300,8 @@
             });
         }
     });
+    
+    _justLoggedIn = NO;
 }
 
 - (void)lockRaces {
@@ -437,6 +461,7 @@
 }
 
 - (void)logInCompleted:(NSNotification *)notification {
+    _justLoggedIn = YES;
     [self updateInfo];
 }
 

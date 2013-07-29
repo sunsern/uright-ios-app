@@ -168,6 +168,20 @@
     [self addChild:quitButton];
     [quitButton addEventListener:@selector(quitRace) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
     
+    
+    // Help button
+    SPTexture *helpTexture = [SPTexture textureWithContentsOfFile:@"help_black.png"];
+    SPButton *helpButton = [SPButton buttonWithUpState:helpTexture];
+    helpButton.pivotX = helpButton.width;
+    helpButton.x = gameWidth;
+    helpButton.y = 0;
+    helpButton.scaleX = 0.50;
+    helpButton.scaleY = 0.50;
+    [self addChild:helpButton];
+    [helpButton addEventListener:@selector(showHelp) atObject:self
+                         forType:SP_EVENT_TYPE_TRIGGERED];
+
+    
     // Auto start
     [self addEventListener:@selector(restartRace) atObject:self forType:SP_EVENT_TYPE_ADDED_TO_STAGE];
     
@@ -175,7 +189,7 @@
     [self addEventListener:@selector(enterFrame:) atObject:self forType:SP_EVENT_TYPE_ENTER_FRAME];
     
     // Instruction close
-    [self addEventListener:@selector(raceWillStart) atObject:self forType:SP_EVENT_TYPE_SCENE_CLOSE];
+    [self addEventListener:@selector(hideHelp) atObject:self forType:SP_EVENT_TYPE_SCENE_CLOSE];
 }
 
 
@@ -186,6 +200,25 @@
 }
 
 
+- (void)showHelp {
+    if (Sparrow.stage.height > 480) {
+        InstructionScene *instruction = [[InstructionScene alloc]
+                                         initWithImageName:@"race-instruction-568.png"];
+        [self addChild:instruction];
+    }
+    else {
+        InstructionScene *instruction = [[InstructionScene alloc]
+                                         initWithImageName:@"race-instruction.png"];
+        [self addChild:instruction];
+    }
+}
+
+- (void)hideHelp {
+    if (!_classifier) {
+        [self raceWillStart];
+    }
+}
+
 - (void)restartRace {
     Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
     
@@ -194,16 +227,7 @@
         _targetLabel.text = @"a";
         _targetLabel.x = _targetLabelCenter.x;
         _targetLabel.y = _targetLabelCenter.y;
-        if (Sparrow.stage.height > 480) {
-            InstructionScene *instruction = [[InstructionScene alloc]
-                                             initWithImageName:@"race-instruction-568.png"];
-            [self addChild:instruction];
-        }
-        else {
-            InstructionScene *instruction = [[InstructionScene alloc]
-                                             initWithImageName:@"race-instruction.png"];
-            [self addChild:instruction];
-        }
+        [self showHelp];
     }
     else {
         // Check for new prototypes from server
@@ -277,6 +301,9 @@
     
     // Create test array
     _testArray = [self shuffleArray:_activeCharacters maxLength:RACE_LENGTH];
+    if (_modeID == 7) {
+        _testArray = [self repeatCharacters:_testArray numRepeat:2];
+    }
     
     _session.activeCharacters = _activeCharacters;
     _session.activeProtosetIDs = [ud protosetIDsWithLabels:_activeCharacters];
@@ -527,6 +554,7 @@
     }
 }
 
+#pragma mark Helpers
 
 - (NSArray *)shuffleArray:(NSArray *)labels maxLength:(int)length {
     NSMutableArray *temp = [[NSMutableArray alloc] initWithArray:labels];
@@ -544,5 +572,16 @@
     }
     return outArray;
 }
+
+- (NSArray *)repeatCharacters:(NSArray *)labels numRepeat:(int)numRepeat {
+    NSMutableArray *outArray = [[NSMutableArray alloc] init];
+    for (NSString *letter in labels) {
+        for (int i=0;i < numRepeat; i++) {
+            [outArray addObject:letter];
+        }
+    }
+    return outArray;
+}
+
 
 @end
