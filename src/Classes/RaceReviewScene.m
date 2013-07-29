@@ -45,7 +45,8 @@
         int gameHeight = Sparrow.stage.height;
         
         // BG
-        SPQuad *bg = [SPQuad quadWithWidth:gameWidth height:gameHeight color:0x799875];
+        //SPQuad *bg = [SPQuad quadWithWidth:gameWidth height:gameHeight color:0x799875];
+        SPImage *bg = [SPImage imageWithContentsOfFile:@"background-green-linen.png"];
         [self addChild:bg];
         
         _inkCanvas = [[Canvas alloc] initWithWidth:200 height:(200/1.3)];

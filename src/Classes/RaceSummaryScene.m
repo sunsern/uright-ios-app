@@ -11,6 +11,8 @@
 #import "SessionData.h"
 #import "ServerManager.h"
 #import "RaceReviewScene.h"
+#import "RoundData.h"
+#import "ClassificationResult.h"
 
 @implementation RaceSummaryScene {
     SessionData *_session;
@@ -29,31 +31,36 @@
         
         _session = session;
         
+        // Background
+        SPImage *background = [SPImage imageWithContentsOfFile:@"background-orange-pine.png"];
+        [self addChild:background];
+        
         // Window
-        SPQuad *window = [SPQuad quadWithWidth:gameWidth height:gameHeight color:0xbccbba];
+        SPQuad *window = [SPQuad quadWithWidth:gameWidth height:gameHeight color:0x000000];
         window.x = (gameWidth - window.width) / 2;
         window.y = (gameHeight - window.height) / 2;
-        window.alpha = 1.0;
+        window.alpha = 0.0;
         [self addChild:window];
         
 
         // Session Summary
         SPTextField *summary_banner = [SPTextField textFieldWithWidth:window.width-40
-                                                               height:100
+                                                               height:75
                                                                  text:@"Summary"
                                                              fontName:@"Chalkduster"
-                                                             fontSize:50
+                                                             fontSize:48
                                                                 color:0x000000];
         summary_banner.x = (gameWidth - summary_banner.width) / 2;
-        summary_banner.y = y_offset + window.y + 10;
+        summary_banner.y = y_offset + window.y + 20;
         summary_banner.autoScale = YES;
         [self addChild:summary_banner];
         
         NSString *summary = [NSString stringWithFormat:
                              @"Total bits:  %0.2f\n\n"
                              "Total time:  %0.2f\n\n"
-                             "BPS:  %0.2f\n\n",
-                             session.totalScore, session.totalTime, session.bps];
+                             "BPS:  %0.2f\n\n"
+                             "Experience: %0.2f",
+                             session.totalScore, session.totalTime, session.bps, session.bps];
         
         SPTextField *session_summary = [SPTextField textFieldWithWidth:window.width-40
                                                                 height:300
@@ -85,24 +92,39 @@
         restartButton.pivotX = restartButton.width / 2;
         restartButton.pivotY = restartButton.height / 2;
         restartButton.x = gameWidth/4;
-        restartButton.y = session_summary.y + session_summary.height + 20;
+        restartButton.y = session_summary.y + session_summary.height + 30;
         restartButton.scaleX = 1.1;
         restartButton.scaleY = 1.1;
+        restartButton.fontName = @"Chalkduster";
         [self addChild:restartButton];
         [restartButton addEventListener:@selector(restartRace) atObject:self
                                 forType:SP_EVENT_TYPE_TRIGGERED];
         
         // Review button
-        SPButton *reviewButton = [SPButton buttonWithUpState:buttonTexture text:@"Review Mistakes"];
+        SPButton *reviewButton = [SPButton buttonWithUpState:buttonTexture text:@"Review"];
         reviewButton.pivotX = reviewButton.width / 2;
         reviewButton.pivotY = reviewButton.height / 2;
         reviewButton.x = 3*gameWidth/4;
-        reviewButton.y = session_summary.y + session_summary.height + 20;
+        reviewButton.y = session_summary.y + session_summary.height + 30;
         reviewButton.scaleX = 1.1;
         reviewButton.scaleY = 1.1;
+        reviewButton.fontName = @"Chalkduster";
         [self addChild:reviewButton];
         [reviewButton addEventListener:@selector(review) atObject:self
                                forType:SP_EVENT_TYPE_TRIGGERED];
+        
+        // Count mistakes and disable review button
+        int mistake_count = 0;
+        for (RoundData *rd in session.rounds) {
+            NSString *trueLabel = rd.label;
+            NSString *predicted = [rd.result predictionByRanking:0];
+            if (predicted && ![trueLabel isEqualToString:predicted]) {
+                mistake_count++;
+            }
+        }
+        if (mistake_count == 0) {
+            reviewButton.enabled = NO;
+        }
     }
     return self;
 }
@@ -110,6 +132,7 @@
 
 - (void)review {
     RaceReviewScene *review = [[RaceReviewScene alloc] initWithSessionData:_session];
+    [review dropFromTopNoBounce];
     [self addChild:review];
 }
 

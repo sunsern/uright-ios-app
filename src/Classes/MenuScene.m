@@ -15,12 +15,12 @@
 #import "GlobalStorage.h"
 #import "LoginViewController.h"
 #import "MBProgressHUD.h"
-#import "NoticeScene.h"
 #import "RaceScene.h"
 #import "ScoreViewController.h"
 #import "ServerManager.h"
 #import "Userdata.h"
 #import "InfoPanel.h"
+#import "GRAlertView.h"
 
 #define RACE_MODE_ID 3
 #define EARLY_STOP_MODE_ID 7
@@ -83,7 +83,7 @@
         
         // Create buttons
         _page2 = [[SPSprite alloc] init];
-        SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
+        SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big-borderless.png"];
         NSArray *buttonPage2 = @[@"Thai", @"Hebrew",
                                  @"Japanese", @"Full",
                                  @"English-early-stop", @"Custom",
@@ -105,7 +105,7 @@
             button.scaleX = 1.2;
             button.scaleY = 1.2;
             if (![button.text isEqualToString:@"Back"]) {
-                button.enabled = NO;
+                button.enabled = YES;
             }
             [button addEventListener:@selector(buttonTriggered:)
                             atObject:self
@@ -197,8 +197,15 @@
             if (timestamp > _lastAnnoucement) {
                 NSString *text = annoucement[@"annoucement"];
                 _lastAnnoucement = timestamp;
-                NoticeScene *notice = [[NoticeScene alloc] initWithText:text];
-                [self addChild:notice];
+                GRAlertView *alert = [[GRAlertView alloc]
+                                      initWithTitle:@"Annoucement"
+                                      message:text
+                                      delegate:nil
+                                      cancelButtonTitle:@"Close"
+                                      otherButtonTitles:nil];
+                alert.style = GRAlertStyleInfo;
+                alert.animation = GRAlertAnimationLines;
+                [alert show];
             }
         });
     });
@@ -207,18 +214,35 @@
         NSDictionary *userStats = [ServerManager fetchUserStats:ud.userID];
         if (userStats) {
             dispatch_async(dispatch_get_main_queue(), ^{
+                int old_level = ud.level;
+                
                 ud.level = [userStats[@"level"] intValue];
                 ud.experience = [userStats[@"experience"] floatValue];
                 ud.nextLevelExp = [userStats[@"next_level_exp"] floatValue];
                 ud.bestBps = [userStats[@"best_bps"] floatValue];
                 ud.scores = [[NSArray alloc] initWithArray:userStats[@"recent_bps"]];
                 [_infoPanel updatePanel];
+                
+                if (ud.level > old_level) {
+                    NSString *text = [NSString stringWithFormat:@"You are now level %d.",
+                                      ud.level];
+                    GRAlertView *alert = [[GRAlertView alloc]
+                                          initWithTitle:@"Level up!"
+                                          message:text
+                                          delegate:nil
+                                          cancelButtonTitle:@"Close"
+                                          otherButtonTitles:nil];
+                    alert.style = GRAlertStyleInfo;
+                    alert.animation = GRAlertAnimationLines;
+                    [alert setImage:@"up.png"];
+                    [alert show];
+                    [Media playSound:@"kids_cheer.caf"];
+                }
             });
         }
     });
    
 }
-
 
 - (void)logout {
     UIView *view = Sparrow.currentController.view;

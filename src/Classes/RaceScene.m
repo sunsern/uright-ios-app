@@ -212,8 +212,9 @@
                 [ud setProtosets:protosets];
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    hud.labelText = [NSString stringWithFormat:@"%d prototypes updated.", [updatedLabels count]];
-                    [Sparrow.juggler delayInvocationByTime:1.25 block:^{
+                    hud.labelText = [NSString stringWithFormat:@"%d characters updated.",
+                                     [updatedLabels count]];
+                    [Sparrow.juggler delayInvocationByTime:1.5 block:^{
                         [hud hide:YES];
                         [self raceWillStart];
                     }];
@@ -289,17 +290,17 @@
     
     [[Sparrow juggler] delayInvocationByTime:0.25f block:^{
         countdown.text = @"3";
-        [Media playSound:@"sound.caf"];
+        [Media playSound:@"WhoopFlp.caf"];
     }];
     
     [[Sparrow juggler] delayInvocationByTime:1.25f block:^{
         countdown.text = @"2";
-        [Media playSound:@"sound.caf"];
+        [Media playSound:@"WhoopFlp.caf"];
     }];
     
     [[Sparrow juggler] delayInvocationByTime:2.25f block:^{
         countdown.text = @"1";
-        [Media playSound:@"sound.caf"];
+        [Media playSound:@"WhoopFlp.caf"];
     }];
     
     [[Sparrow juggler] delayInvocationByTime:3.25f block:^{
@@ -439,8 +440,8 @@
     }];
     
     [Sparrow.juggler delayInvocationByTime:0.01f block:^{
-        [self addChild:summary];
         [summary dropFromTop];
+        [self addChild:summary];
     }];
 }
 
@@ -477,7 +478,7 @@
     if (!_earlyStopFound) {
         [_canvas drawMarkerAt:point];
         _earlyStopFound = YES;
-        [Media playSound:@"briefcase-lock-2.caf"];
+        [Media playSound:@"tick.caf"];
     }
 }
 

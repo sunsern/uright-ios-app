@@ -52,8 +52,8 @@
     int gameWidth = Sparrow.stage.width;
     int gameHeight = Sparrow.stage.height;
     
-    // bg
-    SPQuad *background = [SPQuad quadWithWidth:gameWidth height:gameHeight];
+    // BG
+    SPImage *background = [SPImage imageWithContentsOfFile:@"background-green-linen.png"];
     [self addChild:background];
 
     // buttons
@@ -66,8 +66,8 @@
     [self addChild:backButton];
     [backButton addEventListener:@selector(back) atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
     
-    SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
-    SPButton *removeButton = [SPButton buttonWithUpState:buttonTexture text:@"Remove character"];
+    SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"delete.png"];
+    SPButton *removeButton = [SPButton buttonWithUpState:buttonTexture];
     removeButton.x = gameWidth - removeButton.width;
     removeButton.y = 0;
     removeButton.scaleX = 1.0;
