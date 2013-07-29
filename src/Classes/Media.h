@@ -7,12 +7,6 @@
 
 @interface Media : NSObject 
 
-+ (void)initAtlas;
-+ (void)releaseAtlas;
-
-+ (SPTexture *)atlasTexture:(NSString *)name;
-+ (NSArray *)atlasTexturesWithPrefix:(NSString *)prefix;
-
 + (void)initSound;
 + (void)releaseSound;
 

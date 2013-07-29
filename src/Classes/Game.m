@@ -24,7 +24,6 @@
 - (void)dealloc
 {
     // release any resources here
-    [Media releaseAtlas];
     [Media releaseSound];
 }
 
@@ -40,7 +39,6 @@
     // that way, you will be able to access your textures and sounds throughout your 
     // application, without duplicating any resources.
     
-    [Media initAtlas];      // loads your texture atlas -> see Media.h/Media.m
     [Media initSound];      // loads all your sounds    -> see Media.h/Media.m
     
     // Initialize Facebook session

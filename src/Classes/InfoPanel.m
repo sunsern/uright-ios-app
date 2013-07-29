@@ -77,8 +77,8 @@
     _leftTextField.text = [NSString stringWithFormat:@"Level %d :: %@",
                            ud.level, normalizedUsername];
     _rightTextField.text = [NSString stringWithFormat:@"%d\ncharacters", [ud.protosets count]];
-    _expGained.width = _expBarWidth * ud.experience / (ud.experience + ud.nextLevelExp);
-    _expNeeded.width = _expBarWidth * ud.nextLevelExp / (ud.experience + ud.nextLevelExp);
+    _expGained.width = _expBarWidth * ud.experience / MAX(ud.experience + ud.nextLevelExp,1);
+    _expNeeded.width = _expBarWidth - _expGained.width;
     _expNeeded.x = _expGained.x + _expGained.width;
 }
 

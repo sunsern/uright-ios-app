@@ -21,6 +21,7 @@
 #import "Userdata.h"
 #import "InfoPanel.h"
 #import "GRAlertView.h"
+#import "InstructionScene.h"
 
 #define RACE_MODE_ID 3
 #define EARLY_STOP_MODE_ID 7
@@ -187,29 +188,46 @@
 
 - (void)updateInfo {
     Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
-    
+
     [_infoPanel updatePanel];
     
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-        NSDictionary *annoucement = [ServerManager announcement];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            double timestamp = [annoucement[@"timestamp"] doubleValue];
-            if (timestamp > _lastAnnoucement) {
-                NSString *text = annoucement[@"annoucement"];
-                _lastAnnoucement = timestamp;
-                GRAlertView *alert = [[GRAlertView alloc]
-                                      initWithTitle:@"Annoucement"
-                                      message:text
-                                      delegate:nil
-                                      cancelButtonTitle:@"Close"
-                                      otherButtonTitles:nil];
-                alert.style = GRAlertStyleInfo;
-                alert.animation = GRAlertAnimationLines;
-                [alert show];
-            }
+    if (ud.experience == 0.0) {
+        if (Sparrow.stage.height > 480) {
+            InstructionScene *instruction = [[InstructionScene alloc]
+                                             initWithImageName:@"menu-instruction-568.png"];
+            [self addChild:instruction];
+        }
+        else {
+            InstructionScene *instruction = [[InstructionScene alloc]
+                                             initWithImageName:@"menu-instruction.png"];
+            [self addChild:instruction];
+        }
+    }
+    else {
+        
+        // Check for annoucement from server.
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+            NSDictionary *annoucement = [ServerManager announcement];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                double timestamp = [annoucement[@"timestamp"] doubleValue];
+                if (timestamp > _lastAnnoucement) {
+                    NSString *text = annoucement[@"annoucement"];
+                    _lastAnnoucement = timestamp;
+                    GRAlertView *alert = [[GRAlertView alloc]
+                                          initWithTitle:@"Annoucement"
+                                          message:text
+                                          delegate:nil
+                                          cancelButtonTitle:@"Close"
+                                          otherButtonTitles:nil];
+                    alert.style = GRAlertStyleInfo;
+                    alert.animation = GRAlertAnimationLines;
+                    [alert show];
+                }
+            });
         });
-    });
+    }
     
+    // Refresh experience and level
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
         NSDictionary *userStats = [ServerManager fetchUserStats:ud.userID];
         if (userStats) {
@@ -223,6 +241,7 @@
                 ud.scores = [[NSArray alloc] initWithArray:userStats[@"recent_bps"]];
                 [_infoPanel updatePanel];
                 
+                // Level up!
                 if (ud.level > old_level) {
                     NSString *text = [NSString stringWithFormat:@"You are now level %d.",
                                       ud.level];
@@ -241,7 +260,6 @@
             });
         }
     });
-   
 }
 
 - (void)logout {
@@ -347,8 +365,11 @@
 }
 
 - (void)addedToStage:(SPEvent *)event {
+    GlobalStorage *gs = [GlobalStorage sharedInstance];
     if ([PFUser currentUser] == nil ||
-        [[GlobalStorage sharedInstance] activeUserID] == UR_GUEST_ID) {
+        [gs activeUserID] == UR_GUEST_ID ||
+        [gs activeUserdata].username == nil ||
+        [gs activeUserdata].username.length == 0) {
       
         [PFUser logOut];
         [Sparrow.juggler delayInvocationByTime:0.05 block:^{

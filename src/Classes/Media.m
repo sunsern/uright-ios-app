@@ -8,34 +8,8 @@
 
 @implementation Media
 
-static SPTextureAtlas *atlas = NULL;
 static NSMutableDictionary *sounds = NULL;
 static NSDictionary *asciiNameDB = NULL;
-
-#pragma mark Texture Atlas
-
-+ (void)initAtlas
-{
-    if (!atlas)
-        atlas = [[SPTextureAtlas alloc] initWithContentsOfFile:@"atlas.xml"];
-}
-
-+ (void)releaseAtlas
-{
-    atlas = nil;
-}
-
-+ (SPTexture *)atlasTexture:(NSString *)name
-{
-    if (!atlas) [self initAtlas];
-    return [atlas textureByName:name];
-}
-
-+ (NSArray *)atlasTexturesWithPrefix:(NSString *)prefix
-{
-    if (!atlas) [self initAtlas];
-    return [atlas texturesStartingWith:prefix];
-}
 
 #pragma mark Audio
 

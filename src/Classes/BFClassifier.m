@@ -151,7 +151,7 @@
             _prevPoint = nil;
         }
         else {
-            DEBUG_PRINT(@"Reset classifier");
+            //DEBUG_PRINT(@"Reset classifier");
             [_beamPQ clear];
             for (int i=0; i<[_prototypes count];i++) {
                 StateData *state = [[StateData alloc] init];

@@ -20,6 +20,7 @@
 #import "MBProgressHUD.h"
 #import "GlobalStorage.h"
 #import "Userdata.h"
+#import "InstructionScene.h"
 
 #define RACE_LENGTH 15
 #define WAIT_TIME 1.0f
@@ -172,6 +173,9 @@
     
     // Update BPS meter
     [self addEventListener:@selector(enterFrame:) atObject:self forType:SP_EVENT_TYPE_ENTER_FRAME];
+    
+    // Instruction close
+    [self addEventListener:@selector(raceWillStart) atObject:self forType:SP_EVENT_TYPE_SCENE_CLOSE];
 }
 
 
@@ -183,42 +187,67 @@
 
 
 - (void)restartRace {
-    // Check for new prototypes from server
-    MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:Sparrow.currentController.view animated:YES];
-    hud.mode = MBProgressHUDModeIndeterminate;
-    hud.labelText = @"Checking prototypes...";
+    Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
     
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-        Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
-        NSDictionary *protosets = [ServerManager fetchProtosets:ud.userID];
-        if (protosets) {
-            // Count prototypes
-            NSMutableArray *updatedLabels = [[NSMutableArray alloc] init];
-            for (id key in _activeCharacters) {
-                Protoset *old_ps = ud.protosets[key];
-                Protoset *new_ps = protosets[key];
-                if (old_ps && new_ps && new_ps.protosetID > old_ps.protosetID) {
-                    [updatedLabels addObject:key];
+    // Show instruction in the 1st time.
+    if (ud.experience == 0.0) {
+        _targetLabel.text = @"a";
+        _targetLabel.x = _targetLabelCenter.x;
+        _targetLabel.y = _targetLabelCenter.y;
+        if (Sparrow.stage.height > 480) {
+            InstructionScene *instruction = [[InstructionScene alloc]
+                                             initWithImageName:@"race-instruction-568.png"];
+            [self addChild:instruction];
+        }
+        else {
+            InstructionScene *instruction = [[InstructionScene alloc]
+                                             initWithImageName:@"race-instruction.png"];
+            [self addChild:instruction];
+        }
+    }
+    else {
+        // Check for new prototypes from server
+        MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:Sparrow.currentController.view animated:YES];
+        hud.mode = MBProgressHUDModeIndeterminate;
+        hud.labelText = @"Checking prototypes...";
+        
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+            NSDictionary *protosets = [ServerManager fetchProtosets:ud.userID];
+            if (protosets) {
+                // Count prototypes
+                NSMutableArray *updatedLabels = [[NSMutableArray alloc] init];
+                for (id key in _activeCharacters) {
+                    Protoset *old_ps = ud.protosets[key];
+                    Protoset *new_ps = protosets[key];
+                    if (old_ps && new_ps && new_ps.protosetID > old_ps.protosetID) {
+                        [updatedLabels addObject:key];
+                    }
+                    else if (!old_ps) {
+                        [updatedLabels addObject:key];
+                    }
                 }
-                else if (!old_ps) {
-                    [updatedLabels addObject:key];
-                }
-            }
-           
-            // New prototypes found, update and notify user
-            if ([updatedLabels count] > 0) {
-           
-                // Update the protosets
-                [ud setProtosets:protosets];
                 
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    hud.labelText = [NSString stringWithFormat:@"%d characters updated.",
-                                     [updatedLabels count]];
-                    [Sparrow.juggler delayInvocationByTime:1.5 block:^{
+                // New prototypes found, update and notify user
+                if ([updatedLabels count] > 0) {
+                    
+                    // Update the protosets
+                    [ud setProtosets:protosets];
+                    
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        hud.labelText = [NSString stringWithFormat:@"%d characters updated.",
+                                         [updatedLabels count]];
+                        [Sparrow.juggler delayInvocationByTime:1.5 block:^{
+                            [hud hide:YES];
+                            [self raceWillStart];
+                        }];
+                    });
+                }
+                else {
+                    dispatch_async(dispatch_get_main_queue(), ^{
                         [hud hide:YES];
                         [self raceWillStart];
-                    }];
-                });
+                    });
+                }
             }
             else {
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -226,14 +255,8 @@
                     [self raceWillStart];
                 });
             }
-        }
-        else {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [hud hide:YES];
-                [self raceWillStart];
-            });
-        }
-    });
+        });
+    }
 }
 
 
@@ -265,6 +288,9 @@
     
     // BPS meter
     _bpsTextField.text = @"0.00";
+    
+    // Target character
+    _targetLabel.text = @"";
     
     [_canvas clear];
     _canvas.touchable = NO;

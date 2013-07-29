@@ -8,6 +8,8 @@
 
 #import "SPSprite.h"
 
+#define SP_EVENT_TYPE_SCENE_CLOSE @"scene_close"
+
 @interface Scene : SPSprite
 
 - (void)dropFromTop;
