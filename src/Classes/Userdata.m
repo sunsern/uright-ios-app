@@ -55,7 +55,7 @@
         _nextLevelExp = 0.0;
         _bestBps = 0.0;
         _scores = [[NSArray alloc] init];
-        _username = @"";
+        _username = @"unknown";
         _sessions = [[NSMutableArray alloc] init];
         _protosets = [[NSDictionary alloc] init];
         _customCharset = [Charset emptyCharset];

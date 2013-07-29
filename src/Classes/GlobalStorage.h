@@ -20,6 +20,10 @@
 
 + (void)clearGlobalData;
 
+- (void)saveUserdata;
+
+- (void)saveGlobalData;
+
 - (void)switchActiveUser:(int)userID onComplete:(void(^)(void))completeBlock;
 
 - (Charset *)charsetByID:(int)charsetID;

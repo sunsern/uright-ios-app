@@ -66,8 +66,11 @@ void onUncaughtException(NSException *exception)
     return YES;
 }
 
-- (void)applicationWillTerminate:(UIApplication *)application {
+- (void)applicationWillResignActive:(UIApplication *)application {
     // Commit changes to disk
+    DEBUG_PRINT(@"Commiting to disk");
+    [[GlobalStorage sharedInstance] saveUserdata];
+    [[GlobalStorage sharedInstance] saveGlobalData];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 

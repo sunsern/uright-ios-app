@@ -91,7 +91,7 @@
     _label.pivotX = _label.width / 2;
     _label.pivotY = _label.height / 2;
     _label.x = gameWidth / 2;
-    _label.y = 250;
+    _label.y = 230;
     _label.border = YES;
     _label.fontSize = 100;
     _label.fontName = @"AppleColorEmoji";

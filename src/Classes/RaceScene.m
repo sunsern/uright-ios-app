@@ -222,7 +222,7 @@
                     if (old_ps && new_ps && new_ps.protosetID > old_ps.protosetID) {
                         [updatedLabels addObject:key];
                     }
-                    else if (!old_ps) {
+                    else if (!old_ps && new_ps) {
                         [updatedLabels addObject:key];
                     }
                 }
