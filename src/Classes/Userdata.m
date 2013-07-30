@@ -52,6 +52,7 @@
         _userID = UR_GUEST_ID;
         _level = 0;
         _experience = 0.0;
+        _thisLevelExp = 0.0;
         _nextLevelExp = 0.0;
         _bestBps = 0.0;
         _scores = [[NSArray alloc] init];
@@ -69,6 +70,7 @@
         _userID = [jsonObj[@"userID"] intValue];
         _level = [jsonObj[@"level"] intValue];
         _experience = [jsonObj[@"experience"] floatValue];
+        _thisLevelExp = [jsonObj[@"thisLevelExp"] floatValue];
         _nextLevelExp = [jsonObj[@"nextLevelExp"] floatValue];
         _bestBps = [jsonObj[@"bestBps"] floatValue];
         _username = [jsonObj[@"username"] copy];
@@ -93,6 +95,7 @@
     jsonObj[@"userID"] = @(_userID);
     jsonObj[@"level"] = @(_level);
     jsonObj[@"experience"] = @(_experience);
+    jsonObj[@"thisLevelExp"] = @(_thisLevelExp);
     jsonObj[@"nextLevelExp"] = @(_nextLevelExp);
     jsonObj[@"bextBps"] = @(_bestBps);
     jsonObj[@"scores"] = _scores;

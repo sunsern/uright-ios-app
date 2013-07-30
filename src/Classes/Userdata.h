@@ -25,6 +25,7 @@
 @property (readwrite) int userID;
 @property (readwrite) int level;
 @property (readwrite) float experience;
+@property (readwrite) float thisLevelExp;
 @property (readwrite) float nextLevelExp;
 @property (readwrite) float bestBps;
 @property (nonatomic,copy) NSString *username;

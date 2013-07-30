@@ -276,6 +276,7 @@
                 ud.level = [userStats[@"level"] intValue];
                 ud.experience = [userStats[@"experience"] floatValue];
                 ud.nextLevelExp = [userStats[@"next_level_exp"] floatValue];
+                ud.thisLevelExp = [userStats[@"this_level_exp"] floatValue];
                 ud.bestBps = [userStats[@"best_bps"] floatValue];
                 ud.scores = [[NSArray alloc] initWithArray:userStats[@"recent_bps"]];
                 [_infoPanel updatePanel];
@@ -341,9 +342,6 @@
     ScoreViewController *scoreVC = [[ScoreViewController alloc] init];
     [Sparrow.currentController presentModalViewController:scoreVC animated:YES];
 }
-
-
-
 
 
 - (void)buttonTriggered:(SPEvent *)event {
