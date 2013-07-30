@@ -26,9 +26,6 @@
 #define WAIT_TIME 1.0f
 
 @implementation RaceScene {
-    int _modeID;
-    
-    // UI
     SPTextField *_targetLabel;
     SPTextField *_bpsTextField;
     Canvas *_canvas;
@@ -48,6 +45,9 @@
     
     SessionData *_session;
     RoundData *_round;
+    
+    BOOL _firstTime;
+    int _modeID;
 }
 
 
@@ -58,6 +58,7 @@
         _activeCharacters = [[NSArray alloc] initWithArray:characters];
         _classifierMode = classifierMode;
         _modeID = modeID;
+        _firstTime = YES;
     }
     return self;
 }
@@ -223,7 +224,7 @@
     Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
     
     // Show instruction in the 1st time.
-    if (ud.experience == 0.0) {
+    if (ud.experience == 0.0 && _firstTime) {
         _targetLabel.text = @"a";
         _targetLabel.x = _targetLabelCenter.x;
         _targetLabel.y = _targetLabelCenter.y;
@@ -452,6 +453,8 @@
 
 
 - (void)raceCompleted {
+    _firstTime = NO;
+    
     _canvas.touchable = NO;
     [_canvas clear];
 
