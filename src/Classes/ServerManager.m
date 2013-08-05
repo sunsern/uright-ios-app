@@ -16,6 +16,17 @@
 #import "SessionData.h"
 #import "Userdata.h"
 
+NSString* hashedPassword(NSString *password) {
+    const char *cStr = [password UTF8String];
+    unsigned char digest[CC_MD5_DIGEST_LENGTH];
+    CC_MD5( cStr, strlen(cStr), digest ); // This is the md5 call
+    
+    NSMutableString *hashed = [NSMutableString stringWithCapacity:CC_MD5_DIGEST_LENGTH * 2];
+    for(int i = 0; i < CC_MD5_DIGEST_LENGTH; i++)
+        [hashed appendFormat:@"%02x", digest[i]];
+    return hashed;
+}
+
 @implementation ServerManager
 
 + (BOOL)isOnline {
@@ -29,14 +40,7 @@
                           email:(NSString *)email
                        fullname:(NSString *)fullname {
     
-    const char *cStr = [password UTF8String];
-    unsigned char digest[CC_MD5_DIGEST_LENGTH];
-    CC_MD5( cStr, strlen(cStr), digest ); // This is the md5 call
-    
-    NSMutableString *hashed = [NSMutableString stringWithCapacity:CC_MD5_DIGEST_LENGTH * 2];
-    for(int i = 0; i < CC_MD5_DIGEST_LENGTH; i++)
-        [hashed appendFormat:@"%02x", digest[i]];
-    
+    NSString *hashed = hashedPassword(password);
     NSString *urlString = [NSString stringWithFormat:@"%@/newuser", UR_BASE_URL];
     NSURL *url = [NSURL URLWithString:urlString];
     ASIFormDataRequest *request = [ASIFormDataRequest requestWithURL:url];
@@ -60,14 +64,7 @@
 + (int)loginWithUsername:(NSString *)username
                 password:(NSString *)password  {
     
-    const char *cStr = [password UTF8String];
-    unsigned char digest[CC_MD5_DIGEST_LENGTH];
-    CC_MD5( cStr, strlen(cStr), digest ); // This is the md5 call
-    
-    NSMutableString *hashed = [NSMutableString stringWithCapacity:CC_MD5_DIGEST_LENGTH * 2];
-    for(int i = 0; i < CC_MD5_DIGEST_LENGTH; i++)
-        [hashed appendFormat:@"%02x", digest[i]];
-    
+    NSString *hashed = hashedPassword(password);
     NSString *urlString = [NSString stringWithFormat:@"%@/login", UR_BASE_URL];
     NSURL *url = [NSURL URLWithString:urlString];
     ASIFormDataRequest *request = [ASIFormDataRequest requestWithURL:url];

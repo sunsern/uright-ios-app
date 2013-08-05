@@ -68,7 +68,7 @@
         UILabel *leaderboardTitle = [[UILabel alloc]
                                      initWithFrame:CGRectMake((width-200)/2, y_offset+210,
                                                               200, 40)];
-        leaderboardTitle.text = @"Weekly Top-10";
+        leaderboardTitle.text = @"Top 10 uRighters";
         leaderboardTitle.textAlignment = NSTextAlignmentCenter;
         leaderboardTitle.font = [UIFont fontWithName:@"Chalkduster" size:20];
         leaderboardTitle.adjustsFontSizeToFitWidth = YES;
