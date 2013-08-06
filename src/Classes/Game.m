@@ -6,6 +6,7 @@
 #import "Game.h" 
 #import "MenuScene.h"
 #import "AccountManager.h"
+#import "GlobalStorage.h"
 
 @implementation Game
 {
@@ -41,40 +42,11 @@
     
     [Media initSound];      // loads all your sounds    -> see Media.h/Media.m
     
-    // Initialize Facebook session
-    //[AccountManager initializeFacebookSession];
+    // Initialize the singleton storage
+    [GlobalStorage sharedInstance];
     
     _mainmenu = [[MenuScene alloc] init];
     [self addChild:_mainmenu];
-    
-    [self updateLocations];
-    
-    // The controller autorotates the game to all supported device orientations. 
-    // Choose the orienations you want to support in the Xcode Target Settings ("Summary"-tab).
-    // To update the game content accordingly, listen to the "RESIZE" event; it is dispatched
-    // to all game elements (just like an ENTER_FRAME event).
-    // 
-    // To force the game to start up in landscape, add the key "Initial Interface Orientation"
-    // to the "App-Info.plist" file and choose any landscape orientation.
-    
-    [self addEventListener:@selector(onResize:) atObject:self forType:SP_EVENT_TYPE_RESIZE];
-}
-
-- (void)updateLocations
-{
-    //int gameWidth  = Sparrow.stage.width;
-    //int gameHeight = Sparrow.stage.height;
-    
-    //_contents.x = (int) (gameWidth  - _contents.width)  / 2;
-    //_contents.y = (int) (gameHeight - _contents.height) / 2;
-}
-
-- (void)onResize:(SPResizeEvent *)event
-{
-    NSLog(@"new size: %.0fx%.0f (%@)", event.width, event.height, 
-          event.isPortrait ? @"portrait" : @"landscape");
-    
-    [self updateLocations];
 }
 
 @end

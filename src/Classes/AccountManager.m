@@ -37,8 +37,7 @@
                  if (userID != UR_GUEST_ID) {
                      // Success!
                      [[GlobalStorage sharedInstance] switchActiveUser:userID onComplete:^{
-                         Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
-                         ud.username = username;
+                         [AccountManager fillUserInfo:username];
                          completeBlock(YES);
                      }];
                  } else {
@@ -52,8 +51,7 @@
                          [[GlobalStorage sharedInstance]
                           switchActiveUser:newUserID
                           onComplete:^{
-                              Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
-                              ud.username = username;
+                              [AccountManager fillUserInfo:username];
                               completeBlock(YES);
                           }];
                      } else {
@@ -82,8 +80,7 @@
             if (userID != UR_GUEST_ID) {
                 // Success!
                 [[GlobalStorage sharedInstance] switchActiveUser:userID onComplete:^{
-                    Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
-                    ud.username = username;
+                    [AccountManager fillUserInfo:username];
                     dispatch_async(dispatch_get_main_queue(), ^{
                         completeBlock(YES);
                     });
@@ -97,8 +94,7 @@
                 if (newUserID != UR_GUEST_ID) {
                     // Success!
                     [[GlobalStorage sharedInstance] switchActiveUser:newUserID onComplete:^{
-                        Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
-                        ud.username = username;
+                        [AccountManager fillUserInfo:username];
                         dispatch_async(dispatch_get_main_queue(), ^{
                             completeBlock(YES);
                         });
@@ -111,6 +107,20 @@
                 }
             }
         });
+    }
+}
+
++ (void)fillUserInfo:(NSString *)username {
+    Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
+    ud.username = username;
+    NSDictionary *userStats = [ServerManager fetchUserStats:ud.userID];
+    if (userStats) {
+        ud.level = [userStats[@"level"] intValue];
+        ud.experience = [userStats[@"experience"] floatValue];
+        ud.nextLevelExp = [userStats[@"next_level_exp"] floatValue];
+        ud.thisLevelExp = [userStats[@"this_level_exp"] floatValue];
+        ud.bestBps = [userStats[@"best_bps"] floatValue];
+        ud.scores = [[NSArray alloc] initWithArray:userStats[@"recent_bps"]];
     }
 }
 

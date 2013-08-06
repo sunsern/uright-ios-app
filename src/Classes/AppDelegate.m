@@ -38,24 +38,20 @@ void onUncaughtException(NSException *exception)
     
     [PFAnalytics trackAppOpenedWithLaunchOptions:launchOptions];
     
-    // Enable FB
+    // Enable FB support
     [PFFacebookUtils initializeFacebook];
     
-    
+    // Enable Twitter support
     [PFTwitterUtils initializeWithConsumerKey:@"mZ9gPegAV4CSb3uLXRTUxg"
                                consumerSecret:@"mOp9ro4wgRVo6ehsxrt4y5zrkBG4AXsVbToDQantSAU"];
     
-    
-    // Initialize the singleton storage
-    [GlobalStorage sharedInstance];
-        
     // Enable some common settings here:
     //
     // _viewController.showStats = YES;
     // _viewController.multitouchEnabled = YES;
      _viewController.preferredFramesPerSecond = 60;
     
-    // Let's disable multitouch
+    // Disable multitouch
     _viewController.multitouchEnabled = NO;
     
     [_viewController startWithRoot:[Game class] supportHighResolutions:YES doubleOnPad:YES];
@@ -67,8 +63,6 @@ void onUncaughtException(NSException *exception)
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
-    // Commit changes to disk
-    DEBUG_PRINT(@"Commiting to disk");
     [[GlobalStorage sharedInstance] saveUserdata];
     [[GlobalStorage sharedInstance] saveGlobalData];
     [[NSUserDefaults standardUserDefaults] synchronize];

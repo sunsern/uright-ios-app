@@ -246,7 +246,6 @@
         [self showHelp];
     }
     else {
-        
         // Check for annoucement from server.
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
             NSDictionary *annoucement = [ServerManager announcement];
