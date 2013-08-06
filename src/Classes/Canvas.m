@@ -61,6 +61,7 @@
         _guide = [[SPImage alloc] initWithTexture:[[self class]
                                                    guideWithWidth:width
                                                    height:height]];
+        _guide.touchable = NO;
         [self addChild:_guide];
         
         // Create canvas
@@ -78,7 +79,7 @@
         _topline = ADJUST_Y(height * kTopLineRatio);
         _currentInkCharacter = [[InkCharacter alloc] initWithBaseline:_baseline
                                                               topline:_topline];
-        
+                
     }
     return self;
 }

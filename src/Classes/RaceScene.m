@@ -111,6 +111,7 @@
     _bar.x = gameWidth / 2;
     _bar.y = _canvas.y - _bar.height;
     _bar.color = 0x59aa53;
+    _bar.touchable = NO;
     [self addChild:_bar];
     
     // Target character
@@ -147,6 +148,7 @@
     _bpsTextField.fontSize = 40;
     _bpsTextField.fontName = @"ArialRoundedMTBold";
     _bpsTextField.border = YES;
+    _bpsTextField.touchable = NO;
     //_bpsTf.autoScale = YES;
     [self addChild:_bpsTextField];
     
@@ -156,6 +158,7 @@
     bpsLabel.y = y_offset + 5;
     bpsLabel.fontSize = 20;
     bpsLabel.hAlign = SPHAlignRight;
+    bpsLabel.touchable = NO;
     //bpsLabel.border = YES;
     [self addChild:bpsLabel];
     
