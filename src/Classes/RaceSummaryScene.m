@@ -141,7 +141,7 @@
                                     Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
                                     if (ud.bestBps < session.bps) {
                                         newRecordBadge.visible = YES;
-                                        [Media playSound:@"kids_cheer.caf"];
+                                        [Media playSound:@"new_record.caf"];
                                     }
                                 }];
     }

@@ -252,7 +252,7 @@
             // Clear the queue
             [_beamPQ clear];
             
-            // Normalize live states
+            // Normalize alive states
             float sum_like = -FLT_MAX;
             for (id key in _cacheDict) {
                 CacheData *cache = _cacheDict[key];
@@ -310,7 +310,7 @@
                                               floatValue] - sum_like));
                 }
                 float p = [_likelihood[_targetLabel] floatValue];
-                if (-log2f(p) < _targetThreshold) {
+                if (-log2f(p) < _targetThreshold && !point.penup) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [_delegate thresholdReached:point];
                     });

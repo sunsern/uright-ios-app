@@ -330,7 +330,7 @@
 
 
 - (void)countDown {
-    SPTextField *countdown = [[SPTextField alloc] initWithWidth:120 height:120];
+    SPTextField *countdown = [[SPTextField alloc] initWithWidth:200 height:120];
     countdown.hAlign = SPHAlignCenter;
     countdown.vAlign = SPVAlignCenter;
     countdown.pivotX = countdown.width/2;
@@ -345,20 +345,26 @@
     
     [[Sparrow juggler] delayInvocationByTime:0.25f block:^{
         countdown.text = @"3";
-        [Media playSound:@"WhoopFlp.caf"];
+        [Media playSound:@"scouter.caf"];
     }];
     
     [[Sparrow juggler] delayInvocationByTime:1.25f block:^{
         countdown.text = @"2";
-        [Media playSound:@"WhoopFlp.caf"];
+        [Media playSound:@"scouter.caf"];
     }];
     
     [[Sparrow juggler] delayInvocationByTime:2.25f block:^{
         countdown.text = @"1";
-        [Media playSound:@"WhoopFlp.caf"];
+        [Media playSound:@"scouter.caf"];
     }];
     
     [[Sparrow juggler] delayInvocationByTime:3.25f block:^{
+        countdown.text = @"Go!";
+        countdown.fontSize = 80;
+        [Media playSound:@"whistle_go.caf"];
+    }];
+    
+    [[Sparrow juggler] delayInvocationByTime:4.25f block:^{
         [self removeChild:countdown];
         [self startRound];
     }];
@@ -403,9 +409,7 @@
 
 - (void)endRound {
     _canvas.touchable = NO;
-    
-    [Media playSound:@"DING.caf"];
-    
+
     _round.firstPendownTime = _canvas.firstTouchTime;
     _round.lastPenupTime = _canvas.lastTouchTime;
     _round.score = _currentScore;
@@ -427,12 +431,20 @@
     popupScore.y = 140;
     popupScore.fontSize = 30;
     float maxscore = log2f([_activeCharacters count]);
+    // Good
     if (_currentScore >  maxscore - 1.0) {
         popupScore.color = 0x149005;
-    } else if (_currentScore > maxscore / 2) {
+        [Media playSound:@"correct.caf"];
+    }
+    // OK
+    else if (_currentScore >= maxscore / 2) {
         popupScore.color = 0xf08b19;
-    } else {
+        [Media playSound:@"maybe.caf"];
+    }
+    // Bad
+    else {
         popupScore.color = 0xff0000;
+        [Media playSound:@"wrong.caf"];
     }
     popupScore.alpha = 1.0;
     [self addChild:popupScore];
@@ -535,7 +547,7 @@
     if (!_earlyStopFound) {
         [_canvas drawMarkerAt:point];
         _earlyStopFound = YES;
-        [Media playSound:@"tick.caf"];
+        [Media playSound:@"sharp_beep.caf"];
     }
 }
 
