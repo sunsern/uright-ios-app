@@ -195,6 +195,7 @@
 
 
 - (void)dealloc {
+    [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_SCENE_CLOSE];
     [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_ENTER_FRAME];
     [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_ADDED_TO_STAGE];
     [_canvas removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TOUCH];

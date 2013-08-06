@@ -13,6 +13,8 @@
 #import "RaceReviewScene.h"
 #import "RoundData.h"
 #import "ClassificationResult.h"
+#import "GlobalStorage.h"
+#import "Userdata.h"
 
 @implementation RaceSummaryScene {
     SessionData *_session;
@@ -112,7 +114,15 @@
         [self addChild:reviewButton];
         [reviewButton addEventListener:@selector(review) atObject:self
                                forType:SP_EVENT_TYPE_TRIGGERED];
-        
+    
+    
+        // New record
+        SPImage *newRecordBadge = [SPImage imageWithContentsOfFile:@"new-record.png"];
+        newRecordBadge.x = session_summary.x + session_summary.width - newRecordBadge.width;
+        newRecordBadge.y = session_summary.y + session_summary.height - 150;
+        newRecordBadge.visible = NO;
+        [self addChild:newRecordBadge];
+       
         // Count mistakes and disable review button
         int mistake_count = 0;
         for (RoundData *rd in session.rounds) {
@@ -125,10 +135,18 @@
         if (mistake_count == 0) {
             reviewButton.enabled = NO;
         }
+        
+        [self addEventListenerForType:SP_EVENT_TYPE_ADDED_TO_STAGE
+                                block:^(SPEvent *event){
+                                    Userdata *ud = [[GlobalStorage sharedInstance] activeUserdata];
+                                    if (ud.bestBps < session.bps) {
+                                        newRecordBadge.visible = YES;
+                                        [Media playSound:@"kids_cheer.caf"];
+                                    }
+                                }];
     }
     return self;
 }
-
 
 - (void)review {
     RaceReviewScene *review = [[RaceReviewScene alloc] initWithSessionData:_session];
@@ -137,11 +155,13 @@
 }
 
 - (void)quitRace {
+    [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_ADDED_TO_STAGE];
     [self dispatchEventWithType:SP_EVENT_TYPE_QUIT_RACE];
     [self removeFromParent];
 }
 
 - (void)restartRace {
+    [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_ADDED_TO_STAGE];
     [self dispatchEventWithType:SP_EVENT_TYPE_RESTART_RACE];
     [self shootUpAndClose];
 }

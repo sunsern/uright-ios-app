@@ -133,6 +133,8 @@
 
 - (void)dealloc {
     [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TOUCH];
+    [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_SWIPE_RIGHT];
+    [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_SWIPE_LEFT];
 }
 
 

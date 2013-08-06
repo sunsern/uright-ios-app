@@ -140,6 +140,8 @@
 }
 
 - (void)back {
+    [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_SWIPE_LEFT];
+    [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_SWIPE_RIGHT];
     [Sparrow.juggler removeAllObjects];
     [self shootUpAndClose];
 }
