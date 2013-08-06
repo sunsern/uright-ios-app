@@ -20,7 +20,7 @@
 
 // Deafult beam config
 #define kQueueThreshold -10.0
-#define kBeamWidth 300
+#define kBeamWidth 800
 
 // Online mode
 #define kIgnoreAddpoint 0.01

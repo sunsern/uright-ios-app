@@ -670,7 +670,7 @@
 				3CD25FC6179904DB007DDB75 /* 8.caf */,
 				3CD25FC7179904DB007DDB75 /* 9.caf */,
 			);
-			name = digits;
+			path = digits;
 			sourceTree = "<group>";
 		};
 		3C5F57CF17A5F2C20013E4D1 /* sfx */ = {
@@ -682,7 +682,7 @@
 				3CE1B17D178BED370041D1BF /* DING.caf */,
 				DE4F80DB14E1541400655D44 /* tick.caf */,
 			);
-			name = sfx;
+			path = sfx;
 			sourceTree = "<group>";
 		};
 		3C5F57D017A5F38C0013E4D1 /* english */ = {
@@ -715,7 +715,7 @@
 				3CD25FFA179904DB007DDB75 /* y.caf */,
 				3CD25FFC179904DB007DDB75 /* z.caf */,
 			);
-			name = english;
+			path = english;
 			sourceTree = "<group>";
 		};
 		3C5F57D117A5F3990013E4D1 /* hebrew */ = {
@@ -749,7 +749,7 @@
 				3CD25FFB179904DB007DDB75 /* yod.caf */,
 				3CD25FFD179904DB007DDB75 /* zayin.caf */,
 			);
-			name = hebrew;
+			path = hebrew;
 			sourceTree = "<group>";
 		};
 		3C81539C179D27330079EB06 /* MBProgressHUD */ = {
