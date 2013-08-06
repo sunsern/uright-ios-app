@@ -236,7 +236,7 @@
 		1D30AB110D05D00D00671497 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		1D3623240D0F684500981E51 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		1D3623250D0F684500981E51 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		1D6058910D05DD3D006BFB54 /* uRight3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = uRight3.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1D6058910D05DD3D006BFB54 /* uRight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = uRight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1DF5F4DF0D08C38300B7A737 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		288765FC0DF74451002DB57D /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -540,7 +540,7 @@
 		19C28FACFE9D520D11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1D6058910D05DD3D006BFB54 /* uRight3.app */,
+				1D6058910D05DD3D006BFB54 /* uRight.app */,
 				3CE1B1FA1790F0220041D1BF /* UnitTests.octest */,
 			);
 			name = Products;
@@ -624,6 +624,8 @@
 				3CA09659178B5361000B8A0E /* ServerManager.m */,
 				3CE29DD917943A5500769A23 /* AccountManager.h */,
 				3CE29DDA17943A5500769A23 /* AccountManager.m */,
+				3CA0964D178B52F0000B8A0E /* GlobalStorage.h */,
+				3CA0964E178B52F0000B8A0E /* GlobalStorage.m */,
 			);
 			name = Managers;
 			sourceTree = "<group>";
@@ -823,8 +825,6 @@
 				3C38FAF617921B71003CC8C0 /* Charset.m */,
 				3CA0964B178B52F0000B8A0E /* Userdata.h */,
 				3CA0964C178B52F0000B8A0E /* Userdata.m */,
-				3CA0964D178B52F0000B8A0E /* GlobalStorage.h */,
-				3CA0964E178B52F0000B8A0E /* GlobalStorage.m */,
 			);
 			name = Data;
 			sourceTree = "<group>";
@@ -1011,7 +1011,7 @@
 			);
 			name = iPhone;
 			productName = AppScaffold;
-			productReference = 1D6058910D05DD3D006BFB54 /* uRight3.app */;
+			productReference = 1D6058910D05DD3D006BFB54 /* uRight.app */;
 			productType = "com.apple.product-type.application";
 		};
 		3CE1B1F91790F0220041D1BF /* UnitTests */ = {
@@ -1336,7 +1336,7 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = "App-Info.plist";
-				PRODUCT_NAME = uRight3;
+				PRODUCT_NAME = uRight;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
@@ -1352,7 +1352,7 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = "App-Info.plist";
-				PRODUCT_NAME = uRight3;
+				PRODUCT_NAME = uRight;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
@@ -1450,8 +1450,8 @@
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "App-Prefix.pch";
@@ -1467,6 +1467,7 @@
 				);
 				PRODUCT_NAME = "";
 				PROVISIONING_PROFILE = "";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "${SPARROW_SRC}/**";

@@ -115,11 +115,14 @@ static GlobalStorage *__sharedInstance = nil;
 
 
 - (void)saveUserdata {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setObject:[_activeUserdata toJSONObject]
-                 forKey:[NSString stringWithFormat:@"user-%d-version-%0.1f",
-                         _activeUserID, STORAGE_VERSION]];
-    DEBUG_PRINT(@"[GS] User-specific data saved.");
+    // Only save when userdata is not empty
+    if (_activeUserdata && ![_activeUserdata.username isEqualToString:@"unknown"]) {
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        [defaults setObject:[_activeUserdata toJSONObject]
+                     forKey:[NSString stringWithFormat:@"user-%d-version-%0.1f",
+                             _activeUserID, STORAGE_VERSION]];
+        DEBUG_PRINT(@"[GS] User-specific data saved.");
+    }
 }
 
 
@@ -135,8 +138,15 @@ static GlobalStorage *__sharedInstance = nil;
         _activeUserdata = [Userdata emptyUserdata:_activeUserID];
         DEBUG_PRINT(@"[GS] Data for %d doesn't exist. Created from template", _activeUserID);
     } else {
-        _activeUserdata = [[Userdata alloc] initWithJSONObject:userdata];
-        DEBUG_PRINT(@"[GS] Load data for user %d",_activeUserID);
+        @try {
+            _activeUserdata = [[Userdata alloc] initWithJSONObject:userdata];
+            DEBUG_PRINT(@"[GS] Load data for user %d",_activeUserID);
+        }
+        @catch (NSException *e) {
+            _activeUserdata = [Userdata emptyUserdata:_activeUserID];
+            DEBUG_PRINT(@"Exception: %@",e);
+            DEBUG_PRINT(@"Fallback to empty");
+        }
     }
     
     // check for new prototypes

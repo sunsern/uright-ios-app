@@ -14,11 +14,14 @@
 @class SessionData;
 
 @interface Protoset : NSObject <URJSONSerializable>
+
 @property (readwrite) int protosetID;
 @property (nonatomic,strong) NSString *label;
 @property (nonatomic,strong) NSString *type;
 @property (nonatomic,strong) NSArray *prototypes;
+
 @end
+
 
 @interface Userdata : NSObject <URJSONSerializable>
 

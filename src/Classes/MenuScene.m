@@ -203,6 +203,9 @@
         
         _lastAnnoucement = 0;
         _justLoggedIn = NO;
+        
+        // Hide until logged in
+        self.visible = NO;
     }
     return self;
 }
@@ -446,16 +449,21 @@
         [PFUser logOut];
         [Sparrow.juggler delayInvocationByTime:0.05 block:^{
             [self showLoginScene];
+            // Make menu visible in the back
+            self.visible = YES;
         }];
         
     } else {
+        // Make menu visible
+        self.visible = YES;
+        
         [self updateInfo];
     }
 }
 
 - (void)showLoginScene {
     PFLogInViewController *login = [[LoginViewController alloc] init];
-    [Sparrow.currentController presentModalViewController:login animated:YES];
+    [Sparrow.currentController presentModalViewController:login animated:NO];
 }
 
 - (void)logInCompleted:(NSNotification *)notification {

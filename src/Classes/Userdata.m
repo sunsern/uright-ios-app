@@ -114,12 +114,6 @@
 + (Userdata *)emptyUserdata:(int)userID {
     Userdata *ud = [[Userdata alloc] init];
     ud.userID = userID;
-    
-    if (userID == UR_GUEST_ID) {
-        ud.username = @"Guest";
-    } else {
-        ud.username = @"unknown";
-    }
     return ud;
 }
 
