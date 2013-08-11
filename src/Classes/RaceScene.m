@@ -142,14 +142,15 @@
                           forType:SP_EVENT_TYPE_TRIGGERED];
    
     // BPS meter
+    NSString *bmFontName = [SPTextField registerBitmapFontFromFile:@"bm-arial.fnt"];
+
     _bpsTextField = [SPTextField textFieldWithWidth:100 height:50 text:@""];
     _bpsTextField.x = gameWidth/2 + 20;
     _bpsTextField.y = y_offset + 5;
     _bpsTextField.fontSize = 40;
-    _bpsTextField.fontName = @"ArialRoundedMTBold";
+    _bpsTextField.fontName = bmFontName;
     _bpsTextField.border = YES;
     _bpsTextField.touchable = NO;
-    //_bpsTf.autoScale = YES;
     [self addChild:_bpsTextField];
     
     SPTextField *bpsLabel = [SPTextField textFieldWithWidth:150
@@ -431,7 +432,7 @@
                                                               stringWithFormat:@"+%0.2f bits",_currentScore]];
     popupScore.width = 250;
     popupScore.x = 100;
-    popupScore.y = 140;
+    popupScore.y = _canvas.y - 120;
     popupScore.fontSize = 30;
     float maxscore = log2f([_activeCharacters count]);
     // Good

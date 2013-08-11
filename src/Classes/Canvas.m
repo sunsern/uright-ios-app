@@ -13,13 +13,13 @@
 #import "InkCharacter.h"
 
 #define kBrushSize 14.0f
-#define kDefaultColor 0x1028da
+#define kDefaultColor 0x1ab8d0
 #define kSpecialColor 0xff0000
 #define kPrototypeColor 0x555555
 #define kPrototypeScale 0.75
 #define kBaseLineRatio 0.75f
 #define kTopLineRatio 0.25f
-#define kNumSteps 4
+#define kNumSteps 5
 
 #define ADJUST_X(x) (((x - (self.width / 2.0)) / self.height) * 3.00)
 #define UNADJUST_X(x) (((x / 3.00) * self.height) + (self.width / 2))

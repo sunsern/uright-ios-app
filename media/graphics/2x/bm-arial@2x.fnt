@@ -1,0 +1,53 @@
+<?xml version='1.0'?>
+<font>
+  <info aa='1' stretchH='100' unicode='0' spacing='0,0' smooth='1' charset='' face='Dialog' bold='0' padding='1,1,0,0' size='80' italic='0'/>
+  <common lineHeight='96' scaleH='512' scaleW='512' base='78' packed='0' pages='1'/>
+  <pages>
+    <page id='0' file='bm-arial@2x.png'/>
+  </pages>
+  <chars count='43'>
+    <char xadvance='26' yoffset='78' y='0' x='0' id='32' width='0' xoffset='0' height='0' chnl='0' page='0'/>
+    <char xadvance='70' yoffset='19' y='0' x='0' id='64' width='65' xoffset='3' height='77' chnl='0' page='0'/>
+    <char xadvance='31' yoffset='15' y='0' x='65' id='124' width='8' xoffset='11' height='76' chnl='0' page='0'/>
+    <char xadvance='27' yoffset='15' y='0' x='73' id='125' width='23' xoffset='4' height='76' chnl='0' page='0'/>
+    <char xadvance='27' yoffset='15' y='0' x='96' id='123' width='23' xoffset='0' height='76' chnl='0' page='0'/>
+    <char xadvance='27' yoffset='15' y='0' x='119' id='93' width='19' xoffset='2' height='76' chnl='0' page='0'/>
+    <char xadvance='27' yoffset='15' y='0' x='138' id='91' width='19' xoffset='7' height='76' chnl='0' page='0'/>
+    <char xadvance='27' yoffset='15' y='0' x='157' id='41' width='22' xoffset='2' height='76' chnl='0' page='0'/>
+    <char xadvance='27' yoffset='15' y='0' x='179' id='40' width='22' xoffset='4' height='76' chnl='0' page='0'/>
+    <char xadvance='43' yoffset='19' y='0' x='201' id='92' width='30' xoffset='7' height='72' chnl='0' page='0'/>
+    <char xadvance='43' yoffset='19' y='0' x='231' id='47' width='30' xoffset='7' height='72' chnl='0' page='0'/>
+    <char xadvance='52' yoffset='14' y='0' x='261' id='36' width='36' xoffset='7' height='70' chnl='0' page='0'/>
+    <char xadvance='57' yoffset='17' y='0' x='297' id='38' width='53' xoffset='2' height='64' chnl='0' page='0'/>
+    <char xadvance='54' yoffset='17' y='0' x='350' id='37' width='56' xoffset='-1' height='64' chnl='0' page='0'/>
+    <char xadvance='52' yoffset='17' y='0' x='406' id='48' width='43' xoffset='4' height='64' chnl='0' page='0'/>
+    <char xadvance='52' yoffset='17' y='0' x='449' id='57' width='42' xoffset='5' height='64' chnl='0' page='0'/>
+    <char xadvance='52' yoffset='17' y='77' x='0' id='56' width='42' xoffset='6' height='64' chnl='0' page='0'/>
+    <char xadvance='52' yoffset='17' y='77' x='42' id='54' width='42' xoffset='4' height='64' chnl='0' page='0'/>
+    <char xadvance='52' yoffset='17' y='77' x='84' id='51' width='36' xoffset='7' height='64' chnl='0' page='0'/>
+    <char xadvance='35' yoffset='17' y='77' x='120' id='63' width='34' xoffset='0' height='62' chnl='0' page='0'/>
+    <char xadvance='52' yoffset='19' y='77' x='154' id='53' width='35' xoffset='9' height='62' chnl='0' page='0'/>
+    <char xadvance='52' yoffset='17' y='77' x='189' id='50' width='38' xoffset='6' height='62' chnl='0' page='0'/>
+    <char xadvance='52' yoffset='17' y='77' x='227' id='49' width='33' xoffset='11' height='62' chnl='0' page='0'/>
+    <char xadvance='52' yoffset='19' y='77' x='260' id='35' width='52' xoffset='0' height='60' chnl='0' page='0'/>
+    <char xadvance='26' yoffset='19' y='77' x='312' id='33' width='11' xoffset='8' height='60' chnl='0' page='0'/>
+    <char xadvance='52' yoffset='19' y='77' x='323' id='55' width='40' xoffset='8' height='60' chnl='0' page='0'/>
+    <char xadvance='52' yoffset='19' y='77' x='363' id='52' width='44' xoffset='3' height='60' chnl='0' page='0'/>
+    <char xadvance='26' yoffset='34' y='77' x='407' id='59' width='11' xoffset='8' height='58' chnl='0' page='0'/>
+    <char xadvance='65' yoffset='30' y='77' x='418' id='43' width='49' xoffset='8' height='49' chnl='0' page='0'/>
+    <char xadvance='65' yoffset='30' y='141' x='0' id='62' width='49' xoffset='8' height='49' chnl='0' page='0'/>
+    <char xadvance='65' yoffset='30' y='141' x='49' id='60' width='49' xoffset='8' height='49' chnl='0' page='0'/>
+    <char xadvance='52' yoffset='19' y='141' x='98' id='94' width='45' xoffset='3' height='45' chnl='0' page='0'/>
+    <char xadvance='26' yoffset='34' y='141' x='143' id='58' width='11' xoffset='8' height='45' chnl='0' page='0'/>
+    <char xadvance='40' yoffset='19' y='141' x='154' id='42' width='33' xoffset='3' height='31' chnl='0' page='0'/>
+    <char xadvance='26' yoffset='67' y='141' x='187' id='44' width='13' xoffset='7' height='25' chnl='0' page='0'/>
+    <char xadvance='19' yoffset='15' y='141' x='200' id='39' width='12' xoffset='3' height='24' chnl='0' page='0'/>
+    <char xadvance='65' yoffset='43' y='141' x='212' id='61' width='49' xoffset='8' height='23' chnl='0' page='0'/>
+    <char xadvance='31' yoffset='15' y='141' x='261' id='34' width='24' xoffset='3' height='22' chnl='0' page='0'/>
+    <char xadvance='52' yoffset='46' y='141' x='285' id='126' width='45' xoffset='3' height='18' chnl='0' page='0'/>
+    <char xadvance='50' yoffset='14' y='141' x='330' id='96' width='21' xoffset='14' height='15' chnl='0' page='0'/>
+    <char xadvance='26' yoffset='67' y='141' x='351' id='46' width='13' xoffset='7' height='12' chnl='0' page='0'/>
+    <char xadvance='41' yoffset='84' y='141' x='364' id='95' width='42' xoffset='-1' height='9' chnl='0' page='0'/>
+    <char xadvance='47' yoffset='50' y='141' x='406' id='45' width='38' xoffset='5' height='9' chnl='0' page='0'/>
+  </chars>
+</font>
