@@ -90,6 +90,9 @@ static bool NodeLessThan(struct JCPQNode &n1, struct JCPQNode &n2)
         mObjs = (struct JCPQNode *)realloc(mObjs, mCapacity * sizeof(*mObjs));
         if (mObjs == NULL) {
             NSLog(@"Error allocate");
+            @throw [NSException exceptionWithName:@"AllocationError"
+                                           reason:@"Cannot allocate memory"
+                                         userInfo:nil];
         }
     }
     
