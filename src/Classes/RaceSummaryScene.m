@@ -90,7 +90,7 @@
 
         // Restart button
         SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
-        SPButton *restartButton = [SPButton buttonWithUpState:buttonTexture text:@"Restart Race"];
+        SPButton *restartButton = [SPButton buttonWithUpState:buttonTexture text:@"Race Again"];
         restartButton.pivotX = restartButton.width / 2;
         restartButton.pivotY = restartButton.height / 2;
         restartButton.x = gameWidth/4;

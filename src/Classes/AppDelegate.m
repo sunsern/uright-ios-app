@@ -41,10 +41,6 @@ void onUncaughtException(NSException *exception)
     // Enable FB support
     [PFFacebookUtils initializeFacebook];
     
-    // Enable Twitter support
-    [PFTwitterUtils initializeWithConsumerKey:@"mZ9gPegAV4CSb3uLXRTUxg"
-                               consumerSecret:@"mOp9ro4wgRVo6ehsxrt4y5zrkBG4AXsVbToDQantSAU"];
-    
     // Enable some common settings here:
     //
     // _viewController.showStats = YES;
